@@ -1,8 +1,0 @@
-{
-  "runtype": "optimisation",
-  "is_fmo": true, 
-  "frags": 5,
-  "supercomp": "raijin",
-  "package": "gamess", 
-  "using": "initial.xyz"
-}

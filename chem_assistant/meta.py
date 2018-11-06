@@ -32,3 +32,13 @@ Usage:
 
     def __setattr__(self, key, value):
         self._meta[key] = value
+
+# Example meta.json
+# {
+#   "runtype": "optimisation",
+#   "is_fmo": true, 
+#   "frags": 5,
+#   "supercomp": "raijin",
+#   "package": "gamess", 
+#   "using": "initial.xyz"
+# }
