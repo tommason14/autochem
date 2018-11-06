@@ -1,3 +1,4 @@
+from errors import MoleculeError
 class Bond:
     """A class representing the bond between two atoms
 

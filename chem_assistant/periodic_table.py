@@ -146,16 +146,16 @@ class PeriodicTable:
     def get_radius(cls, symbol):
         """Returns atomic radius for a given element"""
         atnum = cls.get_atnum(symbol)
-        return cls.ptable[atnum][2]
+        return float(cls.ptable[atnum][2])
     
     @classmethod
     def get_mass(cls, symbol):
         """Returns atomic mass for a given element"""
         atnum = cls.get_atnum(symbol)
-        return cls.ptable[atnum][1]
+        return float(cls.ptable[atnum][1])
 
     @classmethod
     def get_connectors(cls, symbol):
         """Returns number of possible attachments to a given element"""
         atnum = cls.get_atnum(symbol)
-        return cls.ptable[atnum][-1]
+        return int(cls.ptable[atnum][-1])

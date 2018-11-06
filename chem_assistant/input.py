@@ -1,3 +1,7 @@
+from atom import Atom
+from molecule import Molecule
+
+
 class Input:
     """Base class for any input file for a computational chemistry calculation- ab initio or molecular dynamics.
 
@@ -11,30 +15,10 @@ class Input:
         self.path = path
         self.run = run
         if using is not None:
-            self.coords = read_xyz(using)
-            #list of Atom objects, more useful than list of coordinates
-
-    # def coords(self):
-    #     """Reads in coordinates from an xyz file. Note this will be extended to work for mol and pdb file types in future"""
-    #     atom =
-    #     self.coords = []
-    #     with open(self.coord_file, "r") as cf:
-    #     for line in cf.readlines(): #memory efficiency
-    #         if re.search(atom, line):
-    #             coords.append(line)
-    #     return self.coords
-
-
-    def read_xyz(self, using):
-        """Reads in coordinates from an xyz file"""
-        coords = []
-        with open(using, "r") as f:
-            for coord in f.readlines()[2:]:
-                line = coord.split()
-                for val in PT.ptable.values():
-                    if line[0] == val[0]:
-                        coords.append(Atom(line[0], coords = tuple([float(i) for i in line[1:4]])))
-        return coords
+            self.mol = Molecule(using)
+            #self.mol.separate() # in the "user side" file
+            #self.mol.gamess_format() # in the "user side" file
+            # for frag in self.fragments: Input_type(using=f'fragments/{frag}') -> no fmo though
 
 class Ab_initio(Input):
     """Base class for any input file for an ab initio calculation"""
@@ -98,16 +82,8 @@ class Gamess_input(Ab_initio):
  $FMO
     NFRAG=8 NBODY=2
     MPLEVL(1)=2
-    INDAT(1)=0,1,-25,
-             0,26,-32,
-             0,33,-39,
-             0,40,-64,
-             0,65,-67,
-             0,68,-70,
-             0,71,-73,
-             0,74,-76,
-             0
-    ICHARG(1)=1,-1,-1,1,0,0,0,0
+    INDAT(1)=indat
+    ICHARG(1)=icharg
     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD=100
  $END
  $MP2 CODE=IMS SCSPT=SCS SCSOPO={self.c_os} SCSPAR=0.0 $END
@@ -134,11 +110,9 @@ class Gamess_input(Ab_initio):
  $FMO
     NFRAG=4 NBODY=1
     MPLEVL(1)=2
-    INDAT(1)=0,1,-21,
-             0,22,-28,
-             0
-    ICHARG(1)=1,-1
-    RESPAP=0 RESPPC=-1 RESDIM=4 RCORSD=4
+    INDAT(1)=indat
+    ICHARG(1)=icharg
+    RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD=100
  $END
  $MP2 CODE=IMS SCSPT=SCS SCSOPO={self.c_os} SCSPAR=0.0 $END
  $DATA
@@ -163,3 +137,16 @@ class Gamess_input(Ab_initio):
  $MP2 CODE=IMS SCSPT=SCS SCSOPO=1.752 SCSPAR=0.0 $END
  $DATA
 """
+    # build gamess_input (gi)
+    gi = gamess_header[run]
+    gi += f"{self.run}--{using[:-4]}" #strip.xyz from coordinate file name #title
+    gi += 'C1\n'
+    for element in self.mol.formula(as_dict = True):    # N 7.0
+        gi += f" {element} {PT.get_atnum(element)}.0\n"  # S 16.0
+    gi += " $END\n"
+    for atom in self.coords:
+    gi += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol)}.0 {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
+    gi += ' $END'
+
+
+
