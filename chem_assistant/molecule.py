@@ -76,7 +76,22 @@ class Molecule:
         if using is not None:
             self.coords = self.read_xyz(using)
             #list of Atom objects, more useful than list of coordinates
+            for index, atom in enumerate(self.coords):
+                atom.index = index + 1 #sop first atom has index 1
         self.bonds = []
+        
+        if hasattr(self, 'coords'):
+        # self.complex used in input files
+        # assuming a neutral closed shell system
+        # can be changed in meta.json --> needs implementing
+            self.complex = {
+                "type": "complex",
+                "name": "complex",
+                "atoms": self.coords,
+                "charge": 0,
+                "mult": 1,
+                "elements": set([atom.symbol for atom in self.coords])
+            }
 
     def __repr__(self):
         return f'Molecule of {len(self.coords)} atoms'
@@ -215,7 +230,7 @@ class Molecule:
             symbols[frag] = [atom.symbol for atom in atoms]
         
         def check_dict(molecules_dict, symbols_dict, db):
-            """Checking molecule database for a match, and returning the required attributes- name, atoms in molecule, type of molecule, charge, multiplicity"""
+            """Checking molecule database for a match, and returning the required attributes- name, atoms in molecule, type of molecule, charge, multiplicity, and elements present in the molecule"""
             if db == Molecule.Anions:
                 charge = -1
                 mult = 1
@@ -237,7 +252,8 @@ class Molecule:
                                 "name" : name,
                                 "atoms": self.frags[sym], #not symbols, but the atom objects
                                 "charge": charge,
-                                "multiplicity": mult
+                                "multiplicity": mult,
+                                "elements": set([atom.symbol for atom in self.frags[sym]])
                             }
                         molecules_dict[sym] = data
             return molecules_dict
@@ -245,11 +261,10 @@ class Molecule:
         self.fragments = {}
         for db in (Molecule.Anions, Molecule.Cations, Molecule.Neutrals):
             self.fragments = check_dict(self.fragments, symbols, db)
-    
+
     def print_frags(self):
         for frag, data in self.fragments.items():
             print(f"{data['type'].capitalize()} found: {data['name']}")
-
     def remove_assignments(self):
         for atom in self.coords:
             atom.mol = None
@@ -272,27 +287,37 @@ class Molecule:
             if check.lower() not in ('y', 'n'):
                 print("Please choose 'y' or 'n'")
 
-    #format for fmo 
+    #format for fmo run of complete system 
     def gamess_format(self):
-        """Returns a tuple of strings, for the INDAT and ICHARG blocks of GAMESS FMO calculations"""
-        index_dict = {}
-        for index, atom in enumerate(self.coords):
-            if atom.mol not in index_dict:
-                index_dict[atom.mol] = [index + 1]
-            else:
-                index_dict[atom.mol].append(index + 1)
+        """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
+molecule instance as self.indat and self.charg"""
         
-        indat = ""
-        for frag, lst in index_dict.items():
-            indat +=  f"0,{lst[0]},{lst[-1]},\n"
-        indat += "0"
-
-        # as python dicts are arranged in numerical / alphabetical order, the order of mol in self.coords and the order of fragments in self.frags are the same
-        icharg = ""
+        info = {}
+       
+        #group together indat and charge for each fragment, and order according to the atom indices of indat 
+        
         for frag, data in self.fragments.items():
-            icharg += f"{data['charge']},"
-        icharg = icharg[:-1] #rm trailing comma
-        return (indat, icharg)
-
-
-
+            info[frag] = {"indat": f"0,{data['atoms'][0].index},{data['atoms'][-1].index},\n",
+                          "charg" : str(data['charge'])}
+        # items need sorting
+        # 0,1,7, ### sort on 2nd item ###
+        # 0,8,28,
+        # 0,29,35,
+        # and not 
+        # 0,1,7,
+        # 0,29,35,
+        # 0.8,28 
+        
+        sorted_info = sorted(info.items(), key = lambda val: int(val[1]['indat'].split(',')[1])) 
+        # key: given an item (the val), sort by the value of the key, value pair (val[1]), then
+        # select the indat, split on comma and return the second item, then convert to an integer
+        # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
+        # always be in a numerical order- by using the index from self.coords, it is always ensured that the
+        # correct order is shown, as these coords are also used in the input file        
+        self.indat = ""
+        self.charg = ""
+        for val in sorted_info:
+            self.indat += val[1]['indat']
+            self.charg += val[1]['charg'] + ","
+        self.indat += '0'
+        self.charg = self.charg[:-1] #rm trailing comma        

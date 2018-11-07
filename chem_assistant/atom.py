@@ -43,6 +43,8 @@ class Atom:
 
     def __repr__(self):
         """Prints if called from interpreter. Should be unambiguous"""
+        if hasattr(self, 'index'):
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol} Index: {self.index}"
         return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol}"
 
     def __iter__(self):

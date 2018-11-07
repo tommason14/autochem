@@ -1,0 +1,41 @@
+ {
+  "system": {
+    "mwords": 500,
+    "memddi": 0
+  },
+  "contrl": {
+    "scftyp": "rhf",
+    "runtyp": "optimize",
+    "maxit": 200,
+    "ispher": 1,
+    "icharg": 0
+  },
+  "statpt": {
+    "nstep": 500
+  },
+  "scf": {
+    "dirscf": ".true.",
+    "fdiff": ".false.",
+    "diis": ".true."
+  },
+  "basis": {
+    "gbasis": "ccd"
+  },
+  "fmo": {
+    "nfrag": 4,
+    "nbody": 2,
+    "mplevl(1)": 2,
+    "indat(1)": "indat",
+    "icharg(1)": "charg",
+    "respap": 0,
+    "resppc": -1,
+    "resdim": 100,
+    "rcorsd": 100
+  },
+  "mp2": {
+    "code": "ims",
+    "scspt": "scs",
+    "scsopo": 1.752,
+    "scspar": 0.0
+  }
+}
