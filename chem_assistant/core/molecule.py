@@ -18,6 +18,8 @@ import math
 from errors import *
 import itertools
 
+__all__ = ['Molecule']
+
 class Molecule:
     """Class implementing the concept of a molecular system. Crucial is the separation of molecules in a given system, with output for Fragment Molecular Orbital calculations"""
 
@@ -72,6 +74,7 @@ class Molecule:
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['water'] = ['H', 'H', 'O']
 
+
     def __init__(self, using = None):
         if using is not None:
             self.coords = self.read_xyz(using)
@@ -84,13 +87,15 @@ class Molecule:
         # self.complex used in input files
         # assuming a neutral closed shell system
         # can be changed in meta.json --> needs implementing
+        #sort elements wrt atomic number
+            
             self.complex = {
                 "type": "complex",
                 "name": "complex",
                 "atoms": self.coords,
                 "charge": 0,
                 "mult": 1,
-                "elements": set([atom.symbol for atom in self.coords])
+                "elements": sort_elements(self.coords)
             }
 
     def __repr__(self):
@@ -253,7 +258,7 @@ class Molecule:
                                 "atoms": self.frags[sym], #not symbols, but the atom objects
                                 "charge": charge,
                                 "multiplicity": mult,
-                                "elements": set([atom.symbol for atom in self.frags[sym]])
+                                "elements": sort_elements(self.frags[sym])
                             }
                         molecules_dict[sym] = data
             return molecules_dict
@@ -286,9 +291,11 @@ class Molecule:
                 cutoff = float(input('Cutoff distance (Å): '))
             if check.lower() not in ('y', 'n'):
                 print("Please choose 'y' or 'n'")
+        # now we have the correct fragments, use them to generate the fmo section of inputs
+        self.fmo_meta() 
 
     #format for fmo run of complete system 
-    def gamess_format(self):
+    def fmo_meta(self):
         """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
 molecule instance as self.indat and self.charg"""
         
@@ -297,7 +304,7 @@ molecule instance as self.indat and self.charg"""
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
         
         for frag, data in self.fragments.items():
-            info[frag] = {"indat": f"0,{data['atoms'][0].index},{data['atoms'][-1].index},\n",
+            info[frag] = {"indat": f"0,{data['atoms'][0].index},{data['atoms'][-1].index},",
                           "charg" : str(data['charge'])}
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
@@ -314,10 +321,17 @@ molecule instance as self.indat and self.charg"""
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file        
-        self.indat = ""
-        self.charg = ""
+        self.indat = []
+        self.charg = []
         for val in sorted_info:
-            self.indat += val[1]['indat']
-            self.charg += val[1]['charg'] + ","
-        self.indat += '0'
-        self.charg = self.charg[:-1] #rm trailing comma        
+            self.indat.append(val[1]['indat'])
+            self.charg.append(val[1]['charg'])
+        self.indat.append('0')
+
+def sort_elements(lst):
+    els = []
+    elements = set([atom.symbol for atom in lst])
+    for i in elements:
+        els.append((i, float(PT.get_atnum(i))))
+    sorted_els = sorted(els, key = lambda val: val[1])
+    return sorted_els

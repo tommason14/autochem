@@ -12,3 +12,17 @@
 			
 			
 - make a way for meta.json to be used to look up run types, and fmo etc...
+
+
+- for command line arguments:
+
+Place all scripts in a scripts directory
+
+create a menu:
+1. Create inputs recursively
+2. Obtain results recursively
+3. Get frequencies recursively
+...
+
+call for 1: run scripts/inputs.py
+call for 2: run scripts/results.py

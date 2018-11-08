@@ -1,6 +1,6 @@
-class PTError(Exception):
-    """class PeriodicTable error"""
-    pass
+from errors import PTError
+
+__all__ = ['PeriodicTable']
 
 class PeriodicTable:
     """Helper class to allow for lookup of atomic properties. Can convert between symbol and atomic number"""

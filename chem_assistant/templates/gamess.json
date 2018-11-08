@@ -1,0 +1,33 @@
+{
+  "input": {
+    "system": {
+      "mwords": 500,
+      "memddi": 0
+    },
+    "contrl": {
+      "scftyp": "rhf",
+      "runtyp": "optimize",
+      "maxit": 200,
+      "ispher": 1,
+      "icharg": 0
+    },
+    "statpt": {
+      "nstep": 500
+    },
+    "scf": {
+      "dirscf": ".true.",
+      "fdiff": ".false.",
+      "diis": ".true."
+    },
+    "basis": {
+      "gbasis": "ccd"
+    },
+    "mp2": {
+      "code": "ims",
+      "scspt": "scs",
+      "scsopo": 1.752,
+      "scspar": 0.0
+    }
+  },
+  "job": {}
+}

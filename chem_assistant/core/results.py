@@ -1,4 +1,6 @@
-class Gamess_results:
+__all__ = ['GamessResults']
+
+class GamessResults:
 	"""Class for obtaining results from Gamess simulations. This class requires
 	a log file to be read.
 	Usage:
