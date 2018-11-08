@@ -11,6 +11,8 @@ Description: Class encompassing all meta data for calculations.
 
 import json
 
+__all__ = ['Meta']
+
 class Meta(object):
     """Class for parsing *meta.json* files, present in every directory where computational calculations are desired.
 

@@ -1,6 +1,8 @@
 from os.path import join
 import json
 
+__all__ = ['Settings']
+
 class Settings(dict):
     """Provides a means of updating settings for input and job files. Inherits from a python dictionary, and allows for nesting of dictionaries as values."""
     def __init__(self, *args, **kwargs):
@@ -74,12 +76,44 @@ class Settings(dict):
         self[name] = Settings()
         return self[name]
 
+    def copy(self):
+        ret = Settings()
+        for name in self:
+            if isinstance(self[name], Settings):
+                ret[name] = self[name].copy()
+            else:
+                ret[name] = self[name]
+        return ret
+
+    def merge(self, other):
+        """
+        Return new instance of |Settings| that is a copy of this instance
+        updated with *other*.
+        """
+        ret = self.copy()
+        ret.update(other)
+        return ret
+
+    def update(self, other):
+        """Updates the current |Settings| object with the object passed in"""
+        for name in other:
+            if isinstance(other[name], Settings):
+                if name not in self or not isinstance(self[name], Settings):
+                    self[name] = other[name].copy()
+                else:
+                    self[name].update(other[name])
+            else:
+                self[name] = other[name]
+
     __repr__ = __str__
+
 
 def read_template(template):
     """Obtains default parameters for input files of different packages, and returns them as a |Settings| object. Currently GAMESS is supported"""
-    path = join("templates", template)
-    tmp = json.loads(path)
+    # path = join("templates", template)
+    # tmp = json.loads(path)
+    with open('/Users/tommason/Desktop/chem_assistant/chem_assistant/templates/' + template, "r") as f:
+        tmp = json.load(f)
     return dict_to_settings(tmp)
 
 

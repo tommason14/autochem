@@ -18,19 +18,17 @@ j.settings.input.basis.gbasis = 'accd'
 j = GamessJob(using="file.xyz", fmo=True)
 --> j.mol = Molecule(using="file.xyz") 
 Alias it:
-i = j.settings.input 
-i.basis.gbasis = 'ccd' 
-i.contrl.icharg= 0 
-i.gddi.ngroup=4 # for a 2IP cluster
+s = Settings()
+s.input.key.entry = 'value' 
+--> $KEY entry=value
 
 
-def GamessJob(fmo = True):
-
-load_template('gamess.json')
-...
-if fmo:
-	load_template('gamess_fmo.json')
-
+for path, dirs, files in os.walk('.'):
+		for file in files:
+			if file == 'opt.log' or file == 'opt.out':
+				if file.complete():
+					file.extract_equilibrium_coords()
+					# generate equil.xyz in every subdir from '.' 
 
 
 
