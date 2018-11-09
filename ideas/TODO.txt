@@ -73,8 +73,33 @@ Then call run from the parent dir, which will work recursively
 
 
 
+- GAMESS/PSI4 JOBS
+- GAMESS/PSI4 RESULTS
 
+- CHECK FILES FOR COMPLETION
+  - If error in the run, create error.txt
+    - logging the actual error
+    - if geom opt, how many iterations (log the energies and iteration)
+    - plot a graph of energy against iteration num (plotnine)
+      - if levels out, then finished (for scf methods, such as MP2, no energy
+        change if converged)  
+      - easily check how far through we are
+    - layout:
+      ERROR 
+      GRAPH
+      DATA
 
+  - LOG RESULTS IN A FILE IN THE HOME DIR- add path 
+
+  PATH | ERROR | RESUBMITTED
+                    Y/N
+  - If error, make new xyz (rerun.xyz) and new inp/job (rerun.inp, rerun.job).
+    Make this so that if rerun.xyz in dir, name it rerun2.xyz, and so on.
+  - Ask if want to resubmit (if path, dirs, files in os.walk: run rerun.job
+    - Make sure that if rerun.job in dir, don't rerun the original inputs
+      (explicitly name the job as rerun[0-9].job) --> again, only run the
+      latest rerun[0-9], don't rerun the lower numbers, if there are multiple
+      repeats. (if rerun[0-9]- sort according to max, then run array[0])
 
 
 
