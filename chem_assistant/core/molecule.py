@@ -99,7 +99,22 @@ class Molecule:
             }
 
     def __repr__(self):
-        return f'Molecule of {len(self.coords)} atoms'
+        els = [i[0] for i in self.complex['elements']]
+        if not hasattr(self, 'fragments'):
+            return f'Molecule of {len(self.coords)} atoms. Elements: {els}'
+        return self._repr()
+    
+    def _repr(self):
+        frags = {}
+        for frag in self.fragments.values():
+            if frag['name'] not in frags:
+                frags[frag['name']] = 1
+            else:
+                frags[frag['name']] += 1
+        string = f"Molecule of {len(self.fragments)} fragments, {len(self.coords)} atoms.\nFragments:\n"
+        for frag, num in frags.items():
+            string += f'    {num} x {frag}\n'
+        return string
 
     def __iter__(self):
         return iter(self.coords)

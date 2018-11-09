@@ -21,3 +21,65 @@ Create a menu:
 
 Call for 1: run scripts/inputs.py
 Call for 2: run scripts/results.py
+
+#SCRIPT IDEAS
+
+- Place all xys in one dir, then create a tree of subdirs, with the job desired
+  (could be gamess, psi4, lammps- for the ab initio jobs, with frags in subdir
+if necessary). Files called opt.inp, so need to create a tree with a naming
+system.
+
+
+
+Files(in one dir):
+choline_acetate_1.xyz
+choline_acetate_2.xyz
+choline_acetate_3.xyz
+c4mim_acetate
+
+1IP
+|_choline|
+|        |_acetate|
+|                 |_1|
+|                    |_opt.inp
+|                    |_opt.job
+|                    |_choline_acetate_1.xyz
+|                    |_frags
+|                          |_choline0
+|                                   |_choline0.xyz
+|                                   |_opt.inp
+|                                   |_opt.job
+|                          |_acetate1
+|                                   |_acetate1.xyz
+|                                   |_opt.inp
+|                                   |_opt.job
+|                 |_2
+|                    |_opt.inp
+|                    |_opt.job
+|                    |_choline_acetate_2.xyz
+|                 |_3
+|                    |_opt.inp
+|                    |_opt.job
+|                    |_choline_acetate_3.xyz
+|-c4mim|
+|      |_acetate
+|               |_1|
+|                  |_opt.inp
+|                  |_opt.job
+|                  |_c4mim_acetate_1.xyz
+
+Then just a scp of the files from local to supercomp.
+Then call run from the parent dir, which will work recursively
+
+
+
+
+
+
+
+
+
+
+
+
+

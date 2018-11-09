@@ -37,12 +37,8 @@ class Atom:
             raise TypeError('Atom: Invalid coordinates given')
         self.x, self.y, self.z = self.coords
 
-    def __str__(self):
-        """Should be readable"""
-        return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol}"
-
     def __repr__(self):
-        """Prints if called from interpreter. Should be unambiguous"""
+        """Unambiguous representation of an |Atom| instance"""
         if hasattr(self, 'index'):
             return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol} Index: {self.index}"
         return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol}"
@@ -78,10 +74,4 @@ class Atom:
         denom = self.distance_to(pos1) * self.distance_to(pos2)
         return math.acos(num/denom)
 
-    def minDist(self):
-        distList = []
-        for i, atom_i in self.coords:
-            for j, atom_j in self.coords:
-                dist = atom_i.distance_to(atom_j)
-                distList.append(dist)
-        return min(distList)
+    __str__ = __repr__
