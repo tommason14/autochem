@@ -145,8 +145,6 @@ class GamessJob(Job):
         inp = self.header
         inp += ' $DATA\n'
         inp += f'{self.title}\n'
-        # if self.input.symmetry is not None:
-        #     inp += f'{str(self.input.symmetry).upper()}\n'
         inp += 'C1\n'
         for el in self.mol.complex['elements']: #list of tuples [('H', 1.0), ('O', 8.0)]
             inp += f" {el[0]} {el[1]}\n"
@@ -176,7 +174,7 @@ class GamessJob(Job):
         self.write_file(inp, filetype = 'inp')
 
     def create_inputs_for_fragments(self):
-        """Very useful to generate files for each fragment automatically. Also useful for frequency calculations and generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
+        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
             .
             ├── frags
             │   ├── acetate0
