@@ -192,7 +192,7 @@ class PsiJob(Job):
         self.write_file(self.inp, filetype = 'inp')
 
     def create_inputs_for_fragments(self):
-        """Very useful to generate files for each fragment automatically, for single point and frequency calculations and generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
+        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
             .
             ├── frags
             │   ├── acetate0
