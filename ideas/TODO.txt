@@ -1,28 +1,23 @@
 # TODO
 
-- When creating inputs, call with a file and call instance of molecule:
-	- ...input(using=file)
-			mol = Molecule(using)
-			mol.separate() --> coords
-			mol.gamess_format --> give mol.indat, mol.icharg
-			frag_inp = GamessInput(type="optimisation") or maybe
-			frag_inp = PsiInput(type="single point")
-			then:
-			mol.make_frag_inputs(frag_inp)
-			
-			
-- make a way for meta.json to be used to look up run types, and fmo etc...
-
+Create gif for geometry optimisations? 
+  - store energies and coordinates at each point. Not too hard really, just
+    create lists for the energy values and coords, and store coords as a list
+    of lists, then iterate through and show them in a package. 
+  - Same idea for the vibrations, store coords at each step, with the
+    intensities. Like Anh's script. Then view with a plotnine graph. Import
+into virtualenv, and save a local copy of the scripts. Same with numpy. So we
+just need to import my package, with no other dependencies??
 
 - for command line arguments:
 
 Place all scripts in a scripts directory
 
-create a menu:
+Create a menu:
 1. Create inputs recursively
 2. Obtain results recursively
 3. Get frequencies recursively
 ...
 
-call for 1: run scripts/inputs.py
-call for 2: run scripts/results.py
+Call for 1: run scripts/inputs.py
+Call for 2: run scripts/results.py

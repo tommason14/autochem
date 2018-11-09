@@ -1,0 +1,19 @@
+{
+  "input" : {
+    "memory": "46gb",
+    "molecule": {
+      "charge": 0,
+      "multiplicity": 1,
+      "units": "angstrom",
+      "symmetry": "c1"
+    },
+    "run" : {"energy": "mp2"},
+    "globals": {
+      "basis": "cc-pVTZ",
+      "scf_type": "DF",
+      "freeze_core": true,
+      "guess": "sad",
+      "S_ORTHOGONALIZATION": "canonical"
+    }
+  }
+}
