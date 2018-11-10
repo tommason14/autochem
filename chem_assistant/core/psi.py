@@ -72,14 +72,14 @@ class PsiJob(Job):
         - If extra run options are required:
             >>> self.input.run.additional = {'dertype': 'energy'} 
             # produces optimize('scf', dertype='energy')
+        NOTE: An option for adding commands outside of the molecule and globals section needs to be added.
                                 
     
     The names of files created default to the type of calculation: optimisation (opt), single point energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (freq). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
         >>> job = GamessJob(using = 'file.xyz', filename = 'benzene')
+    This command produces two files, benzene.inp and benzene.job.
     
-    This command produces two files, benzene.inp and benzene.job
-        ...
-    If a system is comprised of multiple fragments, each fragment can have its own input file created by passing in ``frags_in_subdir`` = True.
+    If a system is comprised of multiple fragments, each fragment can have its own input file created in a subdirectory by passing in ``frags_in_subdir`` = True.
     """
     def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None):
         super().__init__(using)
@@ -192,7 +192,7 @@ class PsiJob(Job):
         self.write_file(self.inp, filetype = 'inp')
 
     def create_inputs_for_fragments(self):
-        """Very useful to generate files for each fragment automatically. Also useful for frequency calculations and generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
+        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
             .
             ├── frags
             │   ├── acetate0
