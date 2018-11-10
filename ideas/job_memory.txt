@@ -1,0 +1,49 @@
+GAMESS- raijin
+#!/bin/sh
+#PBS -P k96
+#PBS -l mem=256gb
+#PBS -l ncpus=64
+#PBS -l jobfs=500gb
+#PBS -l walltime=48:00:00
+#PBS -l wd
+
+module unload openmpi/1.6.3
+module load openmpi/1.8.4
+/short/k96/apps/gamess16-srs/rungms.rika equil.inp $PBS_NCPUS > equil.log
+
+^ 4 fragments
+
+
+
+--------------
+Anion of that same molecule:
+
+#!/bin/sh
+#PBS -P k96
+#PBS -l mem=16gb
+#PBS -l ncpus=8
+#PBS -l jobfs=100gb
+#PBS -l walltime=48:00:00
+#PBS -l wd
+
+module unload openmpi/1.6.3
+module load openmpi/1.8.4
+/short/k96/apps/gamess16/rungms.rika anion2.inp $PBS_NCPUS > anion2.log
+
+
+-------------------
+PSI4 of that complex
+#!/bin/bash
+#PBS -P k96
+#PBS -l mem=48GB
+#PBS -l ncpus=16
+#PBS -l jobfs=10Gb
+#PBS -l walltime=4:00:00
+#PBS -l wd
+
+module load psicode/4.0b5.1
+
+setenv OMP_NUM_THREADS $PBS_NCPUS
+setenv MKL_NUM_THREADS $PBS_NCPUS
+
+psi4 complex.ok complex.out
