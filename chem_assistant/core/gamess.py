@@ -136,7 +136,7 @@ class GamessJob(Job):
         string += "     MPLEVL(1)=2\n"
         string += f"     INDAT(1)={self.mol.indat[0]}\n"
         for d in self.mol.indat[1:]:
-            string += f"{' '*14}{d}\n" #indent by 14 spaces
+            string += f"{' '*14}{d}\n"
         string += f"     ICHARG(1)={','.join(self.mol.charg)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         return string

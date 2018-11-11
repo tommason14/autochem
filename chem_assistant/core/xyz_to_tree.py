@@ -75,6 +75,33 @@ def make_files(choice, xyz, s):
     return choices[choice] 
 
 
+def make_parent_dir():
+    calc_dir = os.path.join(os.getcwd(), 'calcs')
+    if not os.path.exists(calc_dir):
+        os.mkdir(calc_dir)
+    os.chdir(calc_dir)
+
+def make_dir_list(file):
+    filename = file[:-4] # rm .xyz 
+    new_dirs = []
+        # store each portion in a list, then iterate over the list making dirs if needed
+    for part in filename.split('_'):
+        new_dirs.append(part)
+    return new_dirs
+
+def change_to_subdir(subdirectory):
+    new_dir = os.path.join(os.getcwd(), subdirectory)
+    if os.path.isdir(d):
+        os.chdir(new_dir)
+    elif not os.path.isdir(d):
+        os.mkdir(new_dir)
+        os.chdir(new_dir)
+
+def copy_xyz(file):
+    xyz = os.path.join(os.path.dirname(cwd), file)
+    dest = os.path.join(os.getcwd(), file)
+    copyfile(xyz, dest)
+
 def make_tree(files):
     #move up one dir, so you have a structure of file separate to the tree 
     # .
@@ -83,29 +110,14 @@ def make_tree(files):
     # |__tree
     #       |
     #       |__ subdirs 
-    # os.chdir(os.path.dirname(os.getcwd())) #getting the parent dir of the files dir, then moving to it
-    calc_dir = os.path.join(os.getcwd(), 'calcs')
-    if not os.path.exists(calc_dir):
-        os.mkdir(calc_dir)
-    os.chdir(calc_dir)
+    make_parent_dir()
     cwd = os.getcwd()
     for file in files:
-        filename = file[:-4] # rm .xyz 
-        new_dirs = []
-        # store each portion in a list, then iterate over the list making dirs if needed
-        for part in filename.split('_'):
-            new_dirs.append(part)
+        new_dirs = make_dir_list()
         for idx, d in enumerate(new_dirs):
-            new_dir = os.path.join(os.getcwd(), d)
-            if os.path.isdir(d):
-                os.chdir(new_dir)
-            elif not os.path.isdir(d):
-                os.mkdir(new_dir)
-                os.chdir(new_dir)
+            change_to_subdir()
             if idx + 1  == len(new_dirs): #when at maximum depth
-                xyz = os.path.join(os.path.dirname(cwd), file)
-                dest = os.path.join(os.getcwd(), file)
-                copyfile(xyz, dest)
+                copy_xyz(file)
                 # make_files(choice, file, settings) #calls GamessJob etc....
         os.chdir(cwd)
        
