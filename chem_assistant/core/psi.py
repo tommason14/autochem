@@ -232,7 +232,10 @@ class PsiJob(Job):
             Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
             
             #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
-            frag_settings = self.merged
+            if hasattr(self, 'merged'):
+                frag_settings = self.merged
+            else:
+                frag_settings = self.defaults
             frag_settings.input.molecule.charge = data['charge']
             if data['multiplicity'] != 1:
                 frag_settings.input.molecule.multiplicity = data['multiplicity']

@@ -196,7 +196,8 @@ class GamessJob(Job):
         """
         
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
-
+        if not hasattr(self.mol, 'fragments'):
+            self.mol.separate()
         #make subdir if not already there
         subdirectory = os.path.join(os.getcwd(), 'frags')
         if not os.path.exists(subdirectory):
@@ -213,7 +214,10 @@ class GamessJob(Job):
             Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
             
             #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
-            frag_settings = self.merged
+            if hasattr(self, 'merged'):
+                frag_settings = self.merged
+            else:
+                frag_settings = self.defaults
             frag_settings.input.contrl.icharg = data['charge']
             if data['multiplicity'] != 1:
                 frag_settings.input.contrl.mult = data['multiplicity']
