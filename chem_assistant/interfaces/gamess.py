@@ -156,10 +156,10 @@ class GamessJob(Job):
         inp += ' $DATA\n'
         inp += f'{self.title}\n'
         inp += 'C1\n'
-        for el in self.mol.complex['elements']: #list of tuples [('H', 1.0), ('O', 8.0)]
-            inp += f" {el[0]} {el[1]}\n"
-        inp += " $END\n"
         if self.fmo:
+            for el in self.mol.complex['elements']: #list of tuples [('H', 1.0), ('O', 8.0)]
+                inp += f" {el[0]} {el[1]}\n"
+            inp += " $END\n"
             inp += " $FMOXYZ\n"
         for atom in self.mol.coords:
             inp += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol)}.0 {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
@@ -185,8 +185,12 @@ class GamessJob(Job):
         self.write_file(inp, filetype = 'inp')
 
     def get_sc(self):
-        if 'supercomp' in self.merged.keys(): #user has to define a supercomp
-            user_sc = self.merged.supercomp
+        if hasattr(self, 'merged'):
+            meta = self.merged
+        else:
+            meta = self.defaults
+        if 'supercomp' in meta.keys(): #user has to define a supercomp
+            user_sc = meta.supercomp
             supercomps = {'rjn': 'rjn',
                           'raijin': 'rjn',
                           'mgs': 'mgs',
@@ -218,9 +222,7 @@ class GamessJob(Job):
         job = []
         with open(job_file) as f:
             for line in f:
-                job.append(line)
-        print(job)
-        
+                job.append(line)        
         
 
     def create_inputs_for_fragments(self):
@@ -257,7 +259,7 @@ class GamessJob(Job):
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             #make a directory inside the subdir for each fragment
-            name = data['name'] + str(count) # i.e. acetate0, acetate1, choline2, choline3, water4
+            name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
             if not exists(join(subdirectory, name)):
                 mkdir(join(subdirectory, name)) # ./frags/water4/
             chdir(join(subdirectory, name))
