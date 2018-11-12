@@ -1,7 +1,7 @@
 from os.path import join
 import json
 
-__all__ = ['Settings']
+__all__ = ['Settings', 'read_template', 'dict_to_settings']
 
 class Settings(dict):
     """Provides a means of updating settings for input and job files. Inherits from a python dictionary, and allows for nesting of dictionaries as values."""

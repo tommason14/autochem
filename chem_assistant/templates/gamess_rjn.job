@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -P k96
+#PBS -l mem=4gb
+#PBS -l ncpus=8
+#PBS -l jobfs=4gb
+#PBS -l walltime=100:00:00
+#PBS -l wd
+
+module unload openmpi/1.6.3
+module load openmpi/1.8.4
+/short/k96/apps/gamess16-srs/rungms.rika name.inp $PBS_NCPUS > name.log

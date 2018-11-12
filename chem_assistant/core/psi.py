@@ -18,6 +18,8 @@ from .periodic_table import PeriodicTable as PT
 
 import os
 
+__all__ = ['PsiJob']
+
 class PsiJob(Job):
     # Note the job scripts require the supercomputer to be entered, such as:
 

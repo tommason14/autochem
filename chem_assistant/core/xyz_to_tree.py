@@ -17,6 +17,8 @@ xyz_to_tree(settings = s)
 import os
 from shutil import copyfile
 
+# __all__ = ['xyz_to_tree']
+
 # from gamess import GamessJob
 # from psi import PsiJob
 

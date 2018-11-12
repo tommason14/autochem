@@ -1,0 +1,14 @@
+#!/bin/sh
+#$ -S /bin/sh
+#$ -N name
+#$ -l h_rt=48:00:00
+#$ -l h_vmem=64G
+#$ -pe short 16
+#$ -q gaia
+#$ -l passwd=izgoro
+#$ -l m_unit=4
+#$ -cwd
+
+module load psi4/0b5
+
+psi4 complex.inp complex.out

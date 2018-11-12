@@ -1,6 +1,9 @@
 from .periodic_table import PeriodicTable as PT
 import math
 
+
+__all__ = ['Atom']
+
 class Atom:
     """A class representing a atom in 3 dimensional euclidean space.
     An instance has the following attributes:

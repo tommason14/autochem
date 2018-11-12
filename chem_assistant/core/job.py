@@ -2,6 +2,8 @@ from .atom import Atom
 from .molecule import Molecule
 from .settings import *
 
+__all__ = ['Job']
+
 class Job:
     """Base class for any input file for a computational chemistry calculation- ab initio or
 molecular dynamics. This class also creates job files in the same directory as the class is called. 

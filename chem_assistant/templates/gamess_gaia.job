@@ -1,0 +1,16 @@
+#!/bin/sh
+
+#$ -S /bin/sh
+#$ -N hy-ch2-ac-3-p2
+#$ -l h_rt=48:00:00
+#$ -l h_vmem=64G
+#$ -pe short 16
+#$ -cwd
+  
+#$ -q gaia
+#$ -l passwd=izgoro
+#$ -l m_unit=4
+
+module load gamess/16srs1
+
+rungms name.inp 00 1 $NSLOTS > name.out

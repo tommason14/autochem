@@ -1,5 +1,7 @@
 from .errors import MoleculeError
 
+__all__ = ['Bond']
+
 class Bond:
     """A class representing the bond between two atoms
 
