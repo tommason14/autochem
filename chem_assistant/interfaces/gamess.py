@@ -8,7 +8,6 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Interface between Python and creating GAMESS input files 
 """
-# MOVE TO INTERFACES
 
 from ..core.atom import Atom
 from ..core.molecule import Molecule
@@ -17,6 +16,8 @@ from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 
 import os
+
+__all__ = ['GamessJob']
 
 class GamessJob(Job):
     # Note the job scripts require the supercomputer to be entered, such as:
@@ -103,6 +104,12 @@ class GamessJob(Job):
                     self.header.append(line)
         self.header = "".join(self.header)
 
+    def make_automatic_changes(self):
+        """Common scenarios are implemented to remove the commands needed to be called by the user. For example, this sets the opposite spin parameter for SRS-MP2 for the cc-pVTZ basis set without the need to define it in the user code."""
+        #automatically set to ccd, 1.752
+        if self.input.basis.gbasis.lower() == 'cct':
+            self.input.mp2.scsopo = 1.64
+
     def parse_settings(self):
             """
             Transform all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation
@@ -168,6 +175,9 @@ class GamessJob(Job):
 
     def create_inp(self):
         self.determine_fragments() #add fmo info to input settings, if self.fmo is True
+        print(self.input.mp2.scsopo)
+        self.make_automatic_changes()
+        print(self.input.mp2.scsopo)
         self.unordered_header = self.parse_settings() 
         self.order_header() #create self.header variable
         inp = self.make_inp()
