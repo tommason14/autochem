@@ -1,29 +1,28 @@
-__all__ = ['PlamsError', 'FileError', 'ResultsError', 'JobError', 'PTError', 'UnitsError', 'MoleculeError']
+__all__ = ['PlamsError', 'FileError', 'ResultsError', 'JobError', 'PTError', 'MoleculeError', 'SuperCompError']
 
 class PlamsError(Exception):
     """General PLAMS error."""
     pass
 
-class FileError(PlamsError):
+class FileError(Exception):
     """File or filesystem related error."""
     pass
 
-class ResultsError(PlamsError):
+class ResultsError(Exception):
     """|Results| related error."""
     pass
 
-class JobError(PlamsError):
+class JobError(Exception):
     """|Job| related error."""
     pass
 
-class PTError(PlamsError):
-    """:class:`Periodic table<scm.plams.utils.PeriodicTable>` error."""
+class PTError(Exception):
+    """|PeriodicTable| error."""
     pass
 
-class UnitsError(PlamsError):
-    """:class:`Units converter<scm.plams.utils.Units>` error."""
-    pass
-
-class MoleculeError(PlamsError):
+class MoleculeError(Exception):
     """|Molecule| related error."""
+    pass
+
+class SuperCompError(Exception):
     pass

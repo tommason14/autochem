@@ -14,6 +14,7 @@ from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
+from ..core.sc import Supercomp
 
 import os
 

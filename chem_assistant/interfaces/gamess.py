@@ -14,6 +14,8 @@ from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
+from ..core.sc import Supercomp
+from ..core.errors import SuperCompError
 
 import os
 
@@ -81,6 +83,7 @@ class GamessJob(Job):
             self.title = using[:-4]
         
         self.create_inp()
+        self.create_job()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
         
@@ -175,13 +178,30 @@ class GamessJob(Job):
 
     def create_inp(self):
         self.determine_fragments() #add fmo info to input settings, if self.fmo is True
-        print(self.input.mp2.scsopo)
         self.make_automatic_changes()
-        print(self.input.mp2.scsopo)
         self.unordered_header = self.parse_settings() 
         self.order_header() #create self.header variable
         inp = self.make_inp()
         self.write_file(inp, filetype = 'inp')
+
+    def create_job(self):
+        # if hasattr(self.merged, 'supercomp'): #user has to define a supercomp
+        #     user_sc = self.merged.supercomp
+        #     supercomps = {'rjn': 'rjn',
+        #                   'raijin': 'rjn',
+        #                   'mgs': 'mgs',
+        #                   'magnus': 'mgs',
+        #                   'gaia': 'gaia'}
+        #     try:
+        #         self.sc = supercomps[user_sc]
+        #     except:
+        #         raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
+        # else:
+        self.sc = Supercomp()
+        print(self.sc)
+        
+        
+        
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
