@@ -1,4 +1,4 @@
-from periodic_table import PeriodicTable as PT
+from .periodic_table import PeriodicTable as PT
 import math
 
 class Atom:

@@ -1,4 +1,4 @@
-from errors import PTError
+from .errors import PTError
 
 __all__ = ['PeriodicTable']
 

@@ -9,13 +9,13 @@ Github: https:github.com/tommason14
 Description: Holds class representing a molecule
 """
 
-from periodic_table import PeriodicTable as PT
-from atom import Atom
-from bond import Bond
-from meta import Meta
+from .periodic_table import PeriodicTable as PT
+from .atom import Atom
+from .bond import Bond
+from .meta import Meta
+from .errors import *
 import numpy as np
 import math
-from errors import *
 import itertools
 
 __all__ = ['Molecule']

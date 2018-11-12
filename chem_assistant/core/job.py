@@ -1,6 +1,6 @@
-from atom import Atom
-from molecule import Molecule
-from settings import *
+from .atom import Atom
+from .molecule import Molecule
+from .settings import *
 
 class Job:
     """Base class for any input file for a computational chemistry calculation- ab initio or

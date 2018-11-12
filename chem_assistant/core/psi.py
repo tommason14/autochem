@@ -10,11 +10,11 @@ Description: Interface between Python and PSI4 input files
 """
 # MOVE TO INTERFACES
 
-from atom import Atom
-from molecule import Molecule
-from settings import (Settings, read_template, dict_to_settings)
-from job import Job
-from periodic_table import PeriodicTable as PT
+from .atom import Atom
+from .molecule import Molecule
+from .settings import (Settings, read_template, dict_to_settings)
+from .job import Job
+from .periodic_table import PeriodicTable as PT
 
 import os
 

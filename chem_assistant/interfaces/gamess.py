@@ -10,11 +10,11 @@ Description: Interface between Python and creating GAMESS input files
 """
 # MOVE TO INTERFACES
 
-from .atom import Atom
-from .molecule import Molecule
-from .settings import (Settings, read_template, dict_to_settings)
-from .job import Job
-from .periodic_table import PeriodicTable as PT
+from ..core.atom import Atom
+from ..core.molecule import Molecule
+from ..core.settings import (Settings, read_template, dict_to_settings)
+from ..core.job import Job
+from ..core.periodic_table import PeriodicTable as PT
 
 import os
 
