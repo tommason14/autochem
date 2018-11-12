@@ -22,7 +22,7 @@ class Supercomp:
                 self.sc = cases[key]
                 break
             else:
-                self.sc = 'local'
+                self.sc = 'rjn' #default to raijin
 
     def __repr__(self):
         return f"{self.sc}"

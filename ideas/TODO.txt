@@ -108,3 +108,14 @@ Then call run from the parent dir, which will work recursively
 
 
 
+## ADD OPTION FOR LOCAL ASSIGNMENT IN PSI4 INPUT
+
+molecule complex {
+  ... 
+}
+
+<- ADD OPTION HERE
+
+set globals {
+  ...
+}

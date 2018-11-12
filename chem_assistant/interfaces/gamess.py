@@ -15,9 +15,9 @@ from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
-from ..core.errors import SuperCompError
 
-import os
+from os import (chdir, mkdir, getcwd)
+from os.path import (exists, join, dirname)
 
 __all__ = ['GamessJob']
 
@@ -184,22 +184,42 @@ class GamessJob(Job):
         inp = self.make_inp()
         self.write_file(inp, filetype = 'inp')
 
+    def get_sc(self):
+        if 'supercomp' in self.merged.keys(): #user has to define a supercomp
+            user_sc = self.merged.supercomp
+            supercomps = {'rjn': 'rjn',
+                          'raijin': 'rjn',
+                          'mgs': 'mgs',
+                          'magnus': 'mgs',
+                          'gaia': 'gaia'}
+            try:
+                self.sc = supercomps[user_sc]
+            except:
+                raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
+        else:
+            self.sc = Supercomp()
+
     def create_job(self):
-        # if hasattr(self.merged, 'supercomp'): #user has to define a supercomp
-        #     user_sc = self.merged.supercomp
-        #     supercomps = {'rjn': 'rjn',
-        #                   'raijin': 'rjn',
-        #                   'mgs': 'mgs',
-        #                   'magnus': 'mgs',
-        #                   'gaia': 'gaia'}
-        #     try:
-        #         self.sc = supercomps[user_sc]
-        #     except:
-        #         raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
-        # else:
-        self.sc = Supercomp()
-        print(self.sc)
-        
+        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+        # RJN:
+        # job memory = 
+        # ncpus = nfrags
+        # jobfs = 
+        # MGS:
+
+        # GAIA:
+
+        self.get_sc()
+        job = f"gamess_{self.sc}.job"
+        dir_name = dirname(__file__) # interfaces (dir of gamess.py)
+        templates = join(dir_name, '..', 'templates')
+        job_file = join(templates, job)
+
+        job = []
+        with open(job_file) as f:
+            for line in f:
+                job.append(line)
+        print(job)
         
         
 
@@ -229,21 +249,21 @@ class GamessJob(Job):
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()
         #make subdir if not already there
-        subdirectory = os.path.join(os.getcwd(), 'frags')
-        if not os.path.exists(subdirectory):
-            os.mkdir(subdirectory)
+        subdirectory = join(getcwd(), 'frags')
+        if not exists(subdirectory):
+            mkdir(subdirectory)
 
-        parent_dir = os.getcwd()
+        parent_dir = getcwd()
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             #make a directory inside the subdir for each fragment
             name = data['name'] + str(count) # i.e. acetate0, acetate1, choline2, choline3, water4
-            if not os.path.exists(os.path.join(subdirectory, name)):
-                os.mkdir(os.path.join(subdirectory, name)) # ./frags/water4/
-            os.chdir(os.path.join(subdirectory, name))
-            Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
+            if not exists(join(subdirectory, name)):
+                mkdir(join(subdirectory, name)) # ./frags/water4/
+            chdir(join(subdirectory, name))
+            Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
             
-            #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
+            # re-use settings from complex
             if hasattr(self, 'merged'):
                 frag_settings = self.merged
             else:
@@ -252,7 +272,7 @@ class GamessJob(Job):
             if data['multiplicity'] != 1:
                 frag_settings.input.contrl.mult = data['multiplicity']
             job = GamessJob(using = name + str('.xyz'), settings=frag_settings) 
-            os.chdir(parent_dir)
+            chdir(parent_dir)
             count += 1
             
         

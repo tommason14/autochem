@@ -16,7 +16,8 @@ from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
 
-import os
+from os import (chdir, mkdir, getcwd)
+from os.path import (exists, join, dirname)
 
 __all__ = ['PsiJob']
 
@@ -219,18 +220,18 @@ class PsiJob(Job):
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
 
         #make subdir if not already there
-        subdirectory = os.path.join(os.getcwd(), 'frags')
-        if not os.path.exists(subdirectory):
-            os.mkdir(subdirectory)
+        subdirectory = join(getcwd(), 'frags')
+        if not exists(subdirectory):
+            mkdir(subdirectory)
 
-        parent_dir = os.getcwd()
+        parent_dir = getcwd()
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             #make a directory inside the subdir for each fragment
             name = data['name'] + str(count) # i.e. acetate0, acetate1, choline2, choline3, water4
-            if not os.path.exists(os.path.join(subdirectory, name)):
-                os.mkdir(os.path.join(subdirectory, name)) # ./frags/water4/
-            os.chdir(os.path.join(subdirectory, name))
+            if not exists(join(subdirectory, name)):
+                mkdir(join(subdirectory, name)) # ./frags/water4/
+            chdir(join(subdirectory, name))
             Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
             
             #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
@@ -242,7 +243,7 @@ class PsiJob(Job):
             if data['multiplicity'] != 1:
                 frag_settings.input.molecule.multiplicity = data['multiplicity']
             job = PsiJob(using = name + str('.xyz'), settings=frag_settings) 
-            os.chdir(parent_dir)
+            chdir(parent_dir)
             count += 1
             
         

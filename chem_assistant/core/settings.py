@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import (join, dirname)
 import json
 
 __all__ = ['Settings', 'read_template', 'dict_to_settings']
@@ -109,10 +109,10 @@ class Settings(dict):
 
 
 def read_template(template):
-    """Obtains default parameters for input files of different packages, and returns them as a |Settings| object. Currently GAMESS is supported"""
-    # path = join("templates", template)
-    # tmp = json.loads(path)
-    with open('/Users/tommason/Desktop/chem_assistant/chem_assistant/templates/' + template, "r") as f:
+    """Obtains default parameters for input files of different packages, and returns them as a |Settings| object. Currently GAMESS and PSI4 are supported"""
+    path = join(dirname(__file__), '..', 'templates')
+    file = join(path, template)
+    with open(file, "r") as f:
         tmp = json.load(f)
     return dict_to_settings(tmp)
 
