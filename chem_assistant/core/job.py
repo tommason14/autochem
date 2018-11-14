@@ -1,6 +1,7 @@
 from .atom import Atom
 from .molecule import Molecule
 from .settings import *
+from .sc import Supercomp
 
 from os.path import (basename, dirname, join)
 import sys

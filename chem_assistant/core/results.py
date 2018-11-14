@@ -1,6 +1,39 @@
-__all__ = ['GamessResults']
+import re
+from .utils import write_xyz
 
-class GamessResults:
+__all__ = ['Results', 'GamessResults', 'PsiResults']
+
+class Results:
+    """Base class, only for inheritance"""
+
+    def __init__(self, log, input_coords = None):
+        self.log = log
+        if coords is not None:
+            self.input_coords = input_coords
+            # coords needed for hessian calcs
+
+    def read(self):
+        """Memory-efficient reading of large log files, using a generator returning lines as required"""
+        with open(self.log, "r") as f:
+            for line in f.readlines():
+                yield line
+
+    def get_type(self):
+        for line in self.read():
+            if 'PSI4' in line:
+                return 'psi4'
+            elif 'GAMESS' in line:
+                return 'gamess'
+
+    def get_basis(self):
+        for line in self.read():
+            # include file type as a precaution ('basis' could appear in a gamess file)
+            if self.get_type() == 'psi4' and 'basis' in line:
+                return line.split()[-1].lower()
+            elif self.get_type == 'gamess' and 'gbasis' in line.lower(): #gamess data can be written as upper or lowercase
+                return line.split()[-2].split('=')[-1].lower()
+
+class GamessResults(Results):
     """Class for obtaining results from Gamess simulations. This class requires
     a log file to be read.
     Usage:
@@ -26,17 +59,7 @@ instance, really. Simple fix; instead of returning values, store in list and ret
 store the iteration number.
     """
     def __init__(self, log, input_coords = None):
-        self.log = log
-        if coords is not None:
-            self.input_coords = input_coords
-            # coords needed for hessian calcs
-
-    def read(self):
-        """Memory-efficient reading of large log files, using a generator returning lines as required"""
-        with open(self.log, "r") as f:
-            for line in f.readlines():
-                yield line
-
+        super().__init__(self, log, input_coords)
 
     ################################
     #                              #
@@ -69,7 +92,7 @@ store the iteration number.
         """Returns type of calculation ran"""
         for line in self.read():
             if 'RUNTYP=' in line:
-                return line.split()[4].split('=')[1]
+                return line.split()[4].split('=')[1].lower()
         # finds the first instance then breaks out of loop
     
     def get_fmo_level(self):
@@ -82,7 +105,7 @@ store the iteration number.
                 return int(line.split()[-1].split('=')[-1])
         else:
             return 0
-
+        
         def get_equil_coords():
             import re
             coords = []
@@ -97,7 +120,7 @@ store the iteration number.
                         coords.append(line)
                     if 'INTERNUCLEAR DISTANCES (ANGS.)' in line:
                         break 
-            return coords
+            write_xyz(coords, 'equil.xyz')   
 
     ################################
     #                              #
@@ -171,12 +194,37 @@ need to be accounted for also when the time comes.
         Currently only returns the opposite spin energy found from SRS
 calculations due to the greater accuracy when compared to MP2.
         """
-        os_coeff = {
-            "CCD": 1.752,
-            "CCT": 1.64,
-        }
 
-        return self.get_srs_corr() / os_coeff[self.basis]
+        c_os_values['ccd']         = 1.752
+        c_os_values['cc-pvdz']     = 1.752
+        c_os_values['cct']         = 1.64
+        c_os_values['cc-pvtz']     = 1.64
+        c_os_values['ccq']         = 1.689
+        c_os_values['cc-pvqz']     = 1.689
+        c_os_values['accd']        = 1.372
+        c_os_values['aug-cc-pvdz'] = 1.372
+        c_os_values['acct']        = 1.443
+        c_os_values['aug-cc-pvtz'] = 1.443
+        c_os_values['accq']        = 1.591
+        c_os_values['aug-cc-pvqz'] = 1.591
+
+        c_ss_values['ccd']         = 0
+        c_ss_values['cc-pvdz']     = 0
+        c_ss_values['cct']         = 0
+        c_ss_values['cc-pvtz']     = 0
+        c_ss_values['ccq']         = 0
+        c_ss_values['cc-pvqz']     = 0
+        c_os_values['accd']        = 0
+        c_os_values['aug-cc-pvdz'] = 0
+        c_os_values['acct']        = 0
+        c_os_values['aug-cc-pvtz'] = 0
+        c_os_values['accq']        = 0
+        c_os_values['aug-cc-pvqz'] = 0
+
+        c_os = c_os_values.get(self.get_basis(), 1.64)
+        c_ss = c_ss_values.get(self.get_basis(), 0)
+
+        return self.get_srs_corr() / c_os
         
         # for other basis sets- need the e_ss value- or just solve simultaneously. Come to that when
         # the need arises. This won't work for non-zero c_ss
@@ -210,5 +258,102 @@ FMO2"""
     #                              #
     ################################
 
-    # def get_geom(self):
-    #     for i in self.input.
+    def vib_get_geom(self):
+        pass
+    
+    def vib_get_vibs(self):
+        vibs = {}
+        pass
+        # vibs[mode] = [list of vibs for each atom]
+        # one set for each mode
+    
+    def vib_get_intensity(self):
+        ints = {}
+        pass
+        # ints[mode] = [list of ints for each atom]
+
+    def vib_get_coords(self):
+        coords = {}
+        pass
+        # coords[mode] = [list of coords, one coord for each atom]
+
+class PsiResults(Results):
+    """Class defining the results of a PSI4 calculation."""
+    def __init__(self, log, input_coords = None):
+        super().__init__(self, log, input_coords)
+
+    def completed(self):
+        complete = False
+        for line in self.read():
+            if 'PSI4 exiting successfully' in line:
+                complete = True
+        return complete
+
+    def get_runtype(self):
+        for line in self.read():
+            #regex for energy('mp2') or optimize('scf', dertype='hess') (any number of k-v pairs)
+                if re.search("[A-z]*\('[A-z0-9]*'(.?\s*[A-z]*='[A-z]*')*\)", line):
+                    if re.search("[A-z]*\('[A-z0-9]*'\)", line): #energy('mp2')
+                        return line.split('(')[0]
+                    else: #optimize('scf', dertype='hess'......)
+                        return line.split('(')[0] #add to this later, using the collect additional data
+
+    def get_hf(self):
+        for line in self.read():
+            if "Reference Energy" in line:
+                res = float(line.split('=')[1].split()[0].strip())
+        return res
+
+    def get_e_ss(self):
+        for line in self.read():
+            if "Same-Spin Energy          =" in line:
+                res = float(line.split('=')[1].split()[0].strip())
+        return res
+
+    def get_e_os(self):
+        for line in self.read():
+            if "Opposite-Spin Energy          =" in line:
+                res = float(line.split('=')[1].split()[0].strip())
+        return res
+
+    def get_mp2(self):
+        return self.get_hf() + self.get_e_ss() + self.get_e_os()
+
+    def get_srs(self):
+        """Returns SRS-MP2 energy. Note assumes the system contains non-negligible intermolecular
+interactions, such as ionic liquids; the values used in the calculation vary slightly if other
+systems are used. See J. Chem. Phys. 146, 064108 (2017)"""
+
+        c_os_values = {}
+        c_ss_values = {}
+
+        c_os_values['ccd']         = 1.752
+        c_os_values['cc-pvdz']     = 1.752
+        c_os_values['cct']         = 1.64
+        c_os_values['cc-pvtz']     = 1.64
+        c_os_values['ccq']         = 1.689
+        c_os_values['cc-pvqz']     = 1.689
+        c_os_values['accd']        = 1.372
+        c_os_values['aug-cc-pvdz'] = 1.372
+        c_os_values['acct']        = 1.443
+        c_os_values['aug-cc-pvtz'] = 1.443
+        c_os_values['accq']        = 1.591
+        c_os_values['aug-cc-pvqz'] = 1.591
+
+        c_ss_values['ccd']         = 0
+        c_ss_values['cc-pvdz']     = 0
+        c_ss_values['cct']         = 0
+        c_ss_values['cc-pvtz']     = 0
+        c_ss_values['ccq']         = 0
+        c_ss_values['cc-pvqz']     = 0
+        c_os_values['accd']        = 0
+        c_os_values['aug-cc-pvdz'] = 0
+        c_os_values['acct']        = 0
+        c_os_values['aug-cc-pvtz'] = 0
+        c_os_values['accq']        = 0
+        c_os_values['aug-cc-pvqz'] = 0
+
+        c_os = c_os_values.get(self.get_basis(), 1.64)
+        c_ss = c_ss_values.get(self.get_basis(), 0)
+
+        return self.get_hf() + c_os * self.get_e_os() + c_ss * self.get_e_ss()
