@@ -221,7 +221,20 @@ def make_job_files(base_dir, chem_package, settings):
                     print('-'*60)
                 # print()
                 os.chdir(parent)
-    
+
+def make_job_subdirs(base_dir):
+    """Look for input files in any subdirectory of ``calcs``, then creates a directory of that type
+(i.e. opt, spec, freq), then moves the inp and job into that folder.""" 
+    parent = os.getcwd()
+    for path, dirs, files in os.walk(base_dir):    
+        for file in files:
+            if file.endswith('.inp'):
+                os.chdir(path)
+                file_type = file[:-4] # opt, spec, freq...
+                os.mkdir(file_type)
+                os.system(f'mv {file_type}.inp {file_type}.job {file_type}/')
+                os.chdir(parent)
+
 def xyz_to_tree(settings):
     """Takes a directory containing xyz files and creates a directory tree based on the filenames of
 the xyz files present. Uses underscores as delimiters for new subdirectories i.e. every time an
@@ -229,66 +242,49 @@ underscore is seen, a new subdirectory is created.
 
 This function looks for a directory called ``files``, containing the xyz files, and outputs into
 ``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings should be created and then passed into
-the function.
+the function. 
+
+Another desirable feature is to separate optimisations from single point calculations. As a result,
+when the function runs, it creates jobs in a new subdirectory of the molecule directory. When the
+results are looked for, an option is available to automatically create single point files from
+completed optimisations.
+
     >>> s = Settings()
-    >>> s.input.basis.gbasis = 'cct' # gamess input
+    >>> s.input.basis.gbasis = 'ccd' # gamess input (this is actually the default setting)
     >>> xyz_to_tree(s)
 
 Gives the following directory structure:
-
 .
 ├── calcs
-│   ├── c1mim
-│   │   └── nh3
-│   │       ├── c1mim_nh3.xyz
-│   │       ├── frags
-│   │       │   ├── c1mim_0
-│   │       │   │   ├── c1mim_0.xyz
-│   │       │   │   ├── spec.inp
-│   │       │   │   └── spec.job
-│   │       │   ├── nh3_1
-│   │       │   │   ├── nh3_1.xyz
-│   │       │   │   ├── spec.inp
-│   │       │   │   └── spec.job
-│   │       │   ├── nh3_2
-│   │       │   │   ├── nh3_2.xyz
-│   │       │   │   ├── spec.inp
-│   │       │   │   └── spec.job
-│   │       │   └── nh3_3
-│   │       │       ├── nh3_3.xyz
-│   │       │       ├── spec.inp
-│   │       │       └── spec.job
-│   │       ├── spec.inp
-│   │       └── spec.job
-│   └── ch
-│       └── ac
-│           ├── ch_ac.xyz
+│   └── c1mim
+│       └── nh3
+│           ├── c1mim_nh3.xyz
 │           ├── frags
-│           │   ├── acetate_0
-│           │   │   ├── acetate_0.xyz
-│           │   │   ├── spec.inp
-│           │   │   └── spec.job
-│           │   ├── acetate_1
-│           │   │   ├── acetate_1.xyz
-│           │   │   ├── spec.inp
-│           │   │   └── spec.job
-│           │   ├── choline_2
-│           │   │   ├── choline_2.xyz
-│           │   │   ├── spec.inp
-│           │   │   └── spec.job
-│           │   ├── choline_3
-│           │   │   ├── choline_3.xyz
-│           │   │   ├── spec.inp
-│           │   │   └── spec.job
-│           │   └── water_4
-│           │       ├── spec.inp
-│           │       ├── spec.job
-│           │       └── water_4.xyz
-│           ├── spec.inp
-│           └── spec.job
+│           │   ├── c1mim_0
+│           │   │   ├── c1mim_0.xyz
+│           │   │   └── opt
+│           │   │       ├── opt.inp
+│           │   │       └── opt.job
+│           │   ├── nh3_1
+│           │   │   ├── nh3_1.xyz
+│           │   │   └── opt
+│           │   │       ├── opt.inp
+│           │   │       └── opt.job
+│           │   ├── nh3_2
+│           │   │   ├── nh3_2.xyz
+│           │   │   └── opt
+│           │   │       ├── opt.inp
+│           │   │       └── opt.job
+│           │   └── nh3_3
+│           │       ├── nh3_3.xyz
+│           │       └── opt
+│           │           ├── opt.inp
+│           │           └── opt.job
+│           └── opt
+│               ├── opt.inp
+│               └── opt.job
 └── files
-    ├── c1mim_nh3.xyz
-    └── ch_ac.xyz
+    └── c1mim_nh3.xyz
 
 Note: If a directory named ``calcs`` is already present, nonsensical results will be returned- any
 directory containing an xyz file will be acted upon. To run smoothly, remove or rename an existing
@@ -299,4 +295,5 @@ directory containing an xyz file will be acted upon. To run smoothly, remove or 
     files = get_xyz()
     calc_dir = make_tree_and_copy(xyz_directory, files)
     make_job_files(calc_dir, package, settings)
+    make_job_subdirs(calc_dir)
     os.chdir(xyz_directory)

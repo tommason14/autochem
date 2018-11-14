@@ -3,6 +3,20 @@
 REFACTOR CODE IN INTERFACES- MOVE JOB STUFF TO JOB BASE CLASS- FINDING
 TEMPLATE, MODIFYING TEMPLATE REQUIRES THE INTERFACE, MAYBE OVERRIDE METHODS?
 
+-----------
+- when making command line scripts; have an option of 'settings' to accept a
+  settings file:
+  # settings.py
+  s = Settings()
+  s.input.mp2.scsopo = 1.64
+
+  chem-assistant xyz-to-tree -s settings.py
+
+
+  or go even further, but a bit long really
+  chem-assistant xyz-to-tree gamess fmo no-frags -s settings.py 
+-----------
+
 Create gif for geometry optimisations? 
   - store energies and coordinates at each point. Not too hard really, just
     create lists for the energy values and coords, and store coords as a list

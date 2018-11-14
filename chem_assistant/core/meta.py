@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-File: meta.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Class encompassing all meta data for calculations. 
-"""
-
 import json
 
 __all__ = ['Meta']

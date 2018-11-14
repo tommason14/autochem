@@ -74,7 +74,7 @@ store the iteration number.
     
     def get_fmo_level(self):
         """Returns level of FMO calculation ran"""
-        for line in read('c4mim-ac-p4.log'):
+        for line in self.read():
             found = False
             if 'NBODY' in line:
                 found = True
@@ -96,7 +96,7 @@ store the iteration number.
                     if re.search(regex, line):
                         coords.append(line)
                     if 'INTERNUCLEAR DISTANCES (ANGS.)' in line:
-                        break #out of loop
+                        break 
             return coords
 
     ################################
@@ -112,7 +112,6 @@ store the iteration number.
             if 'TOTAL ENERGY =' in line:
                 res = float(line.split()[-1])
         return res #last occurrence
-
 
     def get_hf(self):
         """Returns Hartree-Fock energy"""
@@ -178,6 +177,9 @@ calculations due to the greater accuracy when compared to MP2.
         }
 
         return self.get_srs_corr() / os_coeff[self.basis]
+        
+        # for other basis sets- need the e_ss value- or just solve simultaneously. Come to that when
+        # the need arises. This won't work for non-zero c_ss
 
     def get_e_ss(self):
         if self.get_e_os() is not None:

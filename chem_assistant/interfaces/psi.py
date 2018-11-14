@@ -176,17 +176,25 @@ class PsiJob(Job):
         self.inp.append(string)
         self.inp = "".join(self.inp)
  
-    def write_file(self, data, filetype):
-        """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq).""" 
+    def file_basename(self):
+        """If no filename is passed when the class is instantiated, the name of the file defaults to
+the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
+matrix calculation for vibrational frequencies (freq). This method creates an attribute
+``base_name``, used in creating the input and job files."""
         for key in self.input.run.keys(): #run, or additional
             if key != 'additional':
                 nom = key
         if self.filename == None:
             options = {'optimize': 'opt', 'energy': 'spec', 'frequency': 'freq'}
-            name = options.get(nom, 'file') #default name = file
+            self.base_name = options.get(nom, 'file') #default name = file
         else:
-            name = self.filename
-        with open(f"{name}.{filetype}", "w") as f:
+            self.base_name = self.filename
+
+    def write_file(self, data, filetype):
+        """Writes the generated PSI4 input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+
+NOTE: Must pass data as a string, not a list!""" 
+        with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
     def create_inp(self):
@@ -195,49 +203,14 @@ class PsiJob(Job):
         self.add_run()
         self.write_file(self.inp, filetype = 'inp')
 
-    def get_sc(self):
-        if hasattr(self, 'merged'):
-            meta = self.merged
-        else:
-            meta = self.defaults
-        if 'supercomp' in meta.keys(): #user has to define a supercomp
-            user_sc = meta.supercomp
-            supercomps = {'rjn': 'rjn',
-                          'raijin': 'rjn',
-                          'mgs': 'mgs',
-                          'magnus': 'mgs',
-                          'gaia': 'gaia'}
-            try:
-                self.sc = supercomps[user_sc]
-            except:
-                raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
-        else:
-            self.sc = Supercomp()
-
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        # RJN:
-        # job memory = 
-        # ncpus = nfrags
-        # jobfs = 
-        # MGS:
-
-        # GAIA:
-
-        self.get_sc()
-        job = f"gamess_{self.sc}.job"
-        dir_name = dirname(__file__) # interfaces (dir of gamess.py)
-        templates = join(dir_name, '..', 'templates')
-        job_file = join(templates, job)
-
-        job = []
+        job_file = self.find_job()
         with open(job_file) as f:
-            for line in f:
-                job.append(line)        
+            job = f.read()
 
         # modify
 
-        job = "".join(job)
         # write
         self.write_file(job, filetype="job")               
 

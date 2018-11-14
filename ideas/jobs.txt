@@ -1,0 +1,8 @@
+check raijin for psi4 files that Zoe wrote- how do they change? 
+check raijin for gamess files that Zoe wrote- how do they change? 
+
+- Recommended memory allowance for gamess for a single fragment- one node?
+
+- THEN LAMMPS! 
+
+

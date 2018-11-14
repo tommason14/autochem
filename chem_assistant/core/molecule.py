@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-File: molecule.py
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Holds class representing a molecule
-"""
-
 from .periodic_table import PeriodicTable as PT
 from .atom import Atom
 from .bond import Bond

@@ -166,16 +166,23 @@ class GamessJob(Job):
         inp += ' $END'
         return inp
 
+    def file_basename(self):
+        """If no filename is passed when the class is instantiated, the name of the file defaults to
+the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
+matrix calculation for vibrational frequencies (freq). This method creates an attribute
+``base_name``, used in creating the input and job files."""
+
+        if self.filename is not None:
+            self.base_name = self.filename
+        else:
+            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'freq'}
+            self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
+
     def write_file(self, data, filetype):
         """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
 
 NOTE: Must pass data as a string, not a list!""" 
-        if self.filename == None:
-            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'freq'}
-            name = options.get(self.input.contrl.runtyp, 'file') #default name = file
-        else:
-            name = self.filename
-        with open(f"{name}.{filetype}", "w") as f:
+        with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
     def create_inp(self):
@@ -184,51 +191,34 @@ NOTE: Must pass data as a string, not a list!"""
         self.unordered_header = self.parse_settings() 
         self.order_header() #create self.header variable
         inp = self.make_inp()
+        self.file_basename()
         self.write_file(inp, filetype = 'inp')
-
-    def get_sc(self):
-        if hasattr(self, 'merged'):
-            meta = self.merged
-        else:
-            meta = self.defaults
-        if 'supercomp' in meta.keys(): #user has to define a supercomp
-            user_sc = meta.supercomp
-            supercomps = {'rjn': 'rjn',
-                          'raijin': 'rjn',
-                          'mgs': 'mgs',
-                          'magnus': 'mgs',
-                          'gaia': 'gaia'}
-            try:
-                self.sc = supercomps[user_sc]
-            except:
-                raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
-        else:
-            self.sc = Supercomp()
 
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        # RJN:
-        # job memory = 
-        # ncpus = nfrags
-        # jobfs = 
-        # MGS:
-
-        # GAIA:
-
-        self.get_sc()
-        job = f"gamess_{self.sc}.job"
-        dir_name = dirname(__file__) # interfaces (dir of gamess.py)
-        templates = join(dir_name, '..', 'templates')
-        job_file = join(templates, job)
-
-        job = []
+        job_file = self.find_job()
         with open(job_file) as f:
-            for line in f:
-                job.append(line)        
-
+            job = f.read()       
+        
         # modify
+        if self.sc == 'mgs':
+            # change #SBATCH --nodes=8 #num frags
+            # change rungms name.inp 00 96 12 # 96 = frags*12
+            if hasattr(self.mol, 'fragments'): # translates as if fmo:
+                job = job.replace('nodes=8', f'nodes={len(self.mol.fragments)}')
+                job = job.replace('96', f'{12 * len(self.mol.fragments)}')                    
+            job = job.replace('name', f'{self.base_name}') 
+        elif self.sc == 'rjn':
+            if hasattr(self.mol, 'fragments'):
+                job = job.replace('ncpus=8', f'ncpus={8 * len(self.mol.fragments)}')
+                job = job.replace('mem=4gb', f'ncpus={4 * 8 * len(self.mol.fragments)}gb') #allocate memory per cpu??
+          # change  #PBS -l mem=4gb
+          # change  #PBS -l ncpus=8 ## 1node??
+          # change  #PBS -l jobfs=4gb
+            job = job.replace('name', f'{self.base_name}') 
+        elif self.sc == 'gaia':
+            pass
 
-        job = "".join(job)
         # write
         self.write_file(job, filetype="job")               
  
