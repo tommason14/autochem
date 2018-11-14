@@ -1,5 +1,8 @@
 # TODO
 
+REFACTOR CODE IN INTERFACES- MOVE JOB STUFF TO JOB BASE CLASS- FINDING
+TEMPLATE, MODIFYING TEMPLATE REQUIRES THE INTERFACE, MAYBE OVERRIDE METHODS?
+
 Create gif for geometry optimisations? 
   - store energies and coordinates at each point. Not too hard really, just
     create lists for the energy values and coords, and store coords as a list

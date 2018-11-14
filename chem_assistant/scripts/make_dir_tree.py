@@ -15,6 +15,7 @@ s.....
 xyz_to_tree(settings = s) 
 """
 from ..interfaces.gamess import GamessJob
+from ..interfaces.psi import PsiJob
 # Add user inputs- packages? fmo? 
 
 import os
@@ -46,37 +47,70 @@ def ask_package():
             done = True
         else:
             print('Please choose 1-3')
-    return choice    
+    fmo = False
+    if choice == 1:
+        done_with_fmo = False
+        while not done_with_fmo:
+            run_fmo = input('Run FMO calculations? [y/n] ')
+            if run_fmo.lower() in ('y', 'n'):
+                done_with_fmo = True
+            else:
+                print('Please choose "y" or "n"')
+        if run_fmo == "y":
+            choice = 4
+    # TODO: REFACTOR CODE BELOW- DEFINITELY A BETTER WAY TO DO THIS THAN TO MAKE NEW OPTIONS, ALL IT IS
+    # ACHIEVING IS SETTINGS FRAGS_IN_SUBDIR TO FALSE
+    done_with_frags = False
+    if choice != 3: # no frags in LAMMPS!
+        while not done_with_frags:
+            frags = input('Place inputs of fragments in subdirectories? [y/n] ')
+            if frags.lower() in ('y', 'n'):
+                done_with_frags =  True
+            else:
+                print('Please choose "y" or "n"')
+        if frags == 'n':
+            if choice == 1:
+                choice = 5
+            elif choice == 2:
+                choice = 6
+            elif choice == 4:
+                choice = 7
+        
+    options = {
+        1: "gamess",
+        2: "psi4",
+        3: "lammps",
+        4: "gamess_fmo",
+        5: "gamess_no_frags",
+        6: "psi4_no_frags",
+        7: "gamess_fmo_no_frags"
+    }
+    return options[choice]   
 
-def fmo_for_gamess():
-    ret = input('Run FMO calculations? [Y/N] ')
-    if ret.lower() not in ('y', 'n'):
-        print('Please choose Y or N')
-        fmo_for_gamess()
-    return ret.lower()
+def job_type(package, xyz, s):
+    # jobs = {
+    #     "gamess": GamessJob(using = xyz, frags_in_subdir = True, settings = s),
+    #     "gamess_fmo": GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s),
+    #     "psi4": PsiJob(using = xyz, frags_in_subdir = True, settings = s),
+    #     "lammps": 'LAMMPS'
+    # }
+    # return jobs[package]
+    # ABOVE CODE RAN GAMESS FMO AND PSI4 REGARDLESS OF CHOICE-- WHY???
 
-def get_choices():
-    c = ask_package()
-    if c == 1:
-        fmo = fmo_for_gamess()
-        if fmo == 'y':
-            return 'gamess_fmo'
-        else:
-            return 'gamess'
-    elif c == 2:
-        return 'psi'
-    elif c == 3:
-        return 'lammps'
-
-def make_files(choice, xyz, s):
-    choices = {
-        "gamess": GamessJob(using = xyz, frags_in_subdir = True, settings = s),
-        "gamess_fmo": GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s),
-        "psi": PsiJob(using = xyz, frags_in_subdir = True, settings = s),
-        "lammps": None
-    }    
-    return choices[choice] 
-
+    if package == "gamess":
+        return GamessJob(using = xyz, frags_in_subdir = True, settings = s)
+    elif package == "gamess_fmo":
+        return GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s)
+    elif package == "psi4":
+        return PsiJob(using = xyz, frags_in_subdir = True, settings = s)
+    elif package == "lammps":
+        return 'LAMMPS INP HERE'
+    elif package == "gamess_no_frags":
+        return GamessJob(using = xyz, frags_in_subdir = False, settings = s)
+    elif package == "psi4_no_frags":
+        return PsiJob(using = xyz, frags_in_subdir = False, settings = s)
+    elif package == "gamess_fmo_no_frags":
+        return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s)
 
 def make_parent_dir():
     calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
@@ -88,7 +122,6 @@ def make_parent_dir():
 def make_dir_list(file):
     filename = file[:-4] # rm .xyz 
     new_dirs = []
-        # store each portion in a list, then iterate over the list making dirs if needed
     for part in filename.split('_'):
         new_dirs.append(part)
     return new_dirs
@@ -171,24 +204,99 @@ def make_tree_and_copy(xyz_dir, files):
             change_to_subdir(d)
             if idx + 1  == len(new_dirs): #when at maximum depth
                 copy_xyz(xyz_dir, file)
-                # make_files(choice, file, settings) #calls GamessJob etc....
         os.chdir(cwd)
     return calc_dir
     
-def make_job_files(base_dir):
+def make_job_files(base_dir, chem_package, settings):
     parent = os.getcwd()
     for path, dirs, files in os.walk(base_dir):
         for file in files:
             if file.endswith('.xyz'):
                 os.chdir(path)
-                print(file)
-                GamessJob(using=file, fmo=True, frags_in_subdir = True)
+                print(f"Creating inputs for {file}...") # <- gives the user critical information
+                job_type(chem_package, file, settings)
+                if 'no_frags' in chem_package and 'fmo' not in chem_package:
+                    pass
+                else:
+                    print('-'*60)
+                # print()
                 os.chdir(parent)
     
-def xyz_to_tree(settings = None):
-    # job_choice = get_choices()
+def xyz_to_tree(settings):
+    """Takes a directory containing xyz files and creates a directory tree based on the filenames of
+the xyz files present. Uses underscores as delimiters for new subdirectories i.e. every time an
+underscore is seen, a new subdirectory is created.
+
+This function looks for a directory called ``files``, containing the xyz files, and outputs into
+``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings should be created and then passed into
+the function.
+    >>> s = Settings()
+    >>> s.input.basis.gbasis = 'cct' # gamess input
+    >>> xyz_to_tree(s)
+
+Gives the following directory structure:
+
+.
+├── calcs
+│   ├── c1mim
+│   │   └── nh3
+│   │       ├── c1mim_nh3.xyz
+│   │       ├── frags
+│   │       │   ├── c1mim_0
+│   │       │   │   ├── c1mim_0.xyz
+│   │       │   │   ├── spec.inp
+│   │       │   │   └── spec.job
+│   │       │   ├── nh3_1
+│   │       │   │   ├── nh3_1.xyz
+│   │       │   │   ├── spec.inp
+│   │       │   │   └── spec.job
+│   │       │   ├── nh3_2
+│   │       │   │   ├── nh3_2.xyz
+│   │       │   │   ├── spec.inp
+│   │       │   │   └── spec.job
+│   │       │   └── nh3_3
+│   │       │       ├── nh3_3.xyz
+│   │       │       ├── spec.inp
+│   │       │       └── spec.job
+│   │       ├── spec.inp
+│   │       └── spec.job
+│   └── ch
+│       └── ac
+│           ├── ch_ac.xyz
+│           ├── frags
+│           │   ├── acetate_0
+│           │   │   ├── acetate_0.xyz
+│           │   │   ├── spec.inp
+│           │   │   └── spec.job
+│           │   ├── acetate_1
+│           │   │   ├── acetate_1.xyz
+│           │   │   ├── spec.inp
+│           │   │   └── spec.job
+│           │   ├── choline_2
+│           │   │   ├── choline_2.xyz
+│           │   │   ├── spec.inp
+│           │   │   └── spec.job
+│           │   ├── choline_3
+│           │   │   ├── choline_3.xyz
+│           │   │   ├── spec.inp
+│           │   │   └── spec.job
+│           │   └── water_4
+│           │       ├── spec.inp
+│           │       ├── spec.job
+│           │       └── water_4.xyz
+│           ├── spec.inp
+│           └── spec.job
+└── files
+    ├── c1mim_nh3.xyz
+    └── ch_ac.xyz
+
+Note: If a directory named ``calcs`` is already present, nonsensical results will be returned- any
+directory containing an xyz file will be acted upon. To run smoothly, remove or rename an existing
+``calcs`` directory.
+"""
+    package = ask_package()
     xyz_directory = check_dir()
     files = get_xyz()
     calc_dir = make_tree_and_copy(xyz_directory, files)
-    make_job_files(calc_dir)
+    make_job_files(calc_dir, package, settings)
     os.chdir(xyz_directory)

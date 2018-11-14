@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-File: gamess.py 
+File: psi.py 
 Author: Tom Mason
 Email: tommason14@gmail.com
 Github: https:github.com/tommason14
@@ -104,6 +104,7 @@ class PsiJob(Job):
             self.title = using[:-4]
         
         self.create_inp()
+        self.create_job()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
         
@@ -194,6 +195,52 @@ class PsiJob(Job):
         self.add_run()
         self.write_file(self.inp, filetype = 'inp')
 
+    def get_sc(self):
+        if hasattr(self, 'merged'):
+            meta = self.merged
+        else:
+            meta = self.defaults
+        if 'supercomp' in meta.keys(): #user has to define a supercomp
+            user_sc = meta.supercomp
+            supercomps = {'rjn': 'rjn',
+                          'raijin': 'rjn',
+                          'mgs': 'mgs',
+                          'magnus': 'mgs',
+                          'gaia': 'gaia'}
+            try:
+                self.sc = supercomps[user_sc]
+            except:
+                raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
+        else:
+            self.sc = Supercomp()
+
+    def create_job(self):
+        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+        # RJN:
+        # job memory = 
+        # ncpus = nfrags
+        # jobfs = 
+        # MGS:
+
+        # GAIA:
+
+        self.get_sc()
+        job = f"gamess_{self.sc}.job"
+        dir_name = dirname(__file__) # interfaces (dir of gamess.py)
+        templates = join(dir_name, '..', 'templates')
+        job_file = join(templates, job)
+
+        job = []
+        with open(job_file) as f:
+            for line in f:
+                job.append(line)        
+
+        # modify
+
+        job = "".join(job)
+        # write
+        self.write_file(job, filetype="job")               
+
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
             .
@@ -228,7 +275,7 @@ class PsiJob(Job):
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             #make a directory inside the subdir for each fragment
-            name = data['name'] + str(count) # i.e. acetate0, acetate1, choline2, choline3, water4
+            name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
             if not exists(join(subdirectory, name)):
                 mkdir(join(subdirectory, name)) # ./frags/water4/
             chdir(join(subdirectory, name))

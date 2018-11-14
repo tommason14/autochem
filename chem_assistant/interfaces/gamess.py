@@ -167,7 +167,9 @@ class GamessJob(Job):
         return inp
 
     def write_file(self, data, filetype):
-        """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq).""" 
+        """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+
+NOTE: Must pass data as a string, not a list!""" 
         if self.filename == None:
             options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'freq'}
             name = options.get(self.input.contrl.runtyp, 'file') #default name = file
@@ -223,7 +225,13 @@ class GamessJob(Job):
         with open(job_file) as f:
             for line in f:
                 job.append(line)        
-        
+
+        # modify
+
+        job = "".join(job)
+        # write
+        self.write_file(job, filetype="job")               
+ 
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
