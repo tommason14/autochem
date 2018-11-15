@@ -16,7 +16,7 @@ from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
 
-from os import (chdir, mkdir, getcwd)
+from os import (chdir, mkdir, getcwd, system)
 from os.path import (exists, join, dirname)
 
 __all__ = ['GamessJob']
@@ -84,6 +84,7 @@ class GamessJob(Job):
         
         self.create_inp()
         self.create_job()
+        self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
         
@@ -222,6 +223,11 @@ NOTE: Must pass data as a string, not a list!"""
         # write
         self.write_file(job, filetype="job")               
  
+    def place_files_in_dir(self):
+        """Move input and job files into a directory named with the input name (``base_name``) i.e.
+moves opt.inp and opt.job into a directory called ``opt``."""
+        mkdir(self.base_name)
+        system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
