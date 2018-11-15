@@ -295,5 +295,5 @@ directory containing an xyz file will be acted upon. To run smoothly, remove or 
     files = get_xyz()
     calc_dir = make_tree_and_copy(xyz_directory, files)
     make_job_files(calc_dir, package, settings)
-    make_job_subdirs(calc_dir)
+    #make_job_subdirs(calc_dir)
     os.chdir(xyz_directory)

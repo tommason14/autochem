@@ -16,7 +16,7 @@ from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
 
-from os import (chdir, mkdir, getcwd)
+from os import (chdir, mkdir, getcwd, system)
 from os.path import (exists, join, dirname)
 
 __all__ = ['PsiJob']
@@ -75,14 +75,19 @@ class PsiJob(Job):
         - If extra run options are required:
             >>> self.input.run.additional = {'dertype': 'energy'} 
             # produces optimize('scf', dertype='energy')
-        NOTE: An option for adding commands outside of the molecule and globals section needs to be added.
-                                
+        NOTE: An option for adding commands outside of the molecule and globals section needs to be added.                        
     
     The names of files created default to the type of calculation: optimisation (opt), single point energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (freq). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
         >>> job = GamessJob(using = 'file.xyz', filename = 'benzene')
     This command produces two files, benzene.inp and benzene.job.
     
     If a system is comprised of multiple fragments, each fragment can have its own input file created in a subdirectory by passing in ``frags_in_subdir`` = True.
+
+    Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
+        .
+        └── opt
+            ├── opt.inp
+            └── opt.job
     """
     def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None):
         super().__init__(using)
@@ -105,12 +110,12 @@ class PsiJob(Job):
         
         self.create_inp()
         self.create_job()
+        self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
         
     def make_header(self):
-        """ Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation
-         """
+        """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
         mem  = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
         charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
@@ -178,9 +183,7 @@ class PsiJob(Job):
  
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
-matrix calculation for vibrational frequencies (freq). This method creates an attribute
-``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). This method creates an attribute ``base_name``, used in creating the input and job files."""
         for key in self.input.run.keys(): #run, or additional
             if key != 'additional':
                 nom = key
@@ -193,7 +196,7 @@ matrix calculation for vibrational frequencies (freq). This method creates an at
     def write_file(self, data, filetype):
         """Writes the generated PSI4 input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
 
-NOTE: Must pass data as a string, not a list!""" 
+        NOTE: Must pass data as a string, not a list!""" 
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
@@ -201,6 +204,7 @@ NOTE: Must pass data as a string, not a list!"""
         self.make_header()
         self.add_globals()
         self.add_run()
+        self.file_basename()
         self.write_file(self.inp, filetype = 'inp')
 
     def create_job(self):
@@ -213,6 +217,12 @@ NOTE: Must pass data as a string, not a list!"""
 
         # write
         self.write_file(job, filetype="job")               
+
+    def place_files_in_dir(self):
+        """Move input and job files into a directory named with the input name (``base_name``) i.e.
+        moves opt.inp and opt.job into a directory called ``opt``."""
+        mkdir(self.base_name)
+        system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):

@@ -62,9 +62,13 @@ class GamessJob(Job):
     The names of files created default to the type of calculation: optimisation (opt), single point energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (freq). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
         >>> job = GamessJob(using = 'file.xyz', fmo = True, filename = 'benzene')
     
-    This command produces two files, benzene.inp and benzene.job
-        ...
-
+    This command produces two files, benzene.inp and benzene.job.
+    
+    Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
+        .
+        └── opt
+            ├── opt.inp
+            └── opt.job
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None):
         super().__init__(using)
@@ -115,23 +119,21 @@ class GamessJob(Job):
             self.input.mp2.scsopo = 1.64
 
     def parse_settings(self):
-            """
-            Transform all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation
-            """
-            def parse(key, value):
-                ret = ''
-                if isinstance(value, Settings):
-                    ret += ' ${}'.format(key.upper())
-                    for el in value:
-                        ret += ' {}={}'.format(el.upper(), str(value[el]).upper())
-                    ret += ' $END\n'
-                else:
-                    ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
-                return ret
+        """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
+        def parse(key, value):
+            ret = ''
+            if isinstance(value, Settings):
+                ret += ' ${}'.format(key.upper())
+                for el in value:
+                    ret += ' {}={}'.format(el.upper(), str(value[el]).upper())
+                ret += ' $END\n'
+            else:
+                ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
+            return ret
 
-            inp = [parse(item, self.input[item])
-                for item in self.input]
-            return inp
+        inp = [parse(item, self.input[item])
+            for item in self.input]
+        return inp
 
     def fmo_formatting(self):
         self.mol.fmo_meta() # gives self.mol.indat, self.mol.charg
@@ -169,9 +171,9 @@ class GamessJob(Job):
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
-matrix calculation for vibrational frequencies (freq). This method creates an attribute
-``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
+        matrix calculation for vibrational frequencies (freq). This method creates an attribute
+        ``base_name``, used in creating the input and job files."""
 
         if self.filename is not None:
             self.base_name = self.filename
@@ -182,7 +184,7 @@ matrix calculation for vibrational frequencies (freq). This method creates an at
     def write_file(self, data, filetype):
         """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
 
-NOTE: Must pass data as a string, not a list!""" 
+        NOTE: Must pass data as a string, not a list!""" 
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
@@ -225,7 +227,7 @@ NOTE: Must pass data as a string, not a list!"""
  
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
-moves opt.inp and opt.job into a directory called ``opt``."""
+        moves opt.inp and opt.job into a directory called ``opt``."""
         mkdir(self.base_name)
         system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
