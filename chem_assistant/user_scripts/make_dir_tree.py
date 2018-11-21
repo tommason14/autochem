@@ -241,8 +241,7 @@ the xyz files present. Uses underscores as delimiters for new subdirectories i.e
 underscore is seen, a new subdirectory is created.
 
 This function looks for a directory called ``files``, containing the xyz files, and outputs into
-``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings should be created and then passed into
-the function. 
+``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings should be created and then passed into the function. 
 
 Another desirable feature is to separate optimisations from single point calculations. As a result,
 when the function runs, it creates jobs in a new subdirectory of the molecule directory. When the

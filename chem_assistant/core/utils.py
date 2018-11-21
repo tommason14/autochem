@@ -12,7 +12,7 @@ __all__ = ['read_file', 'get_type']
 
 def read_file(file):
     with open(file, "r") as f:
-        for line in f.read():
+        for line in f.readlines():
             yield line
 
 def get_type(file):

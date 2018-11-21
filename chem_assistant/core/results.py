@@ -6,11 +6,11 @@ __all__ = ['Results', 'GamessResults', 'PsiResults']
 class Results:
     """Base class, only for inheritance"""
 
-    def __init__(self, log, input_coords = None):
+    def __init__(self, log):
         self.log = log
-        if coords is not None:
-            self.input_coords = input_coords
-            # coords needed for hessian calcs
+        # if coords is not None:
+        #     self.input_coords = input_coords
+        #     # coords needed for hessian calcs
 
     def read(self):
         """Memory-efficient reading of large log files, using a generator returning lines as required"""
@@ -28,10 +28,12 @@ class Results:
     def get_basis(self):
         for line in self.read():
             # include file type as a precaution ('basis' could appear in a gamess file)
-            if self.get_type() == 'psi4' and 'basis' in line:
-                return line.split()[-1].lower()
-            elif self.get_type == 'gamess' and 'gbasis' in line.lower(): #gamess data can be written as upper or lowercase
-                return line.split()[-2].split('=')[-1].lower()
+            if self.get_type() == 'psi4':
+                if 'basis' in line.lower():
+                    return line.split()[-1].lower()
+            elif self.get_type() == 'gamess':
+                if 'gbasis' in line.lower(): #gamess data can be written as upper or lowercase
+                    return line.split()[-2].split('=')[-1].lower()
 
 class GamessResults(Results):
     """Class for obtaining results from Gamess simulations. This class requires
@@ -58,14 +60,19 @@ back if not found.
 instance, really. Simple fix; instead of returning values, store in list and return the list, maybe
 store the iteration number.
     """
-    def __init__(self, log, input_coords = None):
-        super().__init__(self, log, input_coords)
+    def __init__(self, log):
+        super().__init__(log)
 
     ################################
     #                              #
     #      CHECK IF COMPLETED      #
     #                              #
     ################################
+
+    def __repr__(self):
+        return self.log # debugging
+
+    __str__ = __repr__
 
     def completed(self):
         found = False
@@ -98,29 +105,28 @@ store the iteration number.
     def get_fmo_level(self):
         """Returns level of FMO calculation ran"""
         for line in self.read():
-            found = False
             if 'NBODY' in line:
-                found = True
-            if found:
-                return int(line.split()[-1].split('=')[-1])
-        else:
-            return 0
+              return int(line.split()[-1].split('=')[-1]) # FMO2 or 3
+        return 0
         
-        def get_equil_coords():
-            import re
-            coords = []
-            regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
-            found = False
-            for line in self.read(): #generator, so can't use line indexing- returns one line at a time
-                if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
-                    found = True
-                    # store lines after this if regex found, until INTERNUCLEAR DISTANCES (ANGS.)
-                if found:
-                    if re.search(regex, line):
+    def get_equil_coords(self):
+        import re
+        coords = []
+        regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
+        found = False
+        for line in self.read(): #generator, so can't use line indexing- returns one line at a time
+            if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
+                found = True
+                # store lines after this if regex found, until INTERNUCLEAR DISTANCES (ANGS.)
+            if found:
+                if re.search(regex, line):
+                    if line.endswith('\n'):
+                        coords.append(line[:-1]) # drop newline char
+                    else:
                         coords.append(line)
-                    if 'INTERNUCLEAR DISTANCES (ANGS.)' in line:
-                        break 
-            write_xyz(coords, 'equil.xyz')   
+                if 'INTERNUCLEAR DISTANCES (ANGS.)' in line:
+                    break 
+        write_xyz(coords, 'equil.xyz')   
 
     ################################
     #                              #
@@ -241,15 +247,13 @@ energies is as follows: FMO3 > FMO2 > Non-FMO.
         The actual call is to either FMO or Non-FMO; the FMO call is then prioritized into FMO3 over
 FMO2"""
         level = self.get_fmo_level()
-        
-        methods = {0: get_non_fmo,
-                   2: get_srs,
-                   3: get_srs}
+        methods = {0: self.get_non_fmo,
+                   2: self.get_srs,
+                   3: self.get_srs}
 
         # need to change in the case of no SRS- need to fall back to get_mp2, and then to
         # get_hf
-
-        return methods.get(level)() # if no FMO, run get_non_fmo()
+        return methods.get(level, 2)() # if no FMO, run get_non_fmo()
         
 
     ################################
@@ -279,8 +283,13 @@ FMO2"""
 
 class PsiResults(Results):
     """Class defining the results of a PSI4 calculation."""
-    def __init__(self, log, input_coords = None):
-        super().__init__(self, log, input_coords)
+    def __init__(self, log):
+        super().__init__(log)
+    
+    def __repr__(self):
+        return self.log # debugging
+
+    __str__ = __repr__
 
     def completed(self):
         complete = False
@@ -312,7 +321,7 @@ class PsiResults(Results):
 
     def get_e_os(self):
         for line in self.read():
-            if "Opposite-Spin Energy          =" in line:
+            if "Opposite-Spin Energy      =" in line:
                 res = float(line.split('=')[1].split()[0].strip())
         return res
 
@@ -357,3 +366,6 @@ systems are used. See J. Chem. Phys. 146, 064108 (2017)"""
         c_ss = c_ss_values.get(self.get_basis(), 0)
 
         return self.get_hf() + c_os * self.get_e_os() + c_ss * self.get_e_ss()
+        
+    def get_energy(self):
+        return self.get_srs()

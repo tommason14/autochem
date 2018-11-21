@@ -11,3 +11,9 @@ file.dat
 
 - data pertinent to the system being simulated
 - read into the input file (read_data file.dat)
+
+
+
+boundary: p = periodic; atoms disappear and reappear on other side
+					f = fixed; atoms disappear when moving out of sim window
+					s = shrink-wrapped; sim window/cell expands to fit content

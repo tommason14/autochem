@@ -25,12 +25,12 @@ Create single points for completed geom_opts? [y/n]
 """
 
 from ..core.utils import (read_file, get_type)
+from ..core.results import (GamessResults, PsiResults)
 import os
 
 
 def get_logs(directory):
     logs = []
-    parent = os.getcwd()
     for path, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith('.log') or file.endswith('.out'):
@@ -38,22 +38,31 @@ def get_logs(directory):
     return logs
 
 
-def parse_logs(directory):
-    cwd = os.getcwd()
-    for log in get_logs(directory):
-        print(os.path.split(log))
+def make_instance(log):
+    """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
+    log_type = get_type(log)
+    if log_type == 'gamess':
+        r = GamessResults(log)
+    elif log_type == 'psi4':
+        r = PsiResults(log)
+    return r
+
+def fetch_data(log):
+    print('File...')
+    r = make_instance(log)
+    if r.completed():
+        if r.get_runtype() == 'optimize':
+            r.get_equil_coords()
+        print('energies...')
+        en = r.get_energy() #fmo3 > fmo2 > non-fmo #fix gamess energy, running v slow
+        basis = r.get_basis()
+        return log, en
+
 
 def parse_results(dir):
-    parse_logs(dir)
+    cwd = os.getcwd()
+    for log in get_logs(dir):
+        f = fetch_data(log)
+        print(f)
 
-            # os.chdir(path)
-            # log_type = get_type(file)
-            # if log_type == 'gamess':
-            #     r = GamessResults(file)
-            # elif log_type == 'psi4':
-            #
-            #     r = PsiResults(file)
-            #
-            # if r.get_runtype() == 'optimize':
-            #     r.get_equil_coords()
-             
+            

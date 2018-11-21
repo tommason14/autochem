@@ -106,7 +106,7 @@ class Molecule:
         string = f"Molecule of {len(self.fragments)} fragments, {len(self.coords)} atoms.\nFragments:\n"
         for frag, num in frags.items():
             string += f'    {num} x {frag}\n'
-        return string
+        return string[:-1] #lose last newline char
 
     def __iter__(self):
         return iter(self.coords)
