@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-File: utils.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Functions useful in multiple scenarios 
-"""
 __all__ = ['read_file', 'get_type']
 
 def read_file(file):

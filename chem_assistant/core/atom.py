@@ -1,7 +1,6 @@
 from .periodic_table import PeriodicTable as PT
 import math
 
-
 __all__ = ['Atom']
 
 class Atom:

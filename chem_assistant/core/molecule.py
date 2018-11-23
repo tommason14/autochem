@@ -6,6 +6,7 @@ from .atom import Atom
 from .bond import Bond
 from .meta import Meta
 from .errors import *
+
 import numpy as np
 import math
 import itertools

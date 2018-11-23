@@ -34,29 +34,27 @@ def get_logs(directory):
     for path, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith('.log') or file.endswith('.out'):
-                logs.append(os.path.join(path, file)) # path is fine as the function uses a user-defined directory
+                logs.append(os.path.join(path, file))
     return logs
 
 
 def make_instance(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
-    if log_type == 'gamess':
-        r = GamessResults(log)
-    elif log_type == 'psi4':
-        r = PsiResults(log)
-    return r
+    logs = {'gamess': GamessResults(log),
+            'psi4': PsiResults(log)}
+    return logs[log_type]
+
 
 def fetch_data(log):
-    print('File...')
     r = make_instance(log)
     if r.completed():
         if r.get_runtype() == 'optimize':
             r.get_equil_coords()
-        print('energies...')
         en = r.get_energy() #fmo3 > fmo2 > non-fmo #fix gamess energy, running v slow
-        basis = r.get_basis()
         return log, en
+    else:
+        r.get_error()
 
 
 def parse_results(dir):
