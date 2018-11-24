@@ -59,7 +59,9 @@ class GamessJob(Job):
     If FMO (Fragment Molecular Orbital) calculations are desired, pass the keyword argument ``fmo``, set to *True*:
         >>> job = GamessJob(using = 'file.xyz', fmo = True)
     
-    The names of files created default to the type of calculation: optimisation (opt), single point energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (freq). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
+    The names of files created default to the type of calculation: optimisation (opt), single point
+energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
+(hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
         >>> job = GamessJob(using = 'file.xyz', fmo = True, filename = 'benzene')
     
     This command produces two files, benzene.inp and benzene.job.
@@ -172,13 +174,13 @@ class GamessJob(Job):
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
         the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
-        matrix calculation for vibrational frequencies (freq). This method creates an attribute
+        matrix calculation for vibrational frequencies (hess). This method creates an attribute
         ``base_name``, used in creating the input and job files."""
 
         if self.filename is not None:
             self.base_name = self.filename
         else:
-            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'freq'}
+            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess'}
             self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
 
     def write_file(self, data, filetype):

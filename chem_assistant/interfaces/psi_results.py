@@ -1,4 +1,6 @@
-from ..core.results import results
+from ..core.results import Results
+
+import re
 
 __all__ = ['PsiResults']
 

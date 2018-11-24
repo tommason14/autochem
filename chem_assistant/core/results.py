@@ -26,11 +26,17 @@ class Results:
                 return 'gamess'
 
     def get_basis(self):
-        for line in self.read():
-            # include file type as a precaution ('basis' could appear in a gamess file)
-            if self.get_type() == 'psi4':
+        # include file type as a precaution ('basis' could appear in a gamess file)
+        if self.get_type() == 'psi4':
+            for line in self.read():
                 if 'basis' in line.lower():
                     return line.split()[-1].lower()
-            elif self.get_type() == 'gamess':
-                if 'gbasis' in line.lower(): #gamess data can be written as upper or lowercase
+        elif self.get_type() == 'gamess':
+            for line in self.read():
+                if 'gbasis' in line.lower() and 'input card' in line.lower(): #gamess data can be written as upper or lowercase
                     return line.split()[-2].split('=')[-1].lower()
+        else:
+            return None
+
+    def get_error(self):
+        print(f'ERROR: {self.log} incomplete')

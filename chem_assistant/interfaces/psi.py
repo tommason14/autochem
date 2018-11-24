@@ -77,7 +77,8 @@ class PsiJob(Job):
             # produces optimize('scf', dertype='energy')
         NOTE: An option for adding commands outside of the molecule and globals section needs to be added.                        
     
-    The names of files created default to the type of calculation: optimisation (opt), single point energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (freq). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
+    The names of files created default to the type of calculation: optimisation (opt), single point
+energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
         >>> job = GamessJob(using = 'file.xyz', filename = 'benzene')
     This command produces two files, benzene.inp and benzene.job.
     
@@ -183,12 +184,12 @@ class PsiJob(Job):
  
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). This method creates an attribute ``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (hess). This method creates an attribute ``base_name``, used in creating the input and job files."""
         for key in self.input.run.keys(): #run, or additional
             if key != 'additional':
                 nom = key
         if self.filename == None:
-            options = {'optimize': 'opt', 'energy': 'spec', 'frequency': 'freq'}
+            options = {'optimize': 'opt', 'energy': 'spec', 'frequency': 'hess'}
             self.base_name = options.get(nom, 'file') #default name = file
         else:
             self.base_name = self.filename

@@ -55,8 +55,6 @@ store the iteration number.
     # if not self.completed():
     #     self.get_error() 
 
-    def get_error(self):
-        pass
 
     ################################
     #                              #

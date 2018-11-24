@@ -25,7 +25,8 @@ Create single points for completed geom_opts? [y/n]
 """
 
 from ..core.utils import (read_file, get_type)
-from ..core.results import (GamessResults, PsiResults)
+from ..interfaces.gamess_results import GamessResults
+from ..interfaces.psi_results import PsiResults
 import os
 
 
@@ -33,7 +34,7 @@ def get_logs(directory):
     logs = []
     for path, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith('.log') or file.endswith('.out'):
+            if file.endswith('.log') or file.endswith('.out') and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
                 logs.append(os.path.join(path, file))
     return logs
 
@@ -43,7 +44,7 @@ def make_instance(log):
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
             'psi4': PsiResults(log)}
-    return logs[log_type]
+    return logs.get(log_type, None)
 
 
 def fetch_data(log):
@@ -52,9 +53,11 @@ def fetch_data(log):
         if r.get_runtype() == 'optimize':
             r.get_equil_coords()
         en = r.get_energy() #fmo3 > fmo2 > non-fmo #fix gamess energy, running v slow
-        return log, en
+        basis = r.get_basis()
+        return log, en, basis
     else:
         r.get_error()
+        return log
 
 
 def parse_results(dir):
