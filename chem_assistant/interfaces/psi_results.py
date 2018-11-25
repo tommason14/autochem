@@ -30,6 +30,15 @@ class PsiResults(Results):
                     else: #optimize('scf', dertype='hess'......)
                         return line.split('(')[0] #add to this later, using the collect additional data
 
+    def is_optimisation(self):
+        return self.get_runtype() == 'optimize'
+    
+    def is_spec(self):
+        return self.get_runtype() == 'energy'
+
+    def is_hessian(self):
+        return self.get_runtype() == 'frequency'
+
     def get_hf(self):
         for line in self.read():
             if "Reference Energy" in line:

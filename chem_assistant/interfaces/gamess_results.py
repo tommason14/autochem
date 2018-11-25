@@ -66,8 +66,11 @@ store the iteration number.
     def get_runtype(self):
         """Returns type of calculation ran"""
         for line in self.read():
-            if 'RUNTYP=' in line:
-                return line.split()[4].split('=')[1].lower()
+            if 'RUNTYP=' in line.upper():
+                parts = line.split()
+                for p in parts:
+                    if 'RUNTYP=' in p:
+                        return p.split('=')[1].lower()
         # finds the first instance then breaks out of loop
     
     def get_fmo_level(self):
@@ -79,22 +82,49 @@ store the iteration number.
         
     def get_equil_coords(self):
         import re
-        coords = []
+        equil = []
+        rerun = []
         regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
         found = False
-        for line in self.read(): #generator, so can't use line indexing- returns one line at a time
+        find = False
+        for line in self.read():
             if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
                 found = True
-                # store lines after this if regex found, until INTERNUCLEAR DISTANCES (ANGS.)
+            if 'ALWAYS THE LAST POINT COMPUTED' in line:
+                find = True
             if found:
                 if re.search(regex, line):
                     if line.endswith('\n'):
-                        coords.append(line[:-1]) # drop newline char
+                        equil.append(line[:-1]) # drop newline char
                     else:
-                        coords.append(line)
-                if 'INTERNUCLEAR DISTANCES (ANGS.)' in line:
-                    break 
-        write_xyz(coords, 'equil.xyz')   
+                        equil.append(line)
+            if find:
+                if re.search(regex, line):
+                    if line.endswith('\n'):
+                        rerun.append(line[:-1]) # drop newline char
+                    else:
+                        rerun.append(line)
+            if line is '\n':
+                find = False
+                found = False
+        if len(equil) > 0:
+            print(f'{self.log}: Equilibrium geometry found')
+            write_xyz(equil, 'equil.xyz')
+        else:
+            if len(rerun) > 0:
+                print(f'{self.log}: Needs resubmitting. Coords stored in rerun.xyz')
+                write_xyz(rerun, 'rerun.xyz')
+            else:
+                print('No iterations have been found!')   
+    
+    def is_optimisation(self):
+        return self.get_runtype() == 'optimize'
+    
+    def is_spec(self):
+        return self.get_runtype() == 'energy'
+
+    def is_hessian(self):
+        return self.get_runtype() == 'hessian'
 
     ################################
     #                              #
@@ -112,11 +142,16 @@ store the iteration number.
 
     def get_hf(self):
         """Returns Hartree-Fock energy"""
+        found = False
         for line in self.read():
             if 'Euncorr HF(3)=' in line:
+                found = True
                 res = float(line.split()[-1])
             elif 'Euncorr HF(2)=' in line:
+                found = True
                 res = float(line.split()[-1])
+        if not found:
+            return "No explicit HF energy"
         return res
 
     def get_mp2(self):
@@ -168,7 +203,7 @@ need to be accounted for also when the time comes.
         Currently only returns the opposite spin energy found from SRS
 calculations due to the greater accuracy when compared to MP2.
         """
-
+        c_os_values = {}
         c_os_values['ccd']         = 1.752
         c_os_values['cc-pvdz']     = 1.752
         c_os_values['cct']         = 1.64
@@ -181,7 +216,8 @@ calculations due to the greater accuracy when compared to MP2.
         c_os_values['aug-cc-pvtz'] = 1.443
         c_os_values['accq']        = 1.591
         c_os_values['aug-cc-pvqz'] = 1.591
-
+        
+        c_ss_values = {}
         c_ss_values['ccd']         = 0
         c_ss_values['cc-pvdz']     = 0
         c_ss_values['cct']         = 0

@@ -39,4 +39,4 @@ class Results:
             return None
 
     def get_error(self):
-        print(f'ERROR: {self.log} incomplete')
+        print(f'{self.log}: Incomplete calculation')

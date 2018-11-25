@@ -47,23 +47,55 @@ def make_instance(log):
     return logs.get(log_type, None)
 
 
-def fetch_data(log):
-    r = make_instance(log)
-    if r.completed():
-        if r.get_runtype() == 'optimize':
-            r.get_equil_coords()
-        en = r.get_energy() #fmo3 > fmo2 > non-fmo #fix gamess energy, running v slow
-        basis = r.get_basis()
-        return log, en, basis
-    else:
-        r.get_error()
-        return log
+def srs_output(r):
+    """Returns parameters of SRS-MP2 calculations; HF energy, Opposite and Same spin parameters, as
+    well as the overall SRS-MP2 energy, as a tuple""" 
+    hf = r.get_hf()
+    opp = r.get_e_os()
+    same = r.get_e_ss()
+    srs = r.get_srs()
+    return hf, opp, same, srs
 
+def fetch_energies(r):
+    """Returns energies of both Gamess and Psi4 calculations. 
+    If possible, a tuple is returned of the form:
+        log file, basis set, HF energy, MP2 opposite spin energy, MP2 same spin energy, SRS-MP2
+energy
+    If that is not possible:
+        log file, basis set, total energy"""
+    if r.is_optimisation():
+        r.get_equil_coords()
+    if type(r) == GamessResults:
+        if r.get_fmo_level() != 0:
+            energy = srs_output(r)
+        else:
+           energy = r.get_non_fmo() # Total Energy = .... 
+    if type(r) == PsiResults:
+        energy = srs_output(r)
+    return energy
+
+def process_hessian(r):
+   """Takes a hessian log file and produces thermochemical data. In future, extend to visualising
+normal modes and plotting IR spectra using node intensities."""
+    # generate freq.out, fort.10, then clean at end by removing from dir
+    
 
 def parse_results(dir):
     cwd = os.getcwd()
     for log in get_logs(dir):
-        f = fetch_data(log)
-        print(f)
+        r = make_instance(log)
+        if r.completed():
+            basis = r.get_basis()
+            if not r.is_hessian():
+                print(f'{r.log}: Finding energies')
+                f = fetch_energies(r)
+                # adding to csv/df/database
+                # print((log, basis) + f)
+            else:
+                print(f'{r.log}: Hessian calc')
+                process_hessian(r)
+        else:
+            # incomplete cases
+            r.get_error()
 
             
