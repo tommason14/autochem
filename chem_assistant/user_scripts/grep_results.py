@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__all__ = ['parse_results', 'thermochemistry']
+__all__ = ['parse_results', 'thermochemistry', 'get_results_class']
 
 """
 File: grep_results.py 
@@ -39,7 +39,7 @@ def get_logs(directory):
     return logs
 
 
-def make_instance(log):
+def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
@@ -83,7 +83,7 @@ normal modes and plotting IR spectra using node intensities."""
 def parse_results(dir):
     cwd = os.getcwd()
     for log in get_logs(dir):
-        r = make_instance(log)
+        r = get_results_class(log)
         if r.completed():
             basis = r.get_basis()
             if not r.is_hessian():
@@ -98,8 +98,59 @@ def parse_results(dir):
             r.get_error()
 
 def thermochemistry(dir):
+    """Returns thermochemical data for all the relevant hessian log files in the given directory and
+    subdirectories.
+    Usage:
+        >>> thermochemistry('.')
+    Returns:
+        Thermodynamics for anion_0.out
+
+        Thermochemistry was done at      298.15 (k) and 1(Atm)
+
+        Total vibr frequencies                                           = 15
+        Imaginary frequencies                                           =  0
+        Low freqs (<300 cm^-1) with                      special treatment  =  0
+
+        Scaling factors
+        ZPVE =   1.0000
+        TC   =   1.0000
+        Svib =   1.0000
+
+           Frequency     ZPVE(vi)      H(vi)      S(vi)
+          170.5510         1.020109         1.597206        10.164604    HO
+          266.5580         1.594352         1.217327         6.771481    HO
+          333.6590         1.995700         0.996996         5.197825    HO
+          401.0410         2.398729         0.809558         4.011760    HO
+          430.5090         2.574985         0.737355         3.585659    HO
+          479.1500         2.865919         0.630098         2.980525    HO
+          490.0140         2.930899         0.608059         2.860051    HO
+          746.1180         4.462723         0.250597         1.070728    HO
+          816.4150         4.883188         0.193758         0.813204    HO
+         1024.9390         6.130423         0.087821         0.353895    HO
+         1045.1020         6.251023         0.081192         0.326142    HO
+         1090.3080         6.521412         0.068016         0.271373    HO
+         1272.6760         7.612202         0.032829         0.128019    HO
+         3689.2490        22.066345         0.000001         0.000003    HO
+         3723.2310        22.269600         0.000001         0.000002    HO
+
+        ZPVE                        =            95.57761 kJ/mol
+
+        Thermal correction in kJ/mol
+
+        TC harmonic oscillator      =            17.22658
+
+             Entropies in J/(mol K)
+        S electronic                =             0.00000
+        S translational             =           161.18860
+        S rotational                =           102.72824
+        S vibrational HO            =            38.53527
+
+        Stotal Harmonic oscillator  =           302.45211
+
+        TC-TdeltaS in kJ/mol        =           -72.94952
+    """
     for log in get_logs(dir):
-        r = make_instance(log)
+        r = get_results_class(log)
         if r.completed():
             if r.is_hessian():
                 print(f'{r.log}: Hessian calc')

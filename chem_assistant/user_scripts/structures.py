@@ -1,5 +1,4 @@
 import os
-from shutil import copyfile
 
 __all__ = ['copy_xyz_tree']
 

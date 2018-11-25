@@ -50,6 +50,8 @@ def cleanup():
     os.system('rm fort.10 moments geom.input freq.out')
 
 def thermo_data(file):
+    """Uses a fortran script to produce thermochemical data for GAMESS Hessian calculations- the
+results produced in the log file have been shown to be inaccurate."""
     thermo_initial_geom(file)
     thermo_freqs(file)
     run(file)
