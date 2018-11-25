@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__all__ = ['parse_results']
+__all__ = ['parse_results', 'thermochemistry']
 
 """
 File: grep_results.py 
@@ -23,7 +23,7 @@ Get results.
 ...
 Create single points for completed geom_opts? [y/n]
 """
-
+from ..core.thermo import thermo_data
 from ..core.utils import (read_file, get_type)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
@@ -93,9 +93,14 @@ def parse_results(dir):
                 # print((log, basis) + f)
             else:
                 print(f'{r.log}: Hessian calc')
-                process_hessian(r)
         else:
             # incomplete cases
             r.get_error()
 
-            
+def thermochemistry(dir):
+    for log in get_logs(dir):
+        r = make_instance(log)
+        if r.completed():
+            if r.is_hessian():
+                print(f'{r.log}: Hessian calc')
+                thermo_data(r.log)

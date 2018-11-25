@@ -34,6 +34,6 @@ with or without atomic numbers."""
                     else:
                         sym, x, y, z = parts
                     x, y, z = float(x), float(y), float(z)
-                    file.write(f"{sym:5s} {x:>13.10f} {y:13.10f} {z:13.10f} \n")
+                    file.write(f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
                 else:
-                    file.write(f"{atom.symbol:5s} {atom.x:>13.10f} {atom.y:>13.10f} {atom.z:>13.10f} \n")
+                    file.write(f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
