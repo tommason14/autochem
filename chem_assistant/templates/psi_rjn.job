@@ -11,4 +11,4 @@ module load psicode/4.0b5.1
 setenv OMP_NUM_THREADS $PBS_NCPUS
 setenv MKL_NUM_THREADS $PBS_NCPUS
 
-psi4 name.ok name.out
+psi4 name.inp name.out

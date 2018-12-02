@@ -12,3 +12,6 @@ Objectives include:
 - Reporting of errors resulting in failed calculations
 - Automatic analysis of results (eventually, using dplython and plotnine to
   replicate the ease of  use found in dplyr and ggplot2 for R)
+
+TODO: Add path of CLI to user's path when setup.py is run:
+- export PATH=$PWD:$PATH  

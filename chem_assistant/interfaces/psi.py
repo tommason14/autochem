@@ -215,7 +215,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             job = f.read()
 
         # modify
-
+        job = job.replace('name', f'{self.base_name}')
         # write
         self.write_file(job, filetype="job")               
 

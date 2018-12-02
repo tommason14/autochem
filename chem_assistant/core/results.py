@@ -1,4 +1,5 @@
 import re
+import os
 from .utils import write_xyz
 
 __all__ = ['Results']
@@ -8,10 +9,8 @@ class Results:
 
     def __init__(self, log):
         self.log = log
-        # if coords is not None:
-        #     self.input_coords = input_coords
-        #     # coords needed for hessian calcs
-
+        self.filepath = os.path.split(self.log)[0]
+        self.abspath = os.path.split(os.path.abspath(self.log))[0]
     def read(self):
         """Memory-efficient reading of large log files, using a generator returning lines as required"""
         with open(self.log, "r") as f:

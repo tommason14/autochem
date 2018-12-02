@@ -7,8 +7,11 @@ __all__ = ['read_file', 'get_type']
 
 def read_file(file):
     with open(file, "r") as f:
-        for line in f.readlines():
-            yield line
+        try:
+            for line in f.readlines():
+                yield line
+        except UnicodeDecodeError:
+            pass
 
 def get_type(file):
     for line in read_file(file):

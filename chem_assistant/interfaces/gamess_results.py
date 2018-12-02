@@ -2,6 +2,7 @@ from ..core.utils import write_xyz
 from ..core.results import Results
 
 import re
+import os
 
 __all__ = ['GamessResults']
 
@@ -54,8 +55,24 @@ store the iteration number.
     # call like this:
     # if not self.completed():
     #     self.get_error() 
+    # cutoff in middle of run with no explanation- memory error
+    def memory_error(self):
+        print('Memory Error- check allocation before resubmitting')
 
+    def get_error(self):
+        super().get_error()
+        if self.is_optimisation():
+            no_equil = True
+            for line in self.read():
+                # check for equilibrium coords
+                if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
+                    no_equil = False    
+            if no_equil:
+                return 'No equilibrium geometry found- need to resubmit with rerun.xyz'
+            else:
+                self.memory_error() # last resort
 
+ 
     ################################
     #                              #
     #         IF COMPLETED         #
@@ -109,11 +126,44 @@ store the iteration number.
                 found = False
         if len(equil) > 0:
             print(f'{self.log}: Equilibrium geometry found')
-            write_xyz(equil, 'equil.xyz')
+            write_xyz(equil, os.path.join(self.abspath, 'equil.xyz'))
         else:
-            if len(rerun) > 0:
-                print(f'{self.log}: Needs resubmitting. Coords stored in rerun.xyz')
-                write_xyz(rerun, 'rerun.xyz')
+            if len(rerun) > 0 and not len(equil) > 0:
+                print(f'{self.log}: Needs resubmitting. Coords stored in rerun/rerun.xyz')
+                # make new dir, and copy over input, replacing any coords
+                # TODO: Refactor this, but cba right now
+                rerun_dir = os.path.join(self.abspath, 'rerun')
+                if not os.path.exists(rerun_dir):
+                    os.mkdir(rerun_dir)
+                write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                inp = self.log[:-3] + 'inp'
+                job = self.log[:-3] + 'job'
+                ext = self.log[-3:] # log or out, but use the same to remain consistent
+                orig_inp = os.path.join(self.abspath, inp) # path of the log file
+                orig_job = os.path.join(self.abspath, job)
+                rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
+                rerun_job = os.path.join(rerun_dir, 'rerun.job')
+                # copy old job into a string (small file), modify file names
+                with open(orig_job, "r") as jobfile:
+                    job = jobfile.read()
+                newjob = job.replace(inp, 'rerun.inp')
+                newjob = newjob.replace(self.log, 'rerun.' + ext)
+                with open(rerun_job, 'w') as f:
+                    f.write(newjob) 
+                # parse original inp and add new coords
+                rerun_inp_file = []
+                with open(orig_inp, "r") as f:
+                    for line in f.readlines():
+                        if re.search(regex, line):
+                            break
+                        else:
+                            rerun_inp_file.append(line)
+                for line in rerun: #add coords
+                    rerun_inp_file.append(line + '\n') 
+                rerun_inp_file.append(' $END')
+                with open(rerun_inp, "w") as f:
+                    for line in rerun_inp_file:
+                        f.write(line)
             else:
                 print('No iterations have been found!')   
     
@@ -265,6 +315,8 @@ FMO2"""
     #     VIBRATIONAL ANALYSIS     #
     #                              #
     ################################
+
+    # create and visualise freq modes/ IR spectra    
 
     def vib_get_geom(self):
         pass

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__all__ = ['parse_results', 'thermochemistry', 'get_results_class']
+__all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class']
 
 """
 File: grep_results.py 
@@ -44,7 +44,7 @@ def get_results_class(log):
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
             'psi4': PsiResults(log)}
-    return logs.get(log_type, None)
+    return log_type, logs.get(log_type, None)
 
 
 def srs_output(r):
@@ -63,13 +63,14 @@ def fetch_energies(r):
 energy
     If that is not possible:
         log file, basis set, total energy"""
+    orig = os.getcwd()
     if r.is_optimisation():
         r.get_equil_coords()
     if type(r) == GamessResults:
         if r.get_fmo_level() != 0:
             energy = srs_output(r)
         else:
-           energy = r.get_non_fmo() # Total Energy = .... 
+            energy = (r.get_non_fmo(),) # Total Energy = .... 
     if type(r) == PsiResults:
         energy = srs_output(r)
     return energy
@@ -81,21 +82,67 @@ normal modes and plotting IR spectra using node intensities."""
     
 
 def parse_results(dir):
+    output = []
     cwd = os.getcwd()
     for log in get_logs(dir):
-        r = get_results_class(log)
-        if r.completed():
-            basis = r.get_basis()
-            if not r.is_hessian():
-                print(f'{r.log}: Finding energies')
-                f = fetch_energies(r)
-                # adding to csv/df/database
-                # print((log, basis) + f)
+        log = log[2:] # no ./file, just file
+        filetype, r = get_results_class(log)
+        try:
+            if r.completed():
+                basis = r.get_basis()
+                if not r.is_hessian():
+                    print(f'{r.log}: Finding energies')
+                    f = fetch_energies(r)
+                    # adding to csv/df/database
+                    output.append((log, filetype, basis) + f)
+                else:
+                    print(f'{r.log}: Hessian calc')
             else:
-                print(f'{r.log}: Hessian calc')
+                # incomplete cases
+                r.get_error()
+        except AttributeError:
+            continue
+    return output
+
+def make_table(results):
+    '''Create a dataframe of energies and other relevant data extracted from each log file'''
+    import pandas as pd
+    files = []
+    types = []
+    sets = []
+    hf_list = []
+    opp_list = []
+    same_list = []
+    energies = []
+    for res in results:
+        filename, filetype, basis, *energy = res
+        if len(energy) > 1:
+            hf, opp, same, en = energy
         else:
-            # incomplete cases
-            r.get_error()
+            hf = 'NA'
+            opp = 'NA'
+            same = 'NA'
+            en = energy[0]
+        #path, file = os.path.split(filename)
+        #if path is not '.':
+        #    file = 'subdir/' + file
+        files.append(filename)
+        types.append(filetype)
+        sets.append(basis)
+        hf_list.append(hf)
+        opp_list.append(opp)
+        same_list.append(same)
+        energies.append(en)
+    
+    df = pd.DataFrame({'File': files, 'Type': types, 'Basis': sets,
+                       'HF': hf_list, 'Opp Spin': opp_list, 'Same Spin': same_list,
+                       'SRS (if poss)': energies})
+    return df
+
+def results_table(dir):
+    results = parse_results(dir)
+    table = make_table(results)
+    return table
 
 def thermochemistry(dir):
     """Returns thermochemical data for all the relevant hessian log files in the given directory and

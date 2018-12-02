@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from chem_assistant.user_scripts import *
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
+parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory', action='store_true')
+parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
+
+args = parser.parse_args()
+
+if args.meta:
+   make_files_from_meta('.') 
+if args.thermochem:
+    thermochemistry('.')
+if args.results:
+    df = results_table('.')
+    print(df)
+    done = False
+    while not done:
+        csv = input('Print to csv? [y/n] ')
+        if csv.lower() in ('y', 'n'):
+            done = True
+            if csv.lower() == 'y':
+                filename = input('Filename: ')
+                df.to_csv(filename, index=False)
+        else:
+            print("Please select 'y' or 'n'")    

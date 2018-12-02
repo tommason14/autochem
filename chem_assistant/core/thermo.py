@@ -39,8 +39,10 @@ def thermo_freqs(file):
 
 def run(file):
     p = subprocess.Popen(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'thermo-gamess.exe'), shell=True, stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE, universal_newlines=True)
-    newline = os.linesep # [1]
+    stdout=subprocess.PIPE, universal_newlines=True) 
+    # os.path.dirname(os.path.realpath(__file__)) = dir of this file, irrespective of where the
+    # python script is executed
+    newline = os.linesep
     commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
     print("\033[30;46mThermodynamics for", file +"\033[0m")
