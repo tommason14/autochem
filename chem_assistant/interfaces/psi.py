@@ -117,6 +117,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
+        comment = f"# PSI4 Calc: {self.title}\n"
         mem  = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
         charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
@@ -128,7 +129,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         reorient = "no_reorient\n"
         end = "}\n"
                 
-        data = [mem, mol, charge, atoms, units, reorient, sym,  end]
+        data = [comment, mem, mol, charge, atoms, units, reorient, sym,  end]
         
         # add in user options
         for key, value in self.input.molecule.items():
@@ -222,7 +223,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
-        mkdir(self.base_name)
+        if not exists(self.base_name):    
+            mkdir(self.base_name)
         system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
