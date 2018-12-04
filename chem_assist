@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
 parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory', action='store_true')
 parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
-parser.add_argument('-t', '--tree_from_files', help='Creates a directory tree with relevant job scripts froma directory called "files"', action='store_true')
+parser.add_argument('-tf', '--tree_from_files', help='Creates a directory tree with relevant job scripts froma directory called "files"', action='store_true')
 parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required', action='store_true')
 args = parser.parse_args()
 

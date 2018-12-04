@@ -144,12 +144,13 @@ store the iteration number.
                 rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
                 rerun_job = os.path.join(rerun_dir, 'rerun.job')
                 # copy old job into a string (small file), modify file names
-                with open(orig_job, "r") as jobfile:
-                    job = jobfile.read()
-                newjob = job.replace(inp, 'rerun.inp')
-                newjob = newjob.replace(self.log, 'rerun.' + ext)
-                with open(rerun_job, 'w') as f:
-                    f.write(newjob) 
+                if job in os.listdir('.'):
+                    with open(orig_job, "r") as jobfile:
+                        job = jobfile.read()
+                    newjob = job.replace(inp, 'rerun.inp')
+                    newjob = newjob.replace(self.log, 'rerun.' + ext)
+                    with open(rerun_job, 'w') as f:
+                        f.write(newjob) 
                 # parse original inp and add new coords
                 rerun_inp_file = []
                 with open(orig_inp, "r") as f:
