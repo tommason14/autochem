@@ -132,7 +132,7 @@ class Molecule:
         if as_latex:
             string = ""
             for sym, number in sorted(formula.items()):
-                string += f"{sym}\\textsubscript{{{number}}}"
+                string += f"{sym}\textsubscript{{{number}}}"
             return string
         if as_html:
             string = ""
