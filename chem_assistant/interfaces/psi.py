@@ -117,7 +117,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
-        comment = f"# PSI4 Calc: {self.title}\n"
+        comment = f"# PSI4 Calc: {self.title}\n\n"
         mem  = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
         charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
