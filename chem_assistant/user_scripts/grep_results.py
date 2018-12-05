@@ -197,7 +197,7 @@ def thermochemistry(dir):
         TC-TdeltaS in kJ/mol        =           -72.94952
     """
     for log in get_logs(dir):
-        r = get_results_class(log)
+        _, r = get_results_class(log)
         if r.completed():
             if r.is_hessian():
                 print(f'{r.log}: Hessian calc')

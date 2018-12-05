@@ -256,7 +256,7 @@ C        call system(acommand)
         cm2kj=2625.5
         pi=3.1415926539
         tokg=1.6605402E-27
-        tokg2=1.6605402E-47
+        tokg2=1.6605402D-47
         
         open(3,file='freq.out',status='unknown')
        
@@ -1025,7 +1025,7 @@ C  140   close(4)
        mtot=0.0
        i=1
   300  read(4,*,end=310) label(i),charge(i),
-       coord(i,1),coord(i,2),coord(i,3)
+     . coord(i,1),coord(i,2),coord(i,3)
        mtot=mtot+mass(charge(i))
        numatom(i)=i
        i=i+1
