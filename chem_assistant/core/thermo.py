@@ -32,7 +32,7 @@ def thermo_freqs(file):
         for line in f.readlines():
             if re.search(regex, line):
                 vibs.append(line.split()[1])
-    vibs = vibs[6:] #3N-6, with the 6 at the start = trans/rot.
+    vibs = vibs[6:] #3N-6, with the 6 at the start = trans or rot modes.
     with open("freq.out", "w") as output:
         for i in vibs:
             output.write(i + "\n")
