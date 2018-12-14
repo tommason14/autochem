@@ -201,6 +201,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+        num_frags = len(self.mol.fragments)
         job_file = self.find_job()
         with open(job_file) as f:
             job = f.read()       
@@ -210,22 +211,26 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             # change #SBATCH --nodes=8 #num frags
             # change rungms name.inp 00 96 12 # 96 = frags*12
             if hasattr(self.mol, 'fragments'): # translates as if fmo:
-                job = job.replace('nodes=8', f'nodes={len(self.mol.fragments)}')
-                job = job.replace('96', f'{12 * len(self.mol.fragments)}')                    
-            job = job.replace('name', f'{self.base_name}') 
+                job = job.replace('nodes=8', f'nodes={num_frags}')
+                job = job.replace('96', f'{12 * num_frags}')                    
+            newjob = job.replace('name', f'{self.base_name}') 
         elif self.sc == 'rjn':
             if hasattr(self.mol, 'fragments'):
-                job = job.replace('ncpus=8', f'ncpus={8 * len(self.mol.fragments)}')
-                job = job.replace('mem=4gb', f'ncpus={4 * 8 * len(self.mol.fragments)}gb') #allocate memory per cpu??
+                job = job.replace('ncpus=8', f'ncpus={8 * num_frags}')
+                job = job.replace('mem=4gb', f'ncpus={4 * 8 * num_frags}gb') #allocate memory per cpu??
           # change  #PBS -l mem=4gb
           # change  #PBS -l ncpus=8 ## 1node??
           # change  #PBS -l jobfs=4gb
-            job = job.replace('name', f'{self.base_name}') 
+            newjob = job.replace('name', f'{self.base_name}') 
+        elif self.sc == 'mon':
+            if hasattr(self.mol, 'fragments'):
+                job = job.replace('mem=64G', f'mem={16 * num_frags}G') # 2IP --> 64G, 2IP + water --> 80G 
+            newjob = job.replace('base_name', f'{self.base_name}')
         elif self.sc == 'gaia':
             pass
 
         # write
-        self.write_file(job, filetype="job")               
+        self.write_file(newjob, filetype="job")               
  
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.

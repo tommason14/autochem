@@ -37,6 +37,8 @@ molecular dynamics. This class also creates job files in the same directory as t
                           'raijin': 'rjn',
                           'mgs': 'mgs',
                           'magnus': 'mgs',
+                          'mon': 'mon',
+                          'monarch': 'mon',
                           'gaia': 'gaia'}
             try:
                 self.sc = supercomps[user_sc]

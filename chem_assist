@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 def imported_settings():
     file_to_import = args.settings[:-3] #lose the .py extension
-    imported = import_module(file_to_import)
+    imported = import_module(file_to_import, package = None)
     imp_sett = getattr(imported, 'sett')
     return imp_sett
 
