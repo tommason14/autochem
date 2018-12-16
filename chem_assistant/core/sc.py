@@ -26,7 +26,7 @@ class Supercomp:
                 self.sc = 'rjn' #default to raijin
 
     def __repr__(self):
-        return f"{self.sc}"
+        return str(self.sc)
 
     def __add__(self, other):
         """String concatenation"""

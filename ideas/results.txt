@@ -30,4 +30,16 @@ for file in os.listdir(‘.’) (or os.walk if recursive)
         res.get_equil_coords() —> output into same dir
        if spec_after():
            make_spec_dir()
- Os.chdir(cwd)
+ os.chdir(cwd)
+
+------------
+Add energies to database- requires the complete path of the file in question-
+when accessing the db later, then you parse for a certain string in the path,
+say '2IP', or 'freq'. No more messing with a million excel files. Just one
+database that is accessible from anywhere on the planet.
+Give the user options to add database credentials from the command line
+interface
+
+
+
+

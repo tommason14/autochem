@@ -68,19 +68,21 @@ class Molecule:
     Neutrals['water'] = ['H', 'H', 'O']
 
 
-    def __init__(self, using = None):
+    def __init__(self, using = None, atoms = None, nfrags = None):
         if using is not None:
             self.coords = self.read_xyz(using)
             #list of Atom objects, more useful than list of coordinates
             for index, atom in enumerate(self.coords):
-                atom.index = index + 1 #sop first atom has index 1
+                atom.index = index + 1 #so first atom has index 1
         self.bonds = []
-        
+        if atoms is not None and using is None:
+            self.coords = atoms
+
+        self.nfrags = nfrags
+
         if hasattr(self, 'coords'):
         # self.complex used in input files
         # assuming a neutral closed shell system
-        # can be changed in meta.json --> needs implementing
-        #sort elements wrt atomic number
             
             self.complex = {
                 "type": "complex",
@@ -175,73 +177,57 @@ class Molecule:
                     f.write(f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n")
 
 
-    def split(self, cutoff):
-        """Assigns each atom in ``self.coords`` to a different fragment- very useful for FMO calculations."""
+    def split(self):
+        """Assigns each atom in ``self.coords`` to a different fragment- very useful for FMO calculations.
+        Note: Only works if all intramolecular bonds are shorter than all intermolecular bonds."""
 
-        # Loop over each atom in turn, and compare with every other atom in the list. If the distance between atoms is less than a cutoff distance, then consider them to be in the same fragment. Consider bonds as appropriate.
-        
-        mol = 0
-        for i, atom_i in enumerate(self.coords):
-            connected = False
-            for j, atom_j in enumerate(self.coords):
-                if i != j:
-                    dist = atom_i.distance_to(atom_j)
-                    if dist < cutoff:
-                        connected = True
-                        #connected
-                        #same molecule 
-                        if atom_i.mol is None and atom_j.mol is None:
-                        #if not already assigned:
-                            atom_i.connected_atoms.append(atom_j)
-                            atom_j.connected_atoms.append(atom_i)
-                            atom_i.bonds.append(Bond(atom_i, atom_j))
-                            atom_j.bonds.append(Bond(atom_j, atom_i))
-                            atom_i.mol, atom_j.mol = mol, mol
-                            mol += 1
-                        elif atom_i.mol is not None and atom_j.mol is None:
-                            # only assign to j
-                            # need to assign the number of i to j, not a new value
-                            atom_j.mol = atom_i.mol
-                            atom_j.connected_atoms.append(atom_i)
-                            atom_j.bonds.append(Bond(atom_j, atom_i))
-                        elif atom_j.mol is not None and atom_i.mol is None:
-                            # only assign to i
-                            atom_i.mol = atom_j.mol
-                            atom_i.connected_atoms.append(atom_j)
-                            atom_i.bonds.append(Bond(atom_i, atom_j))
-                        elif atom_i.mol is not None and atom_j.mol is not None:
-                            """MAY NEED TO ADD SOME BONDS HERE LATER
-                            FOR THE HYDROGEN BOND DISTANCES ETC..."""
-                            # if within cutoff, but assigned to different fragments, need to re-assign all atoms of one number to another
-                            if atom_i.mol != atom_j.mol:
-                                #look up a number to replace
-                                num = atom_j.mol # i.e. get the 4s
-                                for atom in self.coords:
-                                    if atom.mol == num: # when atom.mol is 4
-                                        atom.mol = atom_i.mol # reassign to 3
-            if not connected:
-                # assign its own fragment- say a halide anion
-                atom_i.mol = mol
-                mol +=1
-        
-    def collect_frags(self):
-        """Collating all atoms of fragments into a list, assigned to a key of a dictionary. 
-        Moving from a 1-dimensional list of coordinates to a dictionary of fragments"""
-
-        self.frags = {}
+        self.mol_dict = {}
         for atom in self.coords:
-            if atom.mol not in self.frags:
-                self.frags[atom.mol] = [atom]
-            else:
-                self.frags[atom.mol].append(atom)
+            self.mol_dict[atom.index] = Molecule(atoms = [atom]) # 1-atom molecules
+
+        def min_dist(mol_i, mol_j):
+            """Finds the minimum distance between atoms in two different molecules"""
+            distances = []
+            for atom_i in mol_i:
+                for atom_j in mol_j:
+                    distances.append(atom_i.distance_to(atom_j))
+            return min(distances)
+
+        def distances():
+            dist_list = []
+            # for every combination of atoms in the list, find their distance
+            for i, j in itertools.combinations(self.mol_dict.keys(), 2):
+                minimum_dist = min_dist(self.mol_dict[i], self.mol_dict[j])
+                dist_list.append([i, j, minimum_dist])
+            return dist_list
+
+        def collect_atoms():
+            # modify the molecule dictionary, and drop keys when the atoms are assigned to a new molecule
+            while len(set(self.mol_dict.keys())) > self.nfrags:
+                dist = distances()    
+                dist.sort(key = lambda item: item[2]) # sort on distance of [i, j, dist]
+                # take the second atom, append it to the list of atoms in the value of the first
+                mol1, mol2 = dist[0][:2] # dist = [[i,j,dist], [i,j,dist], [i,j,dist]...]
+                # adding all atoms in 'mol2' to the list of atoms of the first molecule
+                for index, atom in enumerate(self.mol_dict[mol2]):
+                    self.mol_dict[mol1].coords.append(atom)
+                # remove the index of the molecule that has been added to the first list
+                self.mol_dict.pop(mol2)   
+
+        collect_atoms()
+        # assign a number to each molecule
+        for key, value in self.mol_dict.items():
+            val = key
+            for atom in value:
+                atom.mol = val
 
     def check_db(self):
         """Checks fragments for a match in the database"""
 
         symbols = {} # not tied to an instance, only required when checking the database
-        for frag, atoms in self.frags.items():
+        for frag, atoms in self.mol_dict.items():
             symbols[frag] = [atom.symbol for atom in atoms]
-        
+ 
         def check_dict(molecules_dict, symbols_dict, db):
             """Checking molecule database for a match, and returning the required attributes- name, atoms in molecule, type of molecule, charge, multiplicity, and elements present in the molecule"""
             if db == Molecule.Anions:
@@ -263,10 +249,10 @@ class Molecule:
                         data = {
                                 "type": mol_type,
                                 "name" : name,
-                                "atoms": self.frags[sym], #not symbols, but the atom objects
+                                "atoms": self.mol_dict[sym].coords, #not symbols, but the atom objects
                                 "charge": charge,
                                 "multiplicity": mult,
-                                "elements": sort_elements(self.frags[sym])
+                                "elements": sort_elements(self.mol_dict[sym])
                             }
                         molecules_dict[sym] = data
             return molecules_dict
@@ -278,28 +264,12 @@ class Molecule:
     def print_frags(self):
         for frag, data in self.fragments.items():
             print(f"{data['type'].capitalize()} found: {data['name']}")
-    def remove_assignments(self):
-        for atom in self.coords:
-            atom.mol = None
     
     def separate(self):
-        """Separates coordinates into specific fragments using a cutoff distance. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
-        cutoff = 1.7
-        correct = False
-        while not correct:
-            self.split(cutoff)
-            self.collect_frags()
-            self.check_db()
-            self.print_frags()
-            check = input(f'Does your system contain {len(self.fragments)} fragments? [y/n] ')
-            if check.lower() == 'y':
-                correct = True
-            if check.lower() == 'n':
-                self.remove_assignments()
-                cutoff = float(input('Cutoff distance (Å): '))
-            if check.lower() not in ('y', 'n'):
-                print("Please choose 'y' or 'n'")
-        # now we have the correct fragments, use them to generate the fmo section of inputs
+        """Separates coordinates into specific fragments using the intermolecular distances. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
+        self.split()
+        self.check_db()
+        self.print_frags() 
         self.fmo_meta() 
 
     #format for fmo run of complete system 

@@ -56,8 +56,10 @@ class GamessJob(Job):
          H     1.0   -7.26422   -2.51909   -7.63925
          H     1.0   -5.81544   -3.32313   -8.39516 
 
-    If FMO (Fragment Molecular Orbital) calculations are desired, pass the keyword argument ``fmo``, set to *True*:
-        >>> job = GamessJob(using = 'file.xyz', fmo = True)
+    If FMO (Fragment Molecular Orbital) calculations are desired, pass the keyword argument ``fmo``, set to *True*, along with a settings object with a parameter of ``nfrags``:
+        >>> s = Settings()
+        >>> s.nfrags = 4
+        >>> job = GamessJob(using = 'file.xyz', fmo = True, settings = s)
     
     The names of files created default to the type of calculation: optimisation (opt), single point
 energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
@@ -96,6 +98,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
     def determine_fragments(self):
         if self.fmo:
+            if self.merged.nfrags != {}: #automatically creates an empty dict if called
+                self.mol.nfrags = self.merged.nfrags
+            else:
+                self.mol.nfrags = int(input('Number of fragments: '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -103,15 +109,34 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def order_header(self):
         if self.fmo:
-            desired = ('SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO', 'MP2')
+            desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO', 'MP2']
         else:
-            desired = ('SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS', 'MP2') # no gddi or fmo sections
+            desired = ['SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS', 'MP2'] # no gddi or fmo sections
+
+
         self.header = []
         for i in desired:
             for line in self.unordered_header:
                 item = line.split()[0][1:]
                 if item == i:
                     self.header.append(line)
+        # add in additional commands, given as sett.input.blah = 'blah'
+        else:
+            for line in self.unordered_header:
+                item = line.split()[0][1:]
+                if item not in desired and item != 'FMO' and item != 'GDDI':
+                #making inputs of each fragment failed here- fmo and gddi in input originally
+                    if self.fmo:
+                        self.header.insert(-5, line)
+                    else:
+                        self.header.insert(-4, line)
+        
+        # no need for stationary point steps if not an optimisation
+        if self.input.contrl.runtyp != 'optimize':
+            for index, line in enumerate(self.header):
+                if line.split()[0]  == '$STATPT':
+                    del self.header[index]
+
         self.header = "".join(self.header)
 
     def make_automatic_changes(self):
@@ -198,44 +223,55 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         inp = self.make_inp()
         self.file_basename()
         self.write_file(inp, filetype = 'inp')
-
-    def create_job(self):
-        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        num_frags = len(self.mol.fragments)
+   
+    def get_job_template(self):
         job_file = self.find_job()
         with open(job_file) as f:
             job = f.read()       
-        
+            return job
+    
+    def frags_mgs_replace(self, job):
+        if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
+            num_frags = len(self.mol.fragments)
+            jobfile = job.replace('nodes=8', f'nodes={num_frags}')
+            jobfile = jobfile.replace('96', f'{12 * num_frags}') 
+            return jobfile
+        return job
+            
+    def frags_rjn_replace(self, job):
+        if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
+            num_frags = len(self.mol.fragments)
+            jobfile = job.replace('ncpus=8', f'ncpus={16 * num_frags}')
+            jobfile = jobfile.replace('mem=4gb', f'mem={4 * 16 * num_frags}gb')
+            jobfile = jobfile.replace('jobfs=4gb', f'jobfs={4 * 16 * num_frags - 30}gb')
+            return jobfile
+        return job
+    
+    def create_job(self):
+        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+        jobfile = self.get_job_template()
         # modify
-        if self.sc == 'mgs':
-            # change #SBATCH --nodes=8 #num frags
-            # change rungms name.inp 00 96 12 # 96 = frags*12
-            if hasattr(self.mol, 'fragments'): # translates as if fmo:
-                job = job.replace('nodes=8', f'nodes={num_frags}')
-                job = job.replace('96', f'{12 * num_frags}')                    
-            newjob = job.replace('name', f'{self.base_name}') 
-        elif self.sc == 'rjn':
-            if hasattr(self.mol, 'fragments'):
-                job = job.replace('ncpus=8', f'ncpus={8 * num_frags}')
-                job = job.replace('mem=4gb', f'ncpus={4 * 8 * num_frags}gb') #allocate memory per cpu??
-          # change  #PBS -l mem=4gb
-          # change  #PBS -l ncpus=8 ## 1node??
-          # change  #PBS -l jobfs=4gb
-            newjob = job.replace('name', f'{self.base_name}') 
-        elif self.sc == 'mon':
-            if hasattr(self.mol, 'fragments'):
-                job = job.replace('mem=64G', f'mem={16 * num_frags}G') # 2IP --> 64G, 2IP + water --> 80G 
-            newjob = job.replace('base_name', f'{self.base_name}')
-        elif self.sc == 'gaia':
-            pass
+        if str(self.sc) == 'mgs':
+            jobfile = self.frags_mgs_replace(jobfile)
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
+        elif str(self.sc) == 'rjn':
+            jobfile = self.frags_rjn_replace(jobfile)
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
+        # elif self.sc == 'mon':
+        #     if hasattr(self.mol, 'fragments'):
+        #         job = job.replace('mem=64G', f'mem={16 * num_frags}G') # 2IP --> 64G, 2IP + water --> 80G 
+        #     job = job.replace('base_name', f'{self.base_name}')
+        # elif self.sc == 'gaia':
+        #     pass
 
         # write
-        self.write_file(newjob, filetype="job")               
- 
+        self.write_file(jobfile, filetype='job')
+
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
-        mkdir(self.base_name)
+        if not exists(self.base_name):
+            mkdir(self.base_name)
         system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):

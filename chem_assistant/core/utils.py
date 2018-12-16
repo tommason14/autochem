@@ -3,7 +3,7 @@
 
 from .atom import Atom
 
-__all__ = ['read_file', 'get_type']
+__all__ = ['read_file', 'get_type', 'write_xyz']
 
 def read_file(file):
     with open(file, "r") as f:

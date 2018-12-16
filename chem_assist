@@ -17,9 +17,8 @@ args = parser.parse_args()
 
 def imported_settings():
     file_to_import = args.settings[:-3] #lose the .py extension
-    imported = import_module(file_to_import, package = None)
-    imp_sett = getattr(imported, 'sett')
-    return imp_sett
+    imported = import_module(file_to_import)
+    return imported.sett
 
 # if no arguments passed
 if len(sys.argv) == 1:
@@ -47,6 +46,7 @@ if args.settings:
     settings = imported_settings()
 
 if args.dir_tree_from_files and args.settings:
+    settings = imported_settings()
     xyz_to_tree(settings)
 
 if args.dir_tree_from_files and not args.settings:
