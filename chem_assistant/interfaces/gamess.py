@@ -257,7 +257,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         elif str(self.sc) == 'rjn':
             jobfile = self.frags_rjn_replace(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        # elif self.sc == 'mon':
+        elif self.sc == 'mon':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         #     if hasattr(self.mol, 'fragments'):
         #         job = job.replace('mem=64G', f'mem={16 * num_frags}G') # 2IP --> 64G, 2IP + water --> 80G 
         #     job = job.replace('base_name', f'{self.base_name}')
