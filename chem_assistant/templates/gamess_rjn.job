@@ -1,9 +1,9 @@
 #!/bin/bash
 #PBS -P k96
-#PBS -l mem=4gb
-#PBS -l ncpus=8
-#PBS -l jobfs=4gb
-#PBS -l walltime=100:00:00
+#PBS -l mem=125gb
+#PBS -l ncpus=32
+#PBS -l jobfs=150gb
+#PBS -l walltime=24:00:00
 #PBS -l wd
 
 module unload openmpi/1.6.3

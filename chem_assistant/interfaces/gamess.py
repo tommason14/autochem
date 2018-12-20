@@ -233,17 +233,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def frags_mgs_replace(self, job):
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
-            jobfile = job.replace('nodes=8', f'nodes={num_frags}')
-            jobfile = jobfile.replace('96', f'{12 * num_frags}') 
+            jobfile = job.replace('nodes=1', f'nodes={num_frags}')
+            jobfile = jobfile.replace('12 12', f'{12 * num_frags} 12') 
             return jobfile
         return job
             
     def frags_rjn_replace(self, job):
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
-            jobfile = job.replace('ncpus=8', f'ncpus={16 * num_frags}')
-            jobfile = jobfile.replace('mem=4gb', f'mem={4 * 16 * num_frags}gb')
-            jobfile = jobfile.replace('jobfs=4gb', f'jobfs={4 * 16 * num_frags - 30}gb')
+            jobfile = job.replace('ncpus=32', f'ncpus={16 * num_frags}')
+            jobfile = jobfile.replace('mem=128gb', f'mem={4 * 16 * num_frags}gb') # 4gb cpus
+            jobfile = jobfile.replace('jobfs=150gb', f'jobfs={4 * 16 * num_frags + 20}gb')
             return jobfile
         return job
     
