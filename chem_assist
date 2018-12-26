@@ -13,6 +13,7 @@ parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of 
 parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
 parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
 parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
+parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
 args = parser.parse_args()
 
 def imported_settings():
@@ -52,3 +53,5 @@ if args.dir_tree_from_files and args.settings:
 if args.dir_tree_from_files and not args.settings:
     settings = Settings()
     xyz_to_tree(settings)
+if args.graph:
+    plot_opt(args.graph)

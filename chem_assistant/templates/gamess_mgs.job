@@ -3,6 +3,12 @@
 #SBATCH --account=pawsey0197
 #SBATCH --time=24:00:00
 #SBATCH --export=NONE
-module use /group/pawsey0197/software/cle52up04/modulefiles
-module load gamess/2016
+#SBATCH --error=%j.err
+#SBATCH --output=name.log
+
+ulimit -s unlimited
+ulimit -l unlimited
+
+module use /group/pawsey0197/software/cle60up05/modulefiles
+module load gamess/2018
 rungms name.inp 00 12 12

@@ -99,7 +99,8 @@ class Molecule:
             return f'Molecule of {len(self.coords)} atoms. Elements: {els}'
         return self._repr()
     
-    def _repr(self):
+    def _repr(self): 
+        """Repr for system after fragmentation"""
         frags = {}
         for frag in self.fragments.values():
             if frag['name'] not in frags:
@@ -194,6 +195,8 @@ class Molecule:
             return min(distances)
 
         def distances():
+            """Returns a list of lists of [i, j, min_dist(i, j)] for each combination of atoms in
+the system"""
             dist_list = []
             # for every combination of atoms in the list, find their distance
             for i, j in itertools.combinations(self.mol_dict.keys(), 2):
@@ -282,7 +285,7 @@ molecule instance as self.indat and self.charg"""
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
         
         for frag, data in self.fragments.items():
-            info[frag] = {"indat": f"0,{data['atoms'][0].index},{data['atoms'][-1].index},",
+            info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
                           "charg" : str(data['charge'])}
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
