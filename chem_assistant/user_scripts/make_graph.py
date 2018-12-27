@@ -31,6 +31,6 @@ def plot_opt(file):
     df = pd.DataFrame({'iters': iters, 'energies': energies})
     plot = df.plot.line(x = 'iters', y = 'energies', legend = False)
     plot.set_xlabel('Iterations')
-    plot.set_ylabel('Energies, E$_\mathrm{h}$')
+    plot.set_ylabel('Energy, E$_\mathrm{h}$')
     plot.yaxis.major.formatter._useMathText = True
     plt.show()
