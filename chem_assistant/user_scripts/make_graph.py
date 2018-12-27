@@ -13,7 +13,7 @@ Description: Graph of energy vs iteration of geom opt in GAMESS
 # Plotting
 
 import pandas as pd
-from plotnine import * 
+import matplotlib.pyplot as plt
 
 def get_data(file):
     iters = []
@@ -29,10 +29,8 @@ def get_data(file):
 def plot_opt(file):
     iters, energies = get_data(file)
     df = pd.DataFrame({'iters': iters, 'energies': energies})
-    plot = \
-    (
-        ggplot(df) + geom_line(aes(x = 'iters', y = 'energies')) +
-        labs(x = 'Iteration', y = 'Energy, E$_\mathrm{h}$')+
-        theme_bw()
-    )
-    print(plot)
+    plot = df.plot.line(x = 'iters', y = 'energies', legend = False)
+    plot.set_xlabel('Iterations')
+    plot.set_ylabel('Energies, E$_\mathrm{h}$')
+    plot.yaxis.major.formatter._useMathText = True
+    plt.show()
