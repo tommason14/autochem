@@ -3,9 +3,11 @@
 
 from chem_assistant.user_scripts import *
 from chem_assistant.core import Settings
+from chem_assistant.core.thermo import make_ir_spectra
 from importlib import import_module
 import argparse
 import sys
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
@@ -14,6 +16,7 @@ parser.add_argument('-r', '--results', help='Finds results of output files with 
 parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
 parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
 parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
+parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action = 'store')
 args = parser.parse_args()
 
 def imported_settings():
@@ -55,3 +58,16 @@ if args.dir_tree_from_files and not args.settings:
     xyz_to_tree(settings)
 if args.graph:
     plot_opt(args.graph)
+
+if args.ir:
+    # correct = False 
+    # while not correct:
+    #     save = input("Save to png? [Y/N] ")
+    #     if save.lower() not in ('y', 'n'):
+    #         print("Please choose 'Y' or 'N'")
+    # if save.lower() == 'Y':
+    #     correct = True
+    #     name = input('Filename: ')
+    #     make_ir_spectra(args.ir, file_name = name)
+    # else: 
+    make_ir_spectra(args.ir)

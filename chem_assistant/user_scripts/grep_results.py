@@ -24,19 +24,10 @@ Get results.
 Create single points for completed geom_opts? [y/n]
 """
 from ..core.thermo import thermo_data
-from ..core.utils import (read_file, get_type)
+from ..core.utils import (read_file, get_type, get_files)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 import os
-
-
-def get_logs(directory):
-    logs = []
-    for path, dirs, files in os.walk(directory):
-        for file in files:
-            if file.endswith('.log') or file.endswith('.out') and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
-                logs.append(os.path.join(path, file))
-    return logs
 
 
 def get_results_class(log):
@@ -46,6 +37,12 @@ def get_results_class(log):
             'psi4': PsiResults(log)}
     return log_type, logs.get(log_type, None)
 
+def search_for_coords(dir):
+    for log in get_files(dir, ('.log', '.out')):
+        _, r = get_results_class(log)
+        if r.completed():
+            if r.is_optimisation():
+                r.get_equil_coords()
 
 def srs_output(r):
     """Returns parameters of SRS-MP2 calculations; HF energy, Opposite and Same spin parameters, as
@@ -64,8 +61,6 @@ energy
     If that is not possible:
         log file, basis set, total energy"""
     orig = os.getcwd()
-    if r.is_optimisation():
-        r.get_equil_coords()
     if type(r) == GamessResults:
         if r.get_fmo_level() != 0:
             energy = srs_output(r)
@@ -75,16 +70,11 @@ energy
         energy = srs_output(r)
     return energy
 
-def process_hessian(r):
-   """Takes a hessian log file and produces thermochemical data. In future, extend to visualising
-normal modes and plotting IR spectra using node intensities."""
-    # generate freq.out, fort.10, then clean at end by removing from dir
-    
 
 def parse_results(dir):
     output = []
     cwd = os.getcwd()
-    for log in get_logs(dir):
+    for log in get_files(dir, ('.out', '.log')):
         log = log[2:] # no ./file, just file
         filetype, r = get_results_class(log)
         try:
@@ -196,9 +186,8 @@ def thermochemistry(dir):
 
         TC-TdeltaS in kJ/mol        =           -72.94952
     """
-    for log in get_logs(dir):
+    for log in get_files(dir, ('.log', '.out')):
         _, r = get_results_class(log)
         if r.completed():
             if r.is_hessian():
-                print(f'{r.log}: Hessian calc')
                 thermo_data(r.log)
