@@ -264,10 +264,15 @@ the system"""
         for db in (Molecule.Anions, Molecule.Cations, Molecule.Neutrals):
             self.fragments = check_dict(self.fragments, symbols, db)
 
+        #sort order of atoms
+        for data in self.fragments.values():
+            data['atoms'] = sorted(data['atoms'], key = lambda atom: atom.index)
+
+        
     def print_frags(self):
         for frag, data in self.fragments.items():
             print(f"{data['type'].capitalize()} found: {data['name']}")
-    
+
     def separate(self):
         """Separates coordinates into specific fragments using the intermolecular distances. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
         self.split()
@@ -283,7 +288,7 @@ molecule instance as self.indat and self.charg"""
         info = {}
        
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
-        
+
         for frag, data in self.fragments.items():
             info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
                           "charg" : str(data['charge'])}
