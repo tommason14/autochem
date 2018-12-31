@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
 from .atom import Atom
 
 __all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists']
