@@ -9,8 +9,7 @@
       "runtyp": "optimize",
       "maxit": 200,
       "ispher": 1,
-      "icharg": 0,
-      "mplevl": 2
+      "icharg": 0
     },
     "statpt": {
       "nstep": 500
