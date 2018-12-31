@@ -242,7 +242,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace('ncpus=32', f'ncpus={16 * num_frags}')
-            jobfile = jobfile.replace('mem=128gb', f'mem={4 * 16 * num_frags}gb') # 4gb cpus
+            jobfile = jobfile.replace('mem=125gb', f'mem={4 * 16 * num_frags}gb') # 4gb cpus
             jobfile = jobfile.replace('jobfs=150gb', f'jobfs={4 * 16 * num_frags + 20}gb')
             return jobfile
         return job
