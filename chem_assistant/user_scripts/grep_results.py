@@ -41,11 +41,10 @@ def get_results_class(log):
 def search_for_coords(dir):
     for log in get_files(dir, ('.log', '.out')):
         _, r = get_results_class(log)
-        if r.completed() and type(r) == GamessResults:
+        if r.completed():
             if r.is_optimisation():
                 print(f'{r.log}: Finding equilibrium coordinates...')
                 r.get_equil_coords()
-
 
 def srs_output(r):
     """Returns parameters of SRS-MP2 calculations; HF energy, Opposite and Same spin parameters, as

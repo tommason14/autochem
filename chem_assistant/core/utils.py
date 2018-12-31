@@ -44,12 +44,12 @@ with or without atomic numbers."""
 
 
 def get_files(directory, ext):
-    files = []
+    fileLst = []
     for path, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(ext) and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
-                files.append(os.path.join(path, file))
-    return files
+                fileLst.append(os.path.join(path, file))
+    return fileLst
 
 def module_exists(module_name):
     try:
