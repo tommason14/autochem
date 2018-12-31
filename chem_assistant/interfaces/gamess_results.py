@@ -128,7 +128,7 @@ store the iteration number.
             print(f'{self.log}: Equilibrium geometry found')
             write_xyz(equil, os.path.join(self.abspath, 'equil.xyz'))
         else:
-            if len(rerun) > 0 and len(equil) = 0:
+            if len(rerun) > 0 and len(equil) == 0:
                 print(f'{self.log}: Needs resubmitting. Coords stored in rerun/rerun.xyz')
                 # make new dir, and copy over input, replacing any coords
                 # TODO: Refactor this, but cba right now
