@@ -29,6 +29,7 @@ from ..core.utils import (read_file, get_type, get_files)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 import os
+import pandas as pd
 
 
 def get_results_class(log):
@@ -138,58 +139,45 @@ def results_table(dir):
 
 def thermochemistry(dir):
     """Returns thermochemical data for all the relevant hessian log files in the given directory and
-    subdirectories.
+    subdirectories. Saves to excel file, thermo.xlsx
     Usage:
         >>> thermochemistry('.')
-    Returns:
-        Thermodynamics for anion_0.out
-
-        Thermochemistry was done at      298.15 (k) and 1(Atm)
-
-        Total vibr frequencies                                           = 15
-        Imaginary frequencies                                           =  0
-        Low freqs (<300 cm^-1) with                      special treatment  =  0
-
-        Scaling factors
-        ZPVE =   1.0000
-        TC   =   1.0000
-        Svib =   1.0000
-
-           Frequency     ZPVE(vi)      H(vi)      S(vi)
-          170.5510         1.020109         1.597206        10.164604    HO
-          266.5580         1.594352         1.217327         6.771481    HO
-          333.6590         1.995700         0.996996         5.197825    HO
-          401.0410         2.398729         0.809558         4.011760    HO
-          430.5090         2.574985         0.737355         3.585659    HO
-          479.1500         2.865919         0.630098         2.980525    HO
-          490.0140         2.930899         0.608059         2.860051    HO
-          746.1180         4.462723         0.250597         1.070728    HO
-          816.4150         4.883188         0.193758         0.813204    HO
-         1024.9390         6.130423         0.087821         0.353895    HO
-         1045.1020         6.251023         0.081192         0.326142    HO
-         1090.3080         6.521412         0.068016         0.271373    HO
-         1272.6760         7.612202         0.032829         0.128019    HO
-         3689.2490        22.066345         0.000001         0.000003    HO
-         3723.2310        22.269600         0.000001         0.000002    HO
-
-        ZPVE                        =            95.57761 kJ/mol
-
-        Thermal correction in kJ/mol
-
-        TC harmonic oscillator      =            17.22658
-
-             Entropies in J/(mol K)
-        S electronic                =             0.00000
-        S translational             =           161.18860
-        S rotational                =           102.72824
-        S vibrational HO            =            38.53527
-
-        Stotal Harmonic oscillator  =           302.45211
-
-        TC-TdeltaS in kJ/mol        =           -72.94952
     """
+    collected = \
+    {
+        'File': [],
+        'ZPVE': [],
+        'TC': [],
+        'S elec': [],
+        'S tran': [],
+        'S rot': [],
+        'S vib': [],
+        'S tot': [],
+        'TC - TS': []
+    }
+
     for log in get_files(dir, ('.log', '.out')):
         _, r = get_results_class(log)
         if r.completed():
             if r.is_hessian():
-                thermo_data(r.log)
+                print(f'Thermo data for {log}')
+                res = thermo_data(r.log)
+                res['File'] = os.getcwd() +  log[1:]
+                for k, v in res.items():
+                    collected[k].append(v)
+
+    # add units to dict keys   
+
+    kj = ('ZPVE', 'TC', 'TC - TS')
+    jmol = ('S elec', 'S tran', 'S rot', 'S vib', 'S tot')
+    kv = list(collected.items())
+    collected.clear() 
+    for k, v in kv:
+        if k in kj:
+            collected[k + ' [kJ/mol]'] = v
+        elif k in jmol:
+            collected[k + ' [J/(mol K)]'] = v
+        else:
+            collected[k] = v 
+
+    pd.DataFrame(collected).to_excel('thermo.xlsx', index = False) 

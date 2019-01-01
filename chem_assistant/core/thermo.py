@@ -65,13 +65,37 @@ def run(file):
     newline = os.linesep
     commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
-    print("\033[30;46mThermodynamics for", file +"\033[0m")
-    os.system("cat fort.10")
+    # print("\033[30;46mThermodynamics for", file +"\033[0m")
+    # os.system("cat fort.10")
 
-# def make_table():
-#     data
-#
-# def add_data(file):
+def read_fort():
+    with open('fort.10', 'r') as f:
+        fort = [line for line in f.readlines()]
+
+    return fort
+
+def grep_data(fort):
+    """Collects desired data from fort.10"""
+    data = {}
+    lookup = \
+    {
+        'TC h'   : 'TC',
+        'S elec' : 'S elec',
+        'S tran' : 'S tran',
+        'S rot'  : 'S rot',
+        'S vib'  : 'S vib',
+        'Stot'   : 'S tot',
+        'TC-'    : 'TC - TS'
+    }
+    for line in fort:
+        if re.search('ZPVE.*=.*kJ', line):
+            data['ZPVE'] = line.split()[2]
+        for k, v in lookup.items():
+            if k in line:
+                data[v] = line.split()[-1]
+        # Maybe make this faster? Loops through whole dict even if already found- lookup.pop(k) not
+        # possible while iterating over dict
+    return data
 
 def cleanup():
     os.system('rm fort.10 moments geom.input freq.out')
@@ -82,11 +106,14 @@ results produced in the log file have been shown to be inaccurate."""
     thermo_initial_geom(file)
     freq_data(file, write_to_file = True)
     run(file)
+    fort = read_fort()    
+    data = grep_data(fort)
     cleanup()
+    return data
 
 
 # def gam(data, xseq, **params):
-#     "Generalised additive model- fitting complex functions"
+#     """Generalised additive model- fitting complex functions, use in stat_smooth()"""
 #
 #     # create a model
 #
