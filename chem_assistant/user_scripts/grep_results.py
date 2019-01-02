@@ -13,7 +13,8 @@ Description: Searches all sub dirs for results
 """
 """
 - Create opt dir or spec or hess-  when creating the jobs (make another dir)
-- If geom_opt has completed, extract equilibrium coords: save in opt folder as equil.xyz & if no
+TODO:
+- If geom_opt has completed, extract equilibrium coords: save in parent folder as equil.xyz & if no
   spec directory available, create it. If no equil.xyz in spec dir, then copy equil.xyz over to spec dir, and make files
 accordingly.
 
@@ -37,15 +38,17 @@ def get_results_class(log):
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
             'psi4': PsiResults(log)}
-    return log_type, logs.get(log_type, None)
+    return logs.get(log_type, None)
 
 def search_for_coords(dir):
     for log in get_files(dir, ('.log', '.out')):
-        _, r = get_results_class(log)
+        r = get_results_class(log)
         if r.completed():
             if r.is_optimisation():
                 print(f'{r.log}: Finding equilibrium coordinates...')
                 r.get_equil_coords()
+        else:
+            print(f"{log}: Not completed")
 
 def srs_output(r):
     """Returns parameters of SRS-MP2 calculations; HF energy, Opposite and Same spin parameters, as
@@ -65,13 +68,14 @@ energy
         log file, basis set, total energy"""
     orig = os.getcwd()
     if type(r) == GamessResults:
-        if r.get_fmo_level() != 0:
-            energy = srs_output(r)
-        else:
-            energy = (r.get_non_fmo(),) # Total Energy = .... 
+        # if r.get_fmo_level() != 0:
+        #     energy = srs_output(r)
+        # else:
+        #     energy = (r.get_non_fmo(),) # Total Energy = .... 
+        data = r.get_mp2_data()
     if type(r) == PsiResults:
         energy = srs_output(r)
-    return energy
+    return data
 
 
 def parse_results(dir):
@@ -79,23 +83,25 @@ def parse_results(dir):
     cwd = os.getcwd()
     for log in get_files(dir, ('.out', '.log')):
         log = log[2:] # no ./file, just file
-        filetype, r = get_results_class(log)
+        r = get_results_class(log)
+        filetype = get_type(log)
         try:
             if r.completed():
                 basis = r.get_basis()
-                if not r.is_hessian():
+                if r.is_optimisation() and r.opt_found_equil_coords() or r.is_spec(): # long time!!
                     print(f'{r.log}: Finding energies')
                     f = fetch_energies(r)
+                    print(f)
                     # adding to csv/df/database
-                    output.append((log, filetype, basis) + f)
-                else:
+                    # output.append((log, filetype, basis) + f)
+                elif r.is_hessian():
                     print(f'{r.log}: Hessian calc')
             else:
                 # incomplete cases
                 r.get_error()
         except AttributeError:
             continue
-    return output
+    # return output
 
 def make_table(results):
     '''Create a dataframe of energies and other relevant data extracted from each log file'''
@@ -134,8 +140,8 @@ def make_table(results):
 
 def results_table(dir):
     results = parse_results(dir)
-    table = make_table(results)
-    return table
+    # table = make_table(results)
+    # return table
 
 def thermochemistry(dir):
     """Returns thermochemical data for all the relevant hessian log files in the given directory and
@@ -157,11 +163,11 @@ def thermochemistry(dir):
     }
 
     for log in get_files(dir, ('.log', '.out')):
-        _, r = get_results_class(log)
+        r = get_results_class(log)
         if r.completed():
             if r.is_hessian():
                 print(f'Thermo data for {log}')
-                res = thermo_data(r.log)
+                res = thermo_data(r.log) # run fortran script
                 res['File'] = os.getcwd() +  log[1:]
                 for k, v in res.items():
                     collected[k].append(v)

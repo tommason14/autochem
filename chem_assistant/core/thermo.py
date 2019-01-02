@@ -93,8 +93,6 @@ def grep_data(fort):
         for k, v in lookup.items():
             if k in line:
                 data[v] = line.split()[-1]
-        # Maybe make this faster? Loops through whole dict even if already found- lookup.pop(k) not
-        # possible while iterating over dict
     return data
 
 def cleanup():
