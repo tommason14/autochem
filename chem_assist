@@ -34,18 +34,7 @@ if args.meta:
 if args.thermochem:
     thermochemistry('.')
 if args.results:
-    df = results_table('.')
-    print(df)
-    done = False
-    while not done:
-        csv = input('Print to csv? [y/n] ')
-        if csv.lower() in ('y', 'n'):
-            done = True
-            if csv.lower() == 'y':
-                filename = input('Filename: ')
-                df.to_csv(filename, index=False)
-        else:
-            print("Please select 'y' or 'n'")    
+    results_table('.')
 
 if args.settings:
     settings = imported_settings()

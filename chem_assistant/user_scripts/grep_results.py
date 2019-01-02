@@ -30,14 +30,15 @@ from ..core.utils import (read_file, get_type, get_files)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 import os
-import pandas as pd
+import re
+import csv
 
 
 def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
-            'psi4': PsiResults(log)}
+            'psi': PsiResults(log)}
     return logs.get(log_type, None)
 
 def search_for_coords(dir):
@@ -78,70 +79,214 @@ energy
     return data
 
 
+def get_type(filepath):
+    calc = ''
+    with open(filepath, "r") as f:
+        for line in f.readlines():
+            if 'GAMESS' in line:
+                calc = 'gamess'
+                break
+            elif 'PSI4' in line:
+                calc = 'psi'
+                break
+    return calc
+
+def gamess_run_type(filepath):
+    fmo = False
+    mp2 = False
+    scs = False
+    # fmo, mp2/srs, hf, dft?
+    with open(filepath, "r") as f:
+        for line in f.readlines():
+            if 'FMO' in line:
+                fmo = True
+            elif 'MPLEVL' in line:
+                mp2 = True
+            elif 'SCS' in line:
+                scs = True
+            elif 'RUN TITLE' in line:
+                break # by this point, all data required is specified
+    return fmo, mp2, scs
+
+def mp2_data(filepath, mp2_type):
+    basis = ''
+    HF = ''
+    MP2 = ''
+    with open(filepath, "r") as f:
+        for line in f.readlines():
+            if 'Euncorr HF' in line:
+                HF = float(line.split()[-1])
+            if 'INPUT CARD> $BASIS' in line:
+                basis = line.split()[-2].split('=')[1]
+            if f'E corr {mp2_type}' in line:
+                MP2 = float(line.split()[-1])
+    return basis, HF, MP2
+
+def gamess_data(filepath):
+    """Returns the last occurrence of FMO energies (FMO3 given if available), SRS and HF energies"""
+    fmo, mp2, scs = gamess_run_type(filepath)
+    if fmo and scs:
+        basis, HF, MP2 = mp2_data(filepath, 'SCS')
+    elif fmo and mp2 and not scs:
+        basis, HF, MP2 = mp2_data(filepath, 'MP2')
+    elif not fmo:
+        val = ''
+        basis = ''
+        HF = ''
+        MP2 = ''
+        
+        with open(filepath, "r") as f:
+            for line in f.readlines():
+                if 'INPUT CARD> $BASIS' in line:
+                    basis = line.split()[-2].split('=')[1]
+                if 'TOTAL ENERGY =' in line:
+                    val = float(line.split()[-1])
+        # What is total energy? SRS/MP2 or HF/DFT or something else?
+        if scs or mp2:
+            MP2 = val
+        else:
+            HF = val
+
+        # more readable basis set
+        change_basis = {'CCD'  : 'cc-pVDZ',
+                        'CCT'  : 'cc-pVTZ',
+                        'CCQ'  : 'cc-pVQZ',
+                        'aCCD' : 'aug-cc-pVDZ',
+                        'aCCT' : 'aug-cc-pVTZ',
+                        'aCCQ' : 'aug-cc-pVQZ'}
+        basis = change_basis.get(basis, basis) # default is the current value
+
+    return basis, HF, MP2        
+
+
+def psi_data(filepath):
+    HF = ''
+    opp = ''
+    same = ''
+    basis = ''
+    MP2 = '' 
+    with open(filepath, "r") as f:
+        for line in f.readlines():
+            if re.search('basis\s\w*(\-?\w*){1,2}$', line):
+                basis = line.split()[-1]
+            if 'Reference Energy          =' in line:
+                HF = float(line.split('=')[1].split()[0].strip())
+            elif 'Same-Spin Energy          =' in line:
+                same = float(line.split('=')[1].split()[0].strip())
+            elif 'Opposite-Spin Energy      =' in line:
+                opp = float(line.split('=')[1].split()[0].strip())
+    
+    SRS = {}
+    SRS['c_os'] = {}
+    SRS['c_os']['ccd']         = 1.752
+    SRS['c_os']['cc-pvdz']     = 1.752
+    SRS['c_os']['cct']         = 1.64
+    SRS['c_os']['cc-pvtz']     = 1.64
+    SRS['c_os']['ccq']         = 1.689
+    SRS['c_os']['cc-pvqz']     = 1.689
+    SRS['c_os']['accd']        = 1.372
+    SRS['c_os']['aug-cc-pvdz'] = 1.372
+    SRS['c_os']['acct']        = 1.443
+    SRS['c_os']['aug-cc-pvtz'] = 1.443
+    SRS['c_os']['accq']        = 1.591
+    SRS['c_os']['aug-cc-pvqz'] = 1.591
+
+    SRS['c_ss'] = {}
+    SRS['c_ss']['ccd']         = 0
+    SRS['c_ss']['cc-pvdz']     = 0
+    SRS['c_ss']['cct']         = 0
+    SRS['c_ss']['cc-pvtz']     = 0
+    SRS['c_ss']['ccq']         = 0
+    SRS['c_ss']['cc-pvqz']     = 0
+    SRS['c_ss']['accd']        = 0
+    SRS['c_ss']['aug-cc-pvdz'] = 0
+    SRS['c_ss']['acct']        = 0
+    SRS['c_ss']['aug-cc-pvtz'] = 0
+    SRS['c_ss']['accq']        = 0
+    SRS['c_ss']['aug-cc-pvqz'] = 0
+
+
+    c_os = SRS['c_os'][basis.lower()]
+    c_ss = SRS['c_ss'][basis.lower()]
+    
+    MP2 = HF + c_os * opp + c_ss * same
+    
+    return basis, HF, MP2
+
+    
+
+def get_data(log):
+    path, file = os.path.split(log)
+    calctype = get_type(log)
+    if calctype == 'gamess':
+        basis, HF, MP2 = gamess_data(log)
+    elif calctype == 'psi':
+        basis, HF, MP2 = psi_data(log)
+    return file, path, basis, HF, MP2
+
+
 def parse_results(dir):
     output = []
     cwd = os.getcwd()
     for log in get_files(dir, ('.out', '.log')):
-        log = log[2:] # no ./file, just file
         r = get_results_class(log)
-        filetype = get_type(log)
-        try:
-            if r.completed():
-                basis = r.get_basis()
-                if r.is_optimisation() and r.opt_found_equil_coords() or r.is_spec(): # long time!!
-                    print(f'{r.log}: Finding energies')
-                    f = fetch_energies(r)
-                    print(f)
-                    # adding to csv/df/database
-                    # output.append((log, filetype, basis) + f)
-                elif r.is_hessian():
-                    print(f'{r.log}: Hessian calc')
-            else:
-                # incomplete cases
-                r.get_error()
-        except AttributeError:
-            continue
-    # return output
+        if r.completed(): #add provision for energies of opts only if complete
+            print(log)
+            data = get_data(log)
+            output.append(data)
+    return output    
+    #     r = get_results_class(log)
+    #     filetype = get_type(log)
+    #     try:
+    #         if r.completed():
+    #             basis = r.get_basis()
+    #             if r.is_optimisation() and r.opt_found_equil_coords() or r.is_spec(): # long time!!
+    #                 print(f'{r.log}: Finding energies')
+    #                 f = fetch_energies(r)
+    #                 print(f)
+    #                 # adding to csv/df/database
+    #                 # output.append((log, filetype, basis) + f)
+    #             elif r.is_hessian():
+    #                 print(f'{r.log}: Hessian calc')
+    #         else:
+    #             # incomplete cases
+    #             r.get_error()
+    #     except AttributeError:
+    #         continue
+    # # return output
 
 def make_table(results):
-    '''Create a dataframe of energies and other relevant data extracted from each log file'''
-    import pandas as pd
-    files = []
-    types = []
-    sets = []
-    hf_list = []
-    opp_list = []
-    same_list = []
-    energies = []
-    for res in results:
-        filename, filetype, basis, *energy = res
-        if len(energy) > 1:
-            hf, opp, same, en = energy
-        else:
-            hf = 'NA'
-            opp = 'NA'
-            same = 'NA'
-            en = energy[0]
-        #path, file = os.path.split(filename)
-        #if path is not '.':
-        #    file = 'subdir/' + file
-        files.append(filename)
-        types.append(filetype)
-        sets.append(basis)
-        hf_list.append(hf)
-        opp_list.append(opp)
-        same_list.append(same)
-        energies.append(en)
+    '''Create a table of energies and other relevant data extracted from each log file'''
     
-    df = pd.DataFrame({'File': files, 'Type': types, 'Basis': sets,
-                       'HF': hf_list, 'Opp Spin': opp_list, 'Same Spin': same_list,
-                       'SRS (if poss)': energies})
     return df
 
+def write_csv(data):
+    done = False
+    while not done:
+        to_file = input('Print to csv? [y/n] ')
+        if to_file.lower() in ('y', 'n'):
+            done = True
+            if to_file.lower() == 'y':
+                filename = input('Filename: ')
+                with open(filename, "w") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(('File', 'Path', 'Basis', 'HF', 'MP2/SRS'))       
+                    writer.writerows(data)
+        else:   
+            print("Please select 'y' or 'n'")
+
 def results_table(dir):
-    results = parse_results(dir)
-    # table = make_table(results)
-    # return table
+    output = parse_results(dir)
+    print(f"{'File':^30s} | {'Path':^60s} | {'Basis':^8s} | {'HF':^15s} | {'MP2/SRS':^15s}")
+    print('-'*140)
+    for res in output:
+        # need to convert to floats for printing 
+        f, p, b, hf, mp2 = res
+        if hf == '':
+            hf = 0
+        print(f"{f:^30s} | {p:^60s} | {b:^8s} | {hf:^15.6f} | {mp2:^15.6f}")#.format(f, p, b, hf, mp2))
+    write_csv(output) 
+
 
 def thermochemistry(dir):
     """Returns thermochemical data for all the relevant hessian log files in the given directory and
