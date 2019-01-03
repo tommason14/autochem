@@ -53,14 +53,4 @@ if args.equil_coords:
     search_for_coords('.')
 
 if args.ir:
-    # correct = False 
-    # while not correct:
-    #     save = input("Save to png? [Y/N] ")
-    #     if save.lower() not in ('y', 'n'):
-    #         print("Please choose 'Y' or 'N'")
-    # if save.lower() == 'Y':
-    #     correct = True
-    #     name = input('Filename: ')
-    #     make_ir_spectra(args.ir, file_name = name)
-    # else: 
     make_ir_spectra(args.ir)

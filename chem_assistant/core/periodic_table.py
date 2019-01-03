@@ -1,5 +1,3 @@
-from .errors import PTError
-
 __all__ = ['PeriodicTable']
 
 class PeriodicTable:
@@ -127,8 +125,8 @@ class PeriodicTable:
     ptable[117] = ['Ts', 294.00000, 2.00 ,  8]
     ptable[118] = ['Og', 294.00000, 2.00 ,  8]
 
-    def __init__(self):
-        raise PTError('The PeriodicTable class cannot be instantiated.')
+    def __init__(self): 
+        raise AttributeError('The PeriodicTable class cannot be instantiated.')
 
     @classmethod
     def get_atnum(cls, symbol):

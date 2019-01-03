@@ -80,7 +80,6 @@ store the iteration number.
     #                              #
     ################################
 
-
     def get_runtype(self):
         """Returns type of calculation ran"""
         for line in self.read():
@@ -172,14 +171,6 @@ store the iteration number.
     def is_optimisation(self):
         return self.get_runtype() == 'optimize'
     
-    def opt_found_equil_coords(self):
-        try:
-            val = subprocess.check_output(f"grep 'EQUIL' {self.log}", shell = True)
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 1: # no output
-                return False
-        return True
-    
     def is_spec(self):
         return self.get_runtype() == 'energy'
 
@@ -192,252 +183,78 @@ store the iteration number.
     #                              #
     ################################
 
-    def get_mp2_data(self):
-        """
-        Parse GAMESS log files for MP2 calculation data
-
-        Returns
-        -------
-        data: dict 
-            Parsed data
-
-        """
-
-        mp2 = {}    
-        
-        lookup = \
-        {
-            # string to search: mp2[key]
-            "TOTAL ENERGY =" : "TOTAL ENERGY", # for all runs, inc. FMO
-            "Euncorr HF(3)=" : "FMO3 HF",
-            "Euncorr HF(2)=" : "FMO2 HF",
-            "E corr MP2(3)=" : "FMO3 MP2",
-            "E corr MP2(2)=" : "FMO2 MP2",
-            "E corr SCS(3)=" : "SRS FMO3",
-            "E corr SCS(2)=" : "SRS FMO2",
-            "Edelta SCS(3)=" : "SRS FMO3 CORR",
-            "Edelta SCS(2)=" : "SRS FMO2 CORR"
-        }    
-
+    def calc_type(self):
+        fmo = False
+        mp2 = False
+        scs = False
+        # fmo, mp2/srs, hf, dft?
+        # with open(filepath, "r") as f:
+        #     for line in f.readlines():
         for line in self.read():
-            if 'GBASIS=' in line:
-                mp2['BASIS'] = line.split()[0].split('=')[-1]
-            for k, v in lookup.items():
-                if k in line:
-                    mp2[v] = float(line.split()[-1])
-        mp2 = self.calculate_mp2_params(mp2)
-        return mp2
+            if 'FMO' in line:
+                fmo = True
+            elif 'MPLEVL' in line:
+                mp2 = True
+            elif 'SCS' in line:
+                scs = True
+            elif 'RUN TITLE' in line:
+                break # by this point, all data required is specified
+        return fmo, mp2, scs
 
-    def calculate_mp2_params(self, d):
-        """
-        Calculates MP2 and SRS-MP2 parameters based on the keys of dictionary passed as an argument.
-        
-        MP2 Corr = E_OS + E_SS 
-        E_SS = MP2 - HF - E_OS
+    def mp2_data(self, mp2_type):
+        basis = ''
+        HF = ''
+        MP2 = ''
+        # with open(filepath, "r") as f:
+        #     for line in f.readlines():
+        for line in self.read():
+            if 'Euncorr HF' in line:
+                HF = float(line.split()[-1])
+            if 'INPUT CARD> $BASIS' in line:
+                basis = line.split()[-2].split('=')[1]
+            if f'E corr {mp2_type}' in line:
+                MP2 = float(line.split()[-1])
+        return basis, HF, MP2
 
-        SRS Corr = C_OS * E_OS + C_SS + E_SS (C_SS usually 0)
+    def get_data(self):
+        """Returns the last occurrence of FMO energies (FMO3 given if available, else FMO2), SRS and HF energies"""
+        fmo, mp2, scs = self.calc_type()
+        if fmo and scs:
+            basis, HF, MP2 = self.mp2_data('SCS')
+        elif fmo and mp2 and not scs:
+            basis, HF, MP2 = self.mp2_data('MP2')
+        elif not fmo:
+            val = ''
+            basis = ''
+            HF = ''
+            MP2 = ''
+            
+            # with open(filepath, "r") as f:
+            #     for line in f.readlines():
+            for line in self.read():
+                if 'INPUT CARD> $BASIS' in line:
+                    basis = line.split()[-2].split('=')[1]
+                if 'TOTAL ENERGY =' in line:
+                    val = float(line.split()[-1])
+            # What is total energy? SRS/MP2 or HF/DFT or something else?
+            if scs or mp2:
+                MP2 = val
+            else:
+                HF = val
 
-        Calculate E_OS from SRS-MP2, then use it to find E_SS from the non-SRS values.
-        
-        Note: A non-FMO MP2 calculation gives no information except total energy, making it
-impossible to calculate the individual energies of each MP2 spin coefficient with GAMESS non-FMO
-calculations.
+        # more readable basis set
+        change_basis = {'CCD'  : 'cc-pVDZ',
+                        'CCT'  : 'cc-pVTZ',
+                        'CCQ'  : 'cc-pVQZ',
+                        'aCCD' : 'aug-cc-pVDZ',
+                        'aCCT' : 'aug-cc-pVTZ',
+                        'aCCQ' : 'aug-cc-pVQZ'}
+        basis = change_basis.get(basis, basis) # default is the current value
 
-        Params
-        ------
-        data: dict
+        return self.file, self.path, basis, HF, MP2        
 
-        Returns
-        -------
-        data: dict
-
-        """
-        
-        SRS = {}
-        SRS['c_os'] = {}
-        SRS['c_os']['ccd']         = 1.752
-        SRS['c_os']['cc-pvdz']     = 1.752
-        SRS['c_os']['cct']         = 1.64
-        SRS['c_os']['cc-pvtz']     = 1.64
-        SRS['c_os']['ccq']         = 1.689
-        SRS['c_os']['cc-pvqz']     = 1.689
-        SRS['c_os']['accd']        = 1.372
-        SRS['c_os']['aug-cc-pvdz'] = 1.372
-        SRS['c_os']['acct']        = 1.443
-        SRS['c_os']['aug-cc-pvtz'] = 1.443
-        SRS['c_os']['accq']        = 1.591
-        SRS['c_os']['aug-cc-pvqz'] = 1.591
-        
-        SRS['c_ss'] = {}
-        SRS['c_ss']['ccd']         = 0
-        SRS['c_ss']['cc-pvdz']     = 0
-        SRS['c_ss']['cct']         = 0
-        SRS['c_ss']['cc-pvtz']     = 0
-        SRS['c_ss']['ccq']         = 0
-        SRS['c_ss']['cc-pvqz']     = 0
-        SRS['c_ss']['accd']        = 0
-        SRS['c_ss']['aug-cc-pvdz'] = 0
-        SRS['c_ss']['acct']        = 0
-        SRS['c_ss']['aug-cc-pvtz'] = 0
-        SRS['c_ss']['accq']        = 0
-        SRS['c_ss']['aug-cc-pvqz'] = 0
-
-        fmo2 = False
-        fmo3 = False        
-
-        if 'SRS FMO2' in d.keys():
-            fmo2 = True
-        if 'SRS FMO3' in d.keys():       
-            fmo3 = True
-
-        if any('SRS' in item for item in d.keys()):
-            basis = d['BASIS'].lower()
-            C_OS = SRS['c_os'].get(basis, 1.64)
-            C_SS = SRS['c_ss'].get(basis, 0)
-        
-        if fmo2:
-            if C_SS == 0:
-                d['FMO2 E_OS'] = d['SRS FMO2 CORR'] / C_OS
-                d['FMO2 E_SS'] = d['FMO2 MP2'] - d['FMO2 HF'] - d['FMO2 E_OS'] 
-
-        if fmo3:
-            if C_SS == 0:
-                d['FMO3 E_OS'] = d['SRS FMO3 CORR'] / C_OS
-                d['FMO3 E_SS'] = d['FMO3 MP2'] - d['FMO3 HF'] - d['FMO3 E_OS'] 
-
-        return d    
 
             
-
-
-    def get_non_fmo(self):
-        """Returns energy of the calculation, with the exact definition dependent on the input file parameters. Non-FMO energy"""
-        # to store every energy, find line that startwith NSERCH- has iteration and energy on same line
-        for line in self.read():
-            if 'TOTAL ENERGY =' in line:
-                res = float(line.split()[-1])
-        return res #last occurrence
-
-    def get_hf(self):
-        """Returns Hartree-Fock energy"""
-        found = False
-        for line in self.read():
-            if 'Euncorr HF(3)=' in line:
-                found = True
-                res = float(line.split()[-1])
-            elif 'Euncorr HF(2)=' in line:
-                found = True
-                res = float(line.split()[-1])
-        if not found:
-            return "No explicit HF energy"
-        return res
-
-    def get_mp2(self):
-        """Returns MP2 energy"""
-        for line in self.read():
-            if 'E corr MP2(3)=' in line:
-                res = float(line.split()[-1])
-            elif 'E corr MP2(2)=' in line:
-                res = float(line.split()[-1])
-        return res
-
-    def get_srs(self):
-        """Returns SRS-MP2 energy. Looks for SCS as this component is set in
-the input file using SRS values"""
-        for line in self.read():
-            if 'E corr SCS(3)=' in line:
-                res = float(line.split()[-1])
-            elif 'E corr SCS(2)=' in line:
-                res = float(line.split()[-1])
-        return res
-
-    def get_mp2_corr(self):
-        """Returns MP2 correlation energy"""
-        for line in self.read():
-            if 'Edelta MP2(3)=' in line:
-                res = float(line.split()[-1])
-            elif 'Edelta MP2(2)=' in line:
-                res = float(line.split()[-1])
-        return res
-
-    def get_srs_corr(self):
-        """Returns SRS-MP2 correlation energy"""
-        for line in self.read():
-            if 'Edelta SCS(3)=' in line:
-                res =  float(line.split()[-1])
-            elif 'Edelta SCS(2)=' in line:
-                res =  float(line.split()[-1])
-        return res
-
-    def get_e_os(self):
-        """Calculates the opposite spin component to the interaction energy,
-for both MP2 and SRS-MP2 results.
-
-        MP2: Corr = E_OS + E_SS, regardless of basis set.
-        SRS: Corr = 1.752*E_OS for cc-pVDZ, 1.64*E_OS for cc-pVTZ
-
-        Other basis sets have coefficients for the same spin parameter, these
-need to be accounted for also when the time comes.
-        Currently only returns the opposite spin energy found from SRS
-calculations due to the greater accuracy when compared to MP2.
-        """
-        c_os_values = {}
-        c_os_values['ccd']         = 1.752
-        c_os_values['cc-pvdz']     = 1.752
-        c_os_values['cct']         = 1.64
-        c_os_values['cc-pvtz']     = 1.64
-        c_os_values['ccq']         = 1.689
-        c_os_values['cc-pvqz']     = 1.689
-        c_os_values['accd']        = 1.372
-        c_os_values['aug-cc-pvdz'] = 1.372
-        c_os_values['acct']        = 1.443
-        c_os_values['aug-cc-pvtz'] = 1.443
-        c_os_values['accq']        = 1.591
-        c_os_values['aug-cc-pvqz'] = 1.591
-        
-        c_ss_values = {}
-        c_ss_values['ccd']         = 0
-        c_ss_values['cc-pvdz']     = 0
-        c_ss_values['cct']         = 0
-        c_ss_values['cc-pvtz']     = 0
-        c_ss_values['ccq']         = 0
-        c_ss_values['cc-pvqz']     = 0
-        c_os_values['accd']        = 0
-        c_os_values['aug-cc-pvdz'] = 0
-        c_os_values['acct']        = 0
-        c_os_values['aug-cc-pvtz'] = 0
-        c_os_values['accq']        = 0
-        c_os_values['aug-cc-pvqz'] = 0
-
-        c_os = c_os_values.get(self.get_basis(), 1.64)
-        c_ss = c_ss_values.get(self.get_basis(), 0)
-
-        return self.get_srs_corr() / c_os
-        
-        # for other basis sets- need the e_ss value- or just solve simultaneously. Come to that when
-        # the need arises. This won't work for non-zero c_ss
-
-    def get_e_ss(self):
-        if self.get_e_os() is not None:
-            return self.get_mp2() - self.get_e_os()
-        else:
-            return None
-
-    def get_energy(self):
-        """Calls different methods depending on the parameters of the input file. The priority of
-energies is as follows: FMO3 > FMO2 > Non-FMO.
-        The actual call is to either FMO or Non-FMO; the FMO call is then prioritized into FMO3 over
-FMO2"""
-        level = self.get_fmo_level()
-        methods = {0: self.get_non_fmo,
-                   2: self.get_srs,
-                   3: self.get_srs}
-
-        # need to change in the case of no SRS- need to fall back to get_mp2, and then to
-        # get_hf
-        return methods.get(level, 2)() # if no FMO, run get_non_fmo()
-        
-
     ################################
     #                              #
     #     VIBRATIONAL ANALYSIS     #

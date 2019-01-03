@@ -4,7 +4,7 @@
 import os
 from .atom import Atom
 
-__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists']
+__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'write_csv_from_dict', 'write_csv_from_nested']
 
 def read_file(file):
     with open(file, "r") as f:
@@ -58,3 +58,42 @@ def module_exists(module_name):
         return False
     else:
         return True
+
+def write_csv_from_dict(data):
+    """Write to file from dictionary"""
+    done = False
+    while not done:
+        to_file = input('Print to csv? [y/n] ')
+        if to_file.lower() in ('y', 'n'):
+            done = True
+            if to_file.lower() == 'y':
+                filename = input('Filename: ')
+                with open(filename, "w") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(data.keys())
+                    content = zip(*[data[key] for key in data.keys()])
+                    writer.writerows(content) 
+        else:   
+            print("Please select 'y' or 'n'")
+
+def write_csv_from_nested(data,*,col_names = None):
+    """
+    Write to csv from nested data structure; list of tuples, list of lists. 
+    
+    NB: requires a list or tuple of column names passed to the `col_names` parameter
+    """
+    if type(col_names) not in (list, tuple):
+        raise AttributeError('Must pass in column names as a list or tuple of values')
+    done = False
+    while not done:
+        to_file = input('Print to csv? [y/n] ')
+        if to_file.lower() in ('y', 'n'):
+            done = True
+            if to_file.lower() == 'y':
+                filename = input('Filename: ')
+                with open(filename, "w") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(col_names)       
+                    writer.writerows(data)
+        else:   
+            print("Please select 'y' or 'n'")

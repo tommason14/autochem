@@ -10,15 +10,10 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Graph of energy vs iteration of geom opt in GAMESS 
 """
-
-import pandas as pd
-from ..core.utils import module_exists
-if module_exists('plotnine'):
-    from plotnine import *
-else:
-    import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def get_data(file):
     iters = []
@@ -29,18 +24,14 @@ def get_data(file):
                 _, iteration, _, energy, *_ = line.split()
                 iters.append(int(iteration))
                 energies.append(float(energy))
-    return iters, energies 
+    return {'iters': iters, 'energies': energies} 
 
 def plot_opt(file):
-    iters, energies = get_data(file)
-    df = pd.DataFrame({'iters': iters, 'energies': energies})
-    if module_exists('plotnine'):
-        plot = ggplot(df) + geom_line(aes(x = 'iters', y = 'energies'))+\
-               labs(x = 'Iterations',  y = 'Energy, E$_\mathrm{h}$')
-        print(plot)
-    else:
-        plot = df.plot.line(x = 'iters', y = 'energies', legend = False)
-        plot.set_xlabel('Iterations')
-        plot.set_ylabel('Energy, E$_\mathrm{h}$')
-        plot.yaxis.major.formatter._useMathText = True
-        plt.show()
+    data = get_data(file)
+    sns.set_style('darkgrid')
+    plt.figure(figsize=(8,6))
+    sns.lineplot(x = "iters", y = "energies", data = data)
+    plt.ticklabel_format(useOffset = False)
+    plt.xlabel('Iterations')
+    plt.ylabel('Energy, E$_h$')
+    plt.show()

@@ -1,5 +1,3 @@
-from .errors import MoleculeError
-
 __all__ = ['Bond']
 
 class Bond:
@@ -46,7 +44,7 @@ class Bond:
         elif atom is self.atom2:
             return self.atom1
         else:
-            return MoleculeError('Bond.other_end: invalid atom used')
+            return AttributeError('Bond.other_end: invalid atom used')
 
     def resize(self, atom, length):
         """Change length of bond to length given, in angstroms"""

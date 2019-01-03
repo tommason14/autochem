@@ -39,64 +39,58 @@ class PsiResults(Results):
     def is_hessian(self):
         return self.get_runtype() == 'frequency'
 
-    def get_hf(self):
+    def get_data(self):
+        HF = ''
+        opp = ''
+        same = ''
+        basis = ''
+        MP2 = '' 
+        # with open(filepath, "r") as f:
+        #     for line in f.readlines():
         for line in self.read():
-            if "Reference Energy" in line:
-                res = float(line.split('=')[1].split()[0].strip())
-        return res
-
-    def get_e_ss(self):
-        for line in self.read():
-            if "Same-Spin Energy          =" in line:
-                res = float(line.split('=')[1].split()[0].strip())
-        return res
-
-    def get_e_os(self):
-        for line in self.read():
-            if "Opposite-Spin Energy      =" in line:
-                res = float(line.split('=')[1].split()[0].strip())
-        return res
-
-    def get_mp2(self):
-        return self.get_hf() + self.get_e_ss() + self.get_e_os()
-
-    def get_srs(self):
-        """Returns SRS-MP2 energy. Note assumes the system contains non-negligible intermolecular
-        interactions, such as ionic liquids; the values used in the calculation vary slightly if other systems are used. See J. Chem. Phys. 146, 064108 (2017)"""
-
-        c_os_values = {}
-        c_ss_values = {}
-
-        c_os_values['ccd']         = 1.752
-        c_os_values['cc-pvdz']     = 1.752
-        c_os_values['cct']         = 1.64
-        c_os_values['cc-pvtz']     = 1.64
-        c_os_values['ccq']         = 1.689
-        c_os_values['cc-pvqz']     = 1.689
-        c_os_values['accd']        = 1.372
-        c_os_values['aug-cc-pvdz'] = 1.372
-        c_os_values['acct']        = 1.443
-        c_os_values['aug-cc-pvtz'] = 1.443
-        c_os_values['accq']        = 1.591
-        c_os_values['aug-cc-pvqz'] = 1.591
-
-        c_ss_values['ccd']         = 0
-        c_ss_values['cc-pvdz']     = 0
-        c_ss_values['cct']         = 0
-        c_ss_values['cc-pvtz']     = 0
-        c_ss_values['ccq']         = 0
-        c_ss_values['cc-pvqz']     = 0
-        c_os_values['accd']        = 0
-        c_os_values['aug-cc-pvdz'] = 0
-        c_os_values['acct']        = 0
-        c_os_values['aug-cc-pvtz'] = 0
-        c_os_values['accq']        = 0
-        c_os_values['aug-cc-pvqz'] = 0
-
-        c_os = c_os_values.get(self.get_basis(), 1.64)
-        c_ss = c_ss_values.get(self.get_basis(), 0)
-
-        return self.get_hf() + c_os * self.get_e_os() + c_ss * self.get_e_ss()
+            if re.search('basis\s\w*(\-?\w*){1,2}$', line):
+                basis = line.split()[-1]
+            if 'Reference Energy          =' in line:
+                HF = float(line.split('=')[1].split()[0].strip())
+            elif 'Same-Spin Energy          =' in line:
+                same = float(line.split('=')[1].split()[0].strip())
+            elif 'Opposite-Spin Energy      =' in line:
+                opp = float(line.split('=')[1].split()[0].strip())
         
-    def get_energy(self):
-        return self.get_srs()
+        SRS = {}
+        SRS['c_os'] = {}
+        SRS['c_os']['ccd']         = 1.752
+        SRS['c_os']['cc-pvdz']     = 1.752
+        SRS['c_os']['cct']         = 1.64
+        SRS['c_os']['cc-pvtz']     = 1.64
+        SRS['c_os']['ccq']         = 1.689
+        SRS['c_os']['cc-pvqz']     = 1.689
+        SRS['c_os']['accd']        = 1.372
+        SRS['c_os']['aug-cc-pvdz'] = 1.372
+        SRS['c_os']['acct']        = 1.443
+        SRS['c_os']['aug-cc-pvtz'] = 1.443
+        SRS['c_os']['accq']        = 1.591
+        SRS['c_os']['aug-cc-pvqz'] = 1.591
+
+        SRS['c_ss'] = {}
+        SRS['c_ss']['ccd']         = 0
+        SRS['c_ss']['cc-pvdz']     = 0
+        SRS['c_ss']['cct']         = 0
+        SRS['c_ss']['cc-pvtz']     = 0
+        SRS['c_ss']['ccq']         = 0
+        SRS['c_ss']['cc-pvqz']     = 0
+        SRS['c_ss']['accd']        = 0
+        SRS['c_ss']['aug-cc-pvdz'] = 0
+        SRS['c_ss']['acct']        = 0
+        SRS['c_ss']['aug-cc-pvtz'] = 0
+        SRS['c_ss']['accq']        = 0
+        SRS['c_ss']['aug-cc-pvqz'] = 0
+
+
+        c_os = SRS['c_os'][basis.lower()]
+        c_ss = SRS['c_ss'][basis.lower()]
+        
+        MP2 = HF + c_os * opp + c_ss * same
+        
+        return self.file, self.path, basis, HF, MP2
+
