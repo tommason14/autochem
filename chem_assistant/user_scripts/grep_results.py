@@ -147,14 +147,14 @@ def gamess_data(filepath):
         else:
             HF = val
 
-        # more readable basis set
-        change_basis = {'CCD'  : 'cc-pVDZ',
-                        'CCT'  : 'cc-pVTZ',
-                        'CCQ'  : 'cc-pVQZ',
-                        'aCCD' : 'aug-cc-pVDZ',
-                        'aCCT' : 'aug-cc-pVTZ',
-                        'aCCQ' : 'aug-cc-pVQZ'}
-        basis = change_basis.get(basis, basis) # default is the current value
+    # more readable basis set
+    change_basis = {'CCD'  : 'cc-pVDZ',
+                    'CCT'  : 'cc-pVTZ',
+                    'CCQ'  : 'cc-pVQZ',
+                    'aCCD' : 'aug-cc-pVDZ',
+                    'aCCT' : 'aug-cc-pVTZ',
+                    'aCCQ' : 'aug-cc-pVQZ'}
+    basis = change_basis.get(basis, basis) # default is the current value
 
     return basis, HF, MP2        
 
@@ -231,9 +231,10 @@ def parse_results(dir):
     for log in get_files(dir, ('.out', '.log')):
         r = get_results_class(log)
         if r.completed(): #add provision for energies of opts only if complete
-            print(log)
-            data = get_data(log)
-            output.append(data)
+            if not r.is_hessian():
+                print(log)
+                data = get_data(log)
+                output.append(data)
     return output    
     #     r = get_results_class(log)
     #     filetype = get_type(log)
@@ -254,11 +255,6 @@ def parse_results(dir):
     #     except AttributeError:
     #         continue
     # # return output
-
-def make_table(results):
-    '''Create a table of energies and other relevant data extracted from each log file'''
-    
-    return df
 
 def write_csv(data):
     done = False
@@ -313,7 +309,7 @@ def thermochemistry(dir):
             if r.is_hessian():
                 print(f'Thermo data for {log}')
                 res = thermo_data(r.log) # run fortran script
-                res['File'] = os.getcwd() +  log[1:]
+                res['File'] = log
                 for k, v in res.items():
                     collected[k].append(v)
 
@@ -330,5 +326,20 @@ def thermochemistry(dir):
             collected[k + ' [J/(mol K)]'] = v
         else:
             collected[k] = v 
+    write_thermo(collected)
 
-    pd.DataFrame(collected).to_excel('thermo.xlsx', index = False) 
+def write_thermo(data):
+    """Write to file from dictionary"""
+    done = False
+    while not done:
+        to_file = input('Print to csv? [y/n] ')
+        if to_file.lower() in ('y', 'n'):
+            done = True
+            if to_file.lower() == 'y':
+                filename = input('Filename: ')
+                with open(filename, "w") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(data.keys())       
+                    writer.writerows(zip(*[data[key] for key in data.keys()]))
+        else:   
+            print("Please select 'y' or 'n'")

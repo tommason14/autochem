@@ -1,17 +1,14 @@
 from .atom import Atom
 from .utils import module_exists
 
+import warnings
+warnings.filterwarnings("ignore")
+
 import os
 import re
 import subprocess
-import pandas as pd
-
-if module_exists('plotnine'):
-    from plotnine import *
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning, module = 'plotnine')
-# if module_exists('pygam'):
-#     from pygam import LinearGAM
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 __all__ = ['thermo_data', 'make_ir_spectra']
 
@@ -109,42 +106,10 @@ results produced in the log file have been shown to be inaccurate."""
     cleanup()
     return data
 
-
-# def gam(data, xseq, **params):
-#     """Generalised additive model- fitting complex functions, use in stat_smooth()"""
-#
-#     # create a model
-#
-#     x, y = data['x'], data['y']
-#     model = LinearGAM(n_splines = 50).fit(x, y)
-#     
-#     data = pd.DataFrame({'x': xseq, 'y': model.predict(xseq)})
-#     return data
-
 def make_ir_spectra(file, file_name = None):
     res = freq_data(file)
-    df = pd.DataFrame(res)
-    
-    # plotnine graph
-    if module_exists('plotnine'):
-        plot = (
-            ggplot(df) + aes(x = 'vibs', y = 'intensities') +
-            geom_line(size=1.2, color = '#3498DB') +
-            geom_point(color = 'grey')+
-            labs(x = 'Wavenumber (cm$^{\mathrm{-1}}$)', y = 'Intensity')
-            # stat_smooth(aes(x = 'vibs', y = 'intensities'),
-            # method=gam, se = False, size = 1.2) 
-        )
-
-        if file_name is not None:
-            ggsave(plot, dpi = 1000, filename = file_name)
-
-        print(plot)
-
-    # matplotlib fallback
-    else:
-        plot = df.plot('vibs', 'intensities')    
-        import matplotlib.pyplot as plt   
-        plt.show()
-
-
+    sns.set_style('darkgrid')
+    sns.lineplot(x = "vibs", y = "intensities", data = res)
+    plt.xlabel('Wavenumber (cm$^{-1}$)')
+    plt.ylabel('Intensity')
+    plt.show()
