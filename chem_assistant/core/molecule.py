@@ -6,6 +6,7 @@ from .atom import Atom
 from .bond import Bond
 from .meta import Meta
 
+import re
 import numpy as np
 import math
 import itertools
@@ -67,7 +68,7 @@ class Molecule:
     Neutrals['water'] = ['H', 'H', 'O']
 
 
-    def __init__(self, using = None, atoms = None, nfrags = None):
+    def __init__(self, using = None, atoms = None, nfrags = None, user_created = False):
         if using is not None:
             self.coords = self.read_xyz(using)
             #list of Atom objects, more useful than list of coordinates
@@ -223,6 +224,7 @@ the system"""
             for atom in value:
                 atom.mol = val
 
+
     def check_db(self):
         """Checks fragments for a match in the database"""
 
@@ -266,17 +268,86 @@ the system"""
         #sort order of atoms
         for data in self.fragments.values():
             data['atoms'] = sorted(data['atoms'], key = lambda atom: atom.index)
+            # add number
+            for i, atom in enumerate(data['atoms']):
+                atom.number = i + 1
 
+    def renumber_molecules(self):
+        """Molecule numbers (Mol: _) are sometimes not in a numerical order. This function takes the
+    molecules and gives them a number from 1 to the number of fragments""" 
+        current = set([atom.mol for atom in self.coords])
+
+        converter = {k: v for k, v in enumerate(current, 1)}
+        for atom in self.coords:
+            for k, v in converter.items():
+                if atom.mol == v:
+                    atom.mol = k
         
     def print_frags(self):
         for frag, data in self.fragments.items():
             print(f"{data['type'].capitalize()} found: {data['name']}")
+        
+    def reassign_frags_manually(self):
+        """Called if fragments are not assigned correctly- user then input the fragments manually"""
+
+        def get_manual_assignments():
+            manual = input("Fragments: ")
+            manual_split = manual.split(',')
+            manual_assignment = []
+            # remove brackets/spaces
+            for i in manual_split:
+                val = i.strip()
+                if '(' in val:
+                    manual_assignment.append(int(val.split('(')[1].strip()))
+                if ')' in val:
+                    manual_assignment.append(int(val.split(')')[0].strip()))
+            frag_indices = []
+            for i in range(0, len(manual_assignment) - 1, 2):
+                frag_indices.append((manual_assignment[i], manual_assignment[i + 1]))
+            return frag_indices
+
+        def update_mol_dictionary(frag_indices):
+            for molecule, pair in enumerate(frag_indices):
+                num = molecule + 1
+                start, end = pair
+                for ind in range(start, end + 1):
+                    self.coords[ind - 1].index = ind
+                    self.coords[ind - 1].mol = num
+            # reassign mol dict, check db
+            self.mol_dict.clear()
+            mols = set([atom.mol for atom in self.coords])
+            for mol in mols:
+                self.mol_dict[mol] = Molecule(atoms = [atom for atom in self.coords if atom.mol == mol])
+            self.check_db()
+            self.print_frags()
+
+        print()
+        print(f"Should have found {self.nfrags} fragments, but found {len(self.fragments)}...")
+        print()
+        print("Fragments are too close together- there are bonds within fragments that are longer\
+than the shortest distance between fragments")
+        print("Type in the fragments manually. For example, if you have 2 fragments of water, type (1,3),\
+(4,6). Give the atom numbers of the first and last atom in each fragment")
+        print()
+        frag_indices = get_manual_assignments()
+        update_mol_dictionary(frag_indices)
+    
+    def all_atoms_assigned(self):
+        s = 0
+        for frag in self.fragments.values():
+            for atom in frag['atoms']:
+                s += 1
+        return s == len(self.coords)
+
 
     def separate(self):
         """Separates coordinates into specific fragments using the intermolecular distances. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
         self.split()
         self.check_db()
+        self.renumber_molecules()
         self.print_frags() 
+        if not self.all_atoms_assigned():
+            self.reassign_frags_manually()
         self.fmo_meta() 
 
     #format for fmo run of complete system 

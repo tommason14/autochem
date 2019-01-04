@@ -30,6 +30,7 @@ class Atom:
         self.mol = mol
         self.bonds = bonds or []
         self.connected_atoms = []
+        self.h_bonded_to = []
 
         if coords is None:
             self.coords = (0, 0, 0)
@@ -41,9 +42,20 @@ class Atom:
 
     def __repr__(self):
         """Unambiguous representation of an |Atom| instance"""
-        if hasattr(self, 'index'):
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol} Index: {self.index}"
-        return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f} Mol: {self.mol}"
+        if hasattr(self, 'index') and not hasattr(self, 'mol'):
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
+ Index: {self.index} "
+        if hasattr(self, 'index') and hasattr(self, 'mol'):
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
+ Index: {self.index} Mol: {self.mol}"
+        elif hasattr(self, 'number'):
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
+ Mol: {self.mol} Atom: {self.number}"
+        elif hasattr(self, 'index') and len(self.h_bonded_to) > 0:
+            h_bonded = [(atom.symbol, {'mol': atom.mol, 'atom': atom.index}) for atom in self.h_bonded_to]
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
+ Mol: {self.mol} Index: {self.index} Number: {self.number} H-Bonds: {h_bonded}"
+        return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}"
 
     def __iter__(self):
         """Iterates through coordinates when called"""
