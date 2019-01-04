@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-from .atom import Atom
+import csv
 
-__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'write_csv_from_dict', 'write_csv_from_nested']
+from .atom import Atom
+from .periodic_table import PeriodicTable as PT
+
+__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements', 'write_csv_from_dict', 'write_csv_from_nested']
 
 def read_file(file):
     with open(file, "r") as f:
@@ -58,6 +61,18 @@ def module_exists(module_name):
         return False
     else:
         return True
+
+def sort_elements(lst):
+    """
+    Sort a list of |Atom| objects by atomic number. 
+    Returns a list of tuples- (symbol, atomic number)
+    """
+    els = []
+    elements = set([atom.symbol for atom in lst])
+    for i in elements:
+        els.append((i, float(PT.get_atnum(i))))
+    sorted_els = sorted(els, key = lambda val: val[1])
+    return sorted_els
 
 def write_csv_from_dict(data):
     """Write to file from dictionary"""

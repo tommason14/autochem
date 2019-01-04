@@ -15,6 +15,7 @@ from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
+from ..core.utils import sort_elements
 
 from os import (chdir, mkdir, getcwd, system)
 from os.path import (exists, join, dirname)
@@ -162,8 +163,42 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             for item in self.input]
         return inp
 
+    #format for fmo run of complete system 
+    def fmo_meta(self):
+        """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
+molecule instance as self.indat and self.charg"""
+        
+        info = {}
+       
+        #group together indat and charge for each fragment, and order according to the atom indices of indat 
+
+        for frag, data in self.fragments.items():
+            info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
+                          "charg" : str(data['charge'])}
+        # items need sorting
+        # 0,1,7, ### sort on 2nd item ###
+        # 0,8,28,
+        # 0,29,35,
+        # and not 
+        # 0,1,7,
+        # 0,29,35,
+        # 0.8,28 
+        
+        sorted_info = sorted(info.items(), key = lambda val: int(val[1]['indat'].split(',')[1])) 
+        # key: given an item (the val), sort by the value of the key, value pair (val[1]), then
+        # select the indat, split on comma and return the second item, then convert to an integer
+        # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
+        # always be in a numerical order- by using the index from self.coords, it is always ensured that the
+        # correct order is shown, as these coords are also used in the input file        
+        self.mol.indat = []
+        self.mol.charg = []
+        for val in sorted_info:
+            self.mol.indat.append(val[1]['indat'])
+            self.mol.charg.append(val[1]['charg'])
+        self.mol.indat.append('0')
+
     def fmo_formatting(self):
-        self.mol.fmo_meta() # gives self.mol.indat, self.mol.charg
+        self.fmo_meta() # gives self.mol.indat, self.mol.charg
         if self.input.contrl.runtyp in ('optimize', 'hessian'):
             nbody = 2
             rcorsd = 100

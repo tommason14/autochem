@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class',
-'search_for_coords']
+'search_for_coords', 'get_h_bonds']
 
 """
 File: grep_results.py 
@@ -25,6 +25,7 @@ Get results.
 ...
 Create single points for completed geom_opts? [y/n]
 """
+from ..core.molecule import Molecule
 from ..core.thermo import thermo_data
 from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested)
 from ..interfaces.gamess_results import GamessResults
@@ -94,10 +95,9 @@ def results_table(dir):
 
 
 def thermochemistry(dir):
-    """Returns thermochemical data for all the relevant hessian log files in the given directory and
-    subdirectories. Saves to excel file, thermo.xlsx
-    Usage:
-        >>> thermochemistry('.')
+    """
+    Returns thermochemical data for all the relevant hessian log files in the given directory and
+    subdirectories. Saves to csv file.
     """
     collected = \
     {
@@ -136,3 +136,21 @@ def thermochemistry(dir):
         else:
             collected[k] = v 
     write_csv_from_dict(collected)
+
+def get_h_bonds(dir):
+    output = []
+    for file in get_files(dir, ("xyz")):
+        if not any((re.search('cation_?[0-9]*', file), re.search('anion_?[0-9]*', file), re.search('neutral_?[0-9]*', file))) and 'frags' not in file:
+            # no frags in path of xyz- and no files named, cation, anion, neutral
+            # check for names in Anions, Cations, Neutrals
+            print(file)
+            path, f = os.path.split(file)
+            mol = Molecule(using = file)
+            mol.nfrags = int(input('Number of fragments: '))
+            mol.separate()
+            res = mol.find_h_bonds()
+            for i in res:
+                i.insert(0, f)
+                i.insert(1, path)
+            output += res
+    write_csv_from_nested(output, col_names=('File', 'Path', 'Atoms', 'Length (A)'))

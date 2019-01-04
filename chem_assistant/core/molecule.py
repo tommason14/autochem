@@ -4,7 +4,7 @@
 from .periodic_table import PeriodicTable as PT
 from .atom import Atom
 from .bond import Bond
-from .meta import Meta
+from .utils import sort_elements
 
 import re
 import numpy as np
@@ -274,10 +274,22 @@ the system"""
 
     def renumber_molecules(self):
         """Molecule numbers (Mol: _) are sometimes not in a numerical order. This function takes the
-    molecules and gives them a number from 1 to the number of fragments""" 
+        molecules and gives them a number from 1 to the number of fragments""" 
         current = set([atom.mol for atom in self.coords])
-
         converter = {k: v for k, v in enumerate(current, 1)}
+
+        convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)} # old: new
+        print(convert_keys)
+        frags = list(self.fragments.items())
+        print(frags)
+        self.fragments.clear()
+        for k, v in frags:
+            for key, val in convert_keys.items():
+                if k == val:
+                    self.fragments[key] = v
+       
+        print(self.fragments.keys())
+
         for atom in self.coords:
             for k, v in converter.items():
                 if atom.mol == v:
@@ -348,46 +360,70 @@ than the shortest distance between fragments")
         self.print_frags() 
         if not self.all_atoms_assigned():
             self.reassign_frags_manually()
-        self.fmo_meta() 
 
-    #format for fmo run of complete system 
-    def fmo_meta(self):
-        """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
-molecule instance as self.indat and self.charg"""
+    def find_h_bonds(self):
+  
+        frag_list = [frag['atoms'] for frag in self.fragments.values()]
+
+        h_bonders = ['O', 'F', 'H', 'N']
+        H_BOND_DIST = 2.0 
         
-        info = {}
-       
-        #group together indat and charge for each fragment, and order according to the atom indices of indat 
+        # in one case a methyl hydrogen was 1.998Å away from O;
+        # need to correct for that! Look at connecting atoms
 
-        for frag, data in self.fragments.items():
-            info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
-                          "charg" : str(data['charge'])}
-        # items need sorting
-        # 0,1,7, ### sort on 2nd item ###
-        # 0,8,28,
-        # 0,29,35,
-        # and not 
-        # 0,1,7,
-        # 0,29,35,
-        # 0.8,28 
-        
-        sorted_info = sorted(info.items(), key = lambda val: int(val[1]['indat'].split(',')[1])) 
-        # key: given an item (the val), sort by the value of the key, value pair (val[1]), then
-        # select the indat, split on comma and return the second item, then convert to an integer
-        # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
-        # always be in a numerical order- by using the index from self.coords, it is always ensured that the
-        # correct order is shown, as these coords are also used in the input file        
-        self.indat = []
-        self.charg = []
-        for val in sorted_info:
-            self.indat.append(val[1]['indat'])
-            self.charg.append(val[1]['charg'])
-        self.indat.append('0')
+        for i, mol in enumerate(frag_list):
+            for j, mol2 in enumerate(frag_list):
+                if i != j:
+                    for atom1 in mol: # for every atom in first frag
+                        for atom2 in mol2: # for every atom in second frag
+                            if atom1.distance_to(atom2) < H_BOND_DIST:
+                                if atom1.symbol and atom2.symbol in h_bonders and atom1.symbol is not atom2.symbol:
+                                    atom1.h_bonded_to.append(atom2) 
+                        # assigning twice- could be cut down
+                        # could say for atom2 in mol2 if mol2 != mol- and change the iteration above?
 
-def sort_elements(lst):
-    els = []
-    elements = set([atom.symbol for atom in lst])
-    for i in elements:
-        els.append((i, float(PT.get_atnum(i))))
-    sorted_els = sorted(els, key = lambda val: val[1])
-    return sorted_els
+
+        def remove_duplicate_bonds(self):
+            h_bonded = [] #entire system
+            for atom in self.coords:
+                if len(atom.h_bonded_to) > 0:
+                    per_atom = [] # each atom- may have more than one h-bonding partner
+                    for atom2 in atom.h_bonded_to:
+                        per_atom.append((atom.index, atom2.index, atom.distance_to(atom2)))    
+                    h_bonded.append(per_atom)
+
+            # now should flatten list- easier to remove duplicates that way
+            flattened = []
+            for lst in h_bonded:
+                for l in lst:
+                    flattened.append(l)
+
+            # remove duplicate h-bonds
+            # make copy first:
+            h_bonded_flat = flattened
+            for i, bond in enumerate(h_bonded_flat):
+                for j, bonds in enumerate(h_bonded_flat):
+                    if i != j:
+                        if sorted(bond[:2]) == sorted(bonds[:2]): # if same atoms are involved
+                            del h_bonded_flat[j] # remove second instance
+            return h_bonded_flat
+
+        hbonds = remove_duplicate_bonds(self)
+                        
+        def bond_components(self, tup):
+            one, two, length = tup
+            atom = self.coords[one - 1]
+            atom2 = self.coords[two - 1]              
+            print(f"({atom.symbol}, mol: {atom.mol}, atom: {atom.number})--- {length:.3f}Å ---({atom2.symbol}, mol: {atom2.mol}, atom: {atom2.number})")
+
+            mol1 = self.fragments[atom.mol]['name'].capitalize()
+            mol2 = self.fragments[atom2.mol]['name'].capitalize()
+            connection = f"{mol1}-{mol2}"
+            length = round(length, 3)
+            return [connection, length]
+
+        bonds_in_mol = []
+        for bond in hbonds:
+            data = bond_components(self, bond)
+            bonds_in_mol.append(data) # list, so can add file and path later
+        return bonds_in_mol
