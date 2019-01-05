@@ -104,7 +104,8 @@ def results_table(dir):
         if hf == '':
             hf = 0
         print(f"{f:^30s} | {p:^60s} | {b:^8s} | {hf:^15.6f} | {mp2:^15.6f}")
-    write_csv_from_nested(output, col_names = ('File', 'Path', 'Basis', 'HF', 'MP2/SRS'))
+    name = write_csv_from_nested(output, col_names = ('File', 'Path', 'Basis', 'HF', 'MP2/SRS'), return_name = True)
+    return name # for use in other calculations (chem_assist -r uses this name)
 
 
 def thermochemistry(dir):

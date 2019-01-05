@@ -1,18 +1,12 @@
 from .atom import Atom
-from .utils import module_exists
-
-import warnings
-warnings.filterwarnings("ignore")
-
 import os
 import re
 import subprocess
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 __all__ = ['thermo_data', 'make_ir_spectra']
 
 def thermo_initial_geom(file):
+    """Parses GAMESS hessian calculation log file for the initial geometry"""
     atoms = []
     regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
     found = False
@@ -32,6 +26,7 @@ def thermo_initial_geom(file):
             new.write(f"{atom.symbol:5s} {str(atom.atnum):3s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
 
 def freq_data(file, write_to_file = False):
+    """Parses GAMESS hessian calculation log file for the frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     results = {'modes': [], 'vibs': [], 'red_mass': [], 'intensities': []}
     with open(file, "r") as f:
@@ -107,6 +102,15 @@ results produced in the log file have been shown to be inaccurate."""
     return data
 
 def make_ir_spectra(file, file_name = None):
+    """Plot of wavenumber against intensities for vibrations found by diagonalisation of a computed
+hessian matrix"""
+
+    import warnings
+    warnings.filterwarnings("ignore")
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    # Slow imports, so only import if needed
+
     res = freq_data(file)
     sns.set_style('darkgrid')
     sns.lineplot(x = "vibs", y = "intensities", data = res)

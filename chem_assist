@@ -19,6 +19,7 @@ parser.add_argument('-s', '--settings', help='Indicates a file with settings rel
 parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
 parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action = 'store')
 parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every equil.xyz in the current and any subdirectory', action = 'store_true')
+parser.add_argument('-c', '--interaction-energies', help='Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script', action = 'store')
 args = parser.parse_args()
 
 def imported_settings():
@@ -26,9 +27,38 @@ def imported_settings():
     imported = import_module(file_to_import)
     return imported.sett
 
+def menu_choice():
+    try:
+        choice = int(input('Choice: [0] '))
+        if option not in range(1, 9):
+            print('Choose a value between 1 and 9')
+        else:
+            return option
+    except ValueError:
+        print('Please select a number between 1 and 9')
+        menu_choice()
+
 # if no arguments passed
 if len(sys.argv) == 1:
-    print('menu here')
+    print('Comp Chem Automation\n')
+    print("""\
+1. Create files from xyz directory
+2. Create files using meta.py
+3. Find energies
+4. Find equilibrium coordinates from optimisations
+5. Find hydrogen bonds from xyz files
+6. Automate interaction energy calculations
+7. Create IR spectra from hessian
+8. Plot course of optimisation
+0. Exit program
+""")
+    choice = menu_choice()
+    
+    # option = {1: 
+
+    
+    # option.get(choice, 0)
+
 
 if args.meta:
    make_files_from_meta('.') 
@@ -37,7 +67,16 @@ if args.thermochem:
     thermochemistry('.')
 
 if args.results:
-    results_table('.')
+    name = results_table('.')
+    done = False
+    while not done:
+        ints = input('Calculate interaction energies? [Y/N] ')
+        if ints.lower() in ('y', 'n'):
+            done = True
+            if ints.lower() == 'y':
+                calculate_interaction_energies(name)
+        else:   
+            print("Please select 'y' or 'n'")
 
 if args.settings:
     settings = imported_settings()
@@ -48,6 +87,8 @@ if args.dir_tree_from_files and args.settings:
 
 if args.dir_tree_from_files and not args.settings:
     settings = Settings()
+    # default options- Settings object required even 
+    # if empty
     xyz_to_tree(settings)
 
 if args.graph:
@@ -61,3 +102,6 @@ if args.ir:
 
 if args.hydrogen_bonds:
     get_h_bonds('.')
+
+if args.interaction_energies:
+    calculate_interaction_energies(args.interaction_energies)

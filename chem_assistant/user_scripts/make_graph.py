@@ -10,10 +10,6 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Graph of energy vs iteration of geom opt in GAMESS 
 """
-import warnings
-warnings.filterwarnings("ignore")
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 def get_data(file):
     iters = []
@@ -27,6 +23,13 @@ def get_data(file):
     return {'iters': iters, 'energies': energies} 
 
 def plot_opt(file):
+
+    import warnings
+    warnings.filterwarnings("ignore")
+    import matplotlib.pyplot as plt
+    import seaborn as sns 
+    # large import- only import if needed!
+
     data = get_data(file)
     sns.set_style('darkgrid')
     plt.figure(figsize=(8,6))

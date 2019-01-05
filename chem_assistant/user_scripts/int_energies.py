@@ -1,6 +1,8 @@
+__all__ = ['calculate_interaction_energies']
+
 import csv
 import re
-from chem_assistant import Molecule
+from ..core.molecule import Molecule
 # pandas is slow, maybe try something different?
 
 def group_files(csv, header = True):
@@ -24,9 +26,11 @@ def group_files(csv, header = True):
 
 def calculate_energies(d):
     """
+    Calculates interaction energies from single point energy calculations
     INT = E_COMPLEX - SUM(E_ION)
     INT_NEUTRAL SPECIES = E_COMPLEX - E_IONIC_CLUSTER - SUM(E_NEUTRAL_SPECIES)
     """
+    purely_ionic = True
     new_dict = {}
     for k, v in d.items():
         if k.endswith('spec'):
@@ -88,28 +92,59 @@ def calculate_energies(d):
             disp = total_mp2 - total_hf
 
             if ionic_hf != 0.0:
-                new_dict[k] = {} # all the neutral stuff
+                purely_ionic = False
+                new_dict[k] = {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro} # all the neutral stuff
             else:
                 new_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro}
 
             # separate out purely ionic interaction energies from mixed
-    return new_dict
-
-    # new_dict[path] = [[[mol1], [mol2], [mol3]]], int_hf, int_mp2, electro, disp]
+    return new_dict, purely_ionic
 
 
-def write_csv(data, filename):
-    with open(filename, "w") as new:
+def write_csv(data, purely_ionic, filename):
+
+    if purely_ionic:
+        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
+
+        variables = ('total_hf', 'total_mp2', 'disp', 'electro', 'rank', 'deltaE')
+    else:
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]' 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
+
+        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'disp', 'electro', 'rank', 'deltaE')
+    
+    def update_csv(path, cat, an, d, variables):
+        locals().update(d) #create variables
+        lst = [path, cat, an]
+        for key in variables:
+            lst.append(locals()[key])
+        return lst
+
+    # def add_data(writer_obj, data, cat, an, vars, plotting):
+    #     """
+    #     Layout data differently depending on if using the data for plotting or not.
+    #     """
+    #     if plotting:
+            
+    #     else:
+    #         il = f"{cat} {an}"
+    #         writer.writerow((il,)) # accepts one item only, so a tuple
+    #         writer.writerow(()) # blank line
+    #         for path, d in data[cation][anion].items():
+    #             numbers = update_csv(path, d, variables)
+    #             writer.writerow(numbers)
+    #             writer.writerow(())
+
+    with open(filename, "w", encoding = 'utf-8-sig') as new:
         writer = csv.writer(new)
-        writer.writerow(('Int_MP2 = SRS interaction energies if possible',))
-        writer.writerow(('Path', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics'))
-        for k, v in data.items():
-            int_hf, int_mp2, electro, disp = v
-            writer.writerow((k, int_hf, int_mp2, electro, disp))
-        #could separate ILs with a new line??
-        # if cation-anion
-
-
+        # writer.writerow(('Int_MP2 = SRS interaction energies if possible',))
+        writer.writerow(col_names)
+        for cation in data:
+            for anion in data[cation]:
+                for path, d in data[cation][anion].items():
+                    numbers = update_csv(path, cation, anion, d, variables)
+                    writer.writerow(numbers)
+            
+            
 def sort_data(data):
     """ 
     Adds a -1 to the first configuration of each IL, if not already there, then sorts the data into alphanumerical order
@@ -169,7 +204,6 @@ def rank_configs(data):
             groups[c][a] = {}
 
     # add data to correct bin
-
     for k, v in data.items():
         for cation in cations:
             for anion in anions:
@@ -185,29 +219,37 @@ def rank_configs(data):
             for index, val in enumerate(sorted_vals, 1): #start index at 1
                 path, energy = val
                 groups[cation][anion][path]['rank'] = index
-                groups[cation][anion][path]['deltaE'] = groups[cation][anion][path]['total_mp2'] / sorted_vals[0][1] # minimum energy
+                groups[cation][anion][path]['deltaE'] = groups[cation][anion][path]['total_mp2'] - sorted_vals[0][1] # minimum energy
 
-    for cation in groups:
-        for anion in groups[cation]:
-            print(cation, anion)
-            for path, data in groups[cation][anion].items():
-                print(path, data['rank'])
+    # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
 
-    return groups
+    ordered_dict = {}
+    for cat in groups:
+        ordered_dict[cat] = {}
+        for an in groups[cat]:
+            ordered_dict[cat][an] = {}
+            lst = [(k, v) for k, v in groups[cat][an].items()]
+            sorted_lst = sorted(lst, key = lambda kv: kv[1]['rank'])
+            for kv in sorted_lst:
+                k, v = kv
+                ordered_dict[cat][an][k] = v 
+    return ordered_dict
 
 def calculate_interaction_energies(csv):
+    """
+    Calculate interaction energies from a csv file created with this python script; the function
+assumes that variables will be present in the csv.
+    """
     data = group_files(csv)
-    new_data = calculate_energies(data)
+    new_data, purely_ionic = calculate_energies(data)
     sorted_data = sort_data(new_data)
     assigned = assign_molecules(sorted_data)
     ranked = rank_configs(assigned)
     correct = False
     while not correct:
-        filename = input('Filename: ')
+        filename = input('Filename of output: ')
         if not filename.endswith('.csv'):
             print("Please end the filename in '.csv'")
         else:
             correct = True
-    write_csv(groups, filename)
-
-calculate_interaction_energies('1ip_energies.csv')
+    write_csv(ranked, purely_ionic, filename)

@@ -100,7 +100,7 @@ def write_csv_from_dict(data):
         else:   
             print("Please select 'y' or 'n'")
 
-def write_csv_from_nested(data,*,col_names = None):
+def write_csv_from_nested(data,*,col_names = None, return_name = False):
     """
     Write to csv from nested data structure; list of tuples, list of lists. 
     
@@ -120,5 +120,7 @@ def write_csv_from_nested(data,*,col_names = None):
                     writer = csv.writer(f)
                     writer.writerow(col_names)       
                     writer.writerows(data)
+                if return_name:
+                    return filename
         else:   
             print("Please select 'y' or 'n'")

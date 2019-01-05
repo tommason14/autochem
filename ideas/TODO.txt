@@ -1,110 +1,9 @@
-# TODO
-
-REFACTOR CODE IN INTERFACES- MOVE JOB STUFF TO JOB BASE CLASS- FINDING
-TEMPLATE, MODIFYING TEMPLATE REQUIRES THE INTERFACE, MAYBE OVERRIDE METHODS?
-
------------
-- when making command line scripts; have an option of 'settings' to accept a
-  settings file:
-  # settings.py
-  s = Settings()
-  s.input.mp2.scsopo = 1.64
-
-  chem-assistant xyz-to-tree -s settings.py
-
-
-  or go even further, but a bit long really
-  chem-assistant xyz-to-tree gamess fmo no-frags -s settings.py 
------------
-
 Create gif for geometry optimisations? 
   - store energies and coordinates at each point. Not too hard really, just
     create lists for the energy values and coords, and store coords as a list
     of lists, then iterate through and show them in a package. 
   - Same idea for the vibrations, store coords at each step, with the
-    intensities. Like Anh's script. Then view with a plotnine graph. Import
-into virtualenv, and save a local copy of the scripts. Same with numpy. So we
-just need to import my package, with no other dependencies??
-
-- for command line arguments:
-
-Place all scripts in a scripts directory
-
-Create a menu:
-1. Create inputs recursively
-2. Obtain results recursively
-3. Get frequencies recursively
-...
-
-Call for 1: run scripts/inputs.py
-Call for 2: run scripts/results.py
-
-#SCRIPT IDEAS
-
-- Place all xys in one dir, then create a tree of subdirs, with the job desired
-  (could be gamess, psi4, lammps- for the ab initio jobs, with frags in subdir
-if necessary). Files called opt.inp, so need to create a tree with a naming
-system.
-
-
-
-Files(in one dir):
-choline_acetate_1.xyz
-choline_acetate_2.xyz
-choline_acetate_3.xyz
-c4mim_acetate
-
-1IP
-|_choline|
-|        |_acetate|
-|                 |_1|
-|                    |_opt.inp
-|                    |_opt.job
-|                    |_choline_acetate_1.xyz
-|                    |_frags
-|                          |_choline0
-|                                   |_choline0.xyz
-|                                   |_opt.inp
-|                                   |_opt.job
-|                          |_acetate1
-|                                   |_acetate1.xyz
-|                                   |_opt.inp
-|                                   |_opt.job
-|                 |_2
-|                    |_opt.inp
-|                    |_opt.job
-|                    |_choline_acetate_2.xyz
-|                 |_3
-|                    |_opt.inp
-|                    |_opt.job
-|                    |_choline_acetate_3.xyz
-|-c4mim|
-|      |_acetate
-|               |_1|
-|                  |_opt.inp
-|                  |_opt.job
-|                  |_c4mim_acetate_1.xyz
-
-Then just a scp of the files from local to supercomp.
-Then call run from the parent dir, which will work recursively
-
-
-
-- GAMESS/PSI4 JOBS
-- GAMESS/PSI4 RESULTS
-
-- CHECK FILES FOR COMPLETION
-  - If error in the run, create error.txt
-    - logging the actual error
-    - if geom opt, how many iterations (log the energies and iteration)
-    - plot a graph of energy against iteration num (plotnine)
-      - if levels out, then finished (for scf methods, such as MP2, no energy
-        change if converged)  
-      - easily check how far through we are
-    - layout:
-      ERROR 
-      GRAPH
-      DATA
+    intensities. Like Anh's script
 
   - LOG RESULTS IN A FILE IN THE HOME DIR- add path 
 
@@ -117,12 +16,6 @@ Then call run from the parent dir, which will work recursively
       (explicitly name the job as rerun[0-9].job) --> again, only run the
       latest rerun[0-9], don't rerun the lower numbers, if there are multiple
       repeats. (if rerun[0-9]- sort according to max, then run array[0])
-
-
-
-
-
-
 
 
 ## ADD OPTION FOR LOCAL ASSIGNMENT IN PSI4 INPUT
