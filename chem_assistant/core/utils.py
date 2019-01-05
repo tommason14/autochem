@@ -27,7 +27,8 @@ def get_type(file):
 
 def write_xyz(atoms, filename = None):
     """Writes an xyz file using a list of |Atom| instances, or just a list of regular coordinates,
-with or without atomic numbers."""
+with or without atomic numbers.
+"""
     if filename is None:
         raise ValueError('write_xyz: Must give a path to the output file')
     else:
@@ -37,7 +38,7 @@ with or without atomic numbers."""
                 if type(atom) is not Atom:
                     parts = atom.split()
                     if len(parts) > 4: # includes atomic nums
-                        sym, _, x, y, z = parts
+                        sym, *_, x, y, z = parts
                     else:
                         sym, x, y, z = parts
                     x, y, z = float(x), float(y), float(z)
@@ -47,6 +48,12 @@ with or without atomic numbers."""
 
 
 def get_files(directory, ext):
+    """Accepts a tuple of file extensions, searches in all subdirectories of the directory given for relevant files. Returns a list of files with their relative path to the directory passed in.
+
+    Usage:
+        >>> for filepath in get_files('.', ("log", "out")):
+        >>>     parse_file(filepath)
+    """
     fileLst = []
     for path, dirs, files in os.walk(directory):
         for file in files:
@@ -65,7 +72,9 @@ def module_exists(module_name):
 def sort_elements(lst):
     """
     Sort a list of |Atom| objects by atomic number. 
-    Returns a list of tuples- (symbol, atomic number)
+    Returns a list of tuples- [(symbol, atomic number), (symbol, atomic number), ...]
+
+    TODO: Extend to giving back the objects- more useful than just for formatting of symbols
     """
     els = []
     elements = set([atom.symbol for atom in lst])
@@ -99,6 +108,7 @@ def write_csv_from_nested(data,*,col_names = None):
     """
     if type(col_names) not in (list, tuple):
         raise AttributeError('Must pass in column names as a list or tuple of values')
+
     done = False
     while not done:
         to_file = input('Print to csv? [y/n] ')
@@ -106,7 +116,7 @@ def write_csv_from_nested(data,*,col_names = None):
             done = True
             if to_file.lower() == 'y':
                 filename = input('Filename: ')
-                with open(filename, "w") as f:
+                with open(filename, "w", encoding = 'utf-8-sig') as f:
                     writer = csv.writer(f)
                     writer.writerow(col_names)       
                     writer.writerows(data)

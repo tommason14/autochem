@@ -26,7 +26,7 @@ class Molecule:
                         'O', 'O', 'O', 'O', 'C', 'C', 'F']
     Anions["tos"] = ['C', 'C', 'C', 'C', 'H', 'H', 'H', 'H',
                         'H', 'H', 'H', 'S', 'O', 'O', 'O', 'C', 'C', 'C']
-    Anions["h2po4"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
+    Anions["dhp"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
     Anions["acetate"] = ['C','H', 'H', 'H', 'C', 'O', 'O']
 
     Cations = {"c1mim": ['C', 'N', 'C', 'N',
@@ -279,26 +279,24 @@ the system"""
         converter = {k: v for k, v in enumerate(current, 1)}
 
         convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)} # old: new
-        print(convert_keys)
         frags = list(self.fragments.items())
-        print(frags)
         self.fragments.clear()
         for k, v in frags:
             for key, val in convert_keys.items():
                 if k == val:
                     self.fragments[key] = v
        
-        print(self.fragments.keys())
-
         for atom in self.coords:
             for k, v in converter.items():
                 if atom.mol == v:
                     atom.mol = k
         
     def print_frags(self):
+        print()
         for frag, data in self.fragments.items():
             print(f"{data['type'].capitalize()} found: {data['name']}")
-        
+        print()
+
     def reassign_frags_manually(self):
         """Called if fragments are not assigned correctly- user then input the fragments manually"""
 
@@ -336,10 +334,9 @@ the system"""
         print()
         print(f"Should have found {self.nfrags} fragments, but found {len(self.fragments)}...")
         print()
-        print("Fragments are too close together- there are bonds within fragments that are longer\
-than the shortest distance between fragments")
-        print("Type in the fragments manually. For example, if you have 2 fragments of water, type (1,3),\
-(4,6). Give the atom numbers of the first and last atom in each fragment")
+        print("Fragments are too close together- there are bonds within fragments\nthat are longer\
+ than the shortest distance between fragments")
+        print("Type in the fragments manually. For example, if you have 2 fragments of water,\ntype (1,3),(4,6).\nGive the atom numbers of the first and last atom in each fragment")
         print()
         frag_indices = get_manual_assignments()
         update_mol_dictionary(frag_indices)
@@ -413,17 +410,27 @@ than the shortest distance between fragments")
         def bond_components(self, tup):
             one, two, length = tup
             atom = self.coords[one - 1]
-            atom2 = self.coords[two - 1]              
-            print(f"({atom.symbol}, mol: {atom.mol}, atom: {atom.number})--- {length:.3f}Å ---({atom2.symbol}, mol: {atom2.mol}, atom: {atom2.number})")
+            atom2 = self.coords[two - 1]    
 
-            mol1 = self.fragments[atom.mol]['name'].capitalize()
-            mol2 = self.fragments[atom2.mol]['name'].capitalize()
-            connection = f"{mol1}-{mol2}"
+            # print(f"({atom.symbol}, mol: {atom.mol}, atom: {atom.number})--- {length:.3f}Å ---({atom2.symbol}, mol: {atom2.mol}, atom: {atom2.number})")
+
+            mol1 = self.fragments[atom.mol]['name']
+            mol2 = self.fragments[atom2.mol]['name']
+        
+            print(f"({atom.symbol}, {mol1} (mol {atom.mol}))--- {length:.3f}Å ---({atom2.symbol}, {mol2} (mol {atom2.mol}))")
+
+            # Choline-Acetate rather than Acetate-Choline
+            if mol1.lower() in Molecule.Anions:
+                connection = f"{mol2}-{mol1}"
+            else:
+                connection = f"{mol1}-{mol2}"
             length = round(length, 3)
             return [connection, length]
 
         bonds_in_mol = []
+        print('Hydrogen bonds:')
         for bond in hbonds:
             data = bond_components(self, bond)
             bonds_in_mol.append(data) # list, so can add file and path later
+        print() # nicer formatting from command line
         return bonds_in_mol

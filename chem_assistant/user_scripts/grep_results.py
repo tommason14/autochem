@@ -35,6 +35,10 @@ import re
 import csv
 
 def search_for_coords(dir):
+    """
+    Recursively searched log/out files of optimisations for a successful equilibration- then writes to `equil.xyz`. If unsuccesful, writes to `rerun/rerun.xyz`, whilst also creating the corresponding input and job file.
+    """
+    
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
         if r.completed():
@@ -54,6 +58,9 @@ def get_results_class(log):
 
 
 def get_type(filepath):
+    """
+    Read in file, determine calculation type
+    """
     calc = ''
     with open(filepath, "r") as f:
         for line in f.readlines():
@@ -66,6 +73,9 @@ def get_type(filepath):
     return calc
 
 def parse_results(dir):
+    """
+    Used internally to parse log files for energies
+    """
     output = []
     for log in get_files(dir, ('.out', '.log')):
         calc = get_results_class(log)
@@ -82,6 +92,9 @@ def parse_results(dir):
     return output    
 
 def results_table(dir):
+    """
+    Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
+    """
     output = parse_results(dir)
     print(f"{'File':^30s} | {'Path':^60s} | {'Basis':^8s} | {'HF':^15s} | {'MP2/SRS':^15s}")
     print('-'*140)
@@ -138,13 +151,18 @@ def thermochemistry(dir):
     write_csv_from_dict(collected)
 
 def get_h_bonds(dir):
+    """
+    Searches the current and any subdirectories for xyz files, then attempts to split them into fragments, reporting any intermolecular bonding involving hydrogen-bonding atoms less than 2 Å apart. Prints to screen, with then option of saving to csv.
+
+    TODO: Include the atoms bonded to the atom undergoing hydrogen-bonding. Two-fold benefit; can then disregard interactions involving alkyl chains, and can include angle information- internal angles of hydrogen bonds (connected-donor---acceptor) must be <= 45°
+    """
     output = []
     for file in get_files(dir, ("xyz")):
-        if not any((re.search('cation_?[0-9]*', file), re.search('anion_?[0-9]*', file), re.search('neutral_?[0-9]*', file))) and 'frags' not in file:
-            # no frags in path of xyz- and no files named, cation, anion, neutral
-            # check for names in Anions, Cations, Neutrals
-            print(file)
-            path, f = os.path.split(file)
+        path, f = os.path.split(file)
+        if not any((re.search('cation-?_?[0-9]*', f), re.search('anion-?_?[0-9]*', f), re.search('neutral-?_?[0-9]*', f))) and not any((f.split('_')[0] in Molecule.Anions, f.split('_')[0] in Molecule.Cations, f.split('_')[0] in Molecule.Neutrals)) and 'frags' not in path:
+            # no frags in path of xyz- and no files named, cation_1.xyz, cation-1.xyz, anion, neutral
+            # check for names in Anions, Cations, Neutrals- only want complexes
+            print(file + '\n')
             mol = Molecule(using = file)
             mol.nfrags = int(input('Number of fragments: '))
             mol.separate()
@@ -153,4 +171,4 @@ def get_h_bonds(dir):
                 i.insert(0, f)
                 i.insert(1, path)
             output += res
-    write_csv_from_nested(output, col_names=('File', 'Path', 'Atoms', 'Length (A)'))
+    write_csv_from_nested(output, col_names=('File', 'Path', 'Molecules', 'Length (Å)'))
