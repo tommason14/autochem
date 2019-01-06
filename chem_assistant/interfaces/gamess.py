@@ -17,7 +17,7 @@ from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
 from ..core.utils import sort_elements
 
-from os import (chdir, mkdir, getcwd, system)
+from os import (chdir, mkdir, getcwd, system, walk)
 from os.path import (exists, join, dirname)
 
 __all__ = ['GamessJob']
@@ -75,7 +75,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             ├── opt.inp
             └── opt.job
     """
-    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None):
+    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
+= None, is_complex = False):
         super().__init__(using)
         self.fmo = fmo # Boolean
         self.filename = filename
@@ -91,11 +92,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         else:
             self.title = using[:-4]
         
+        self.is_complex = is_complex # creates a `complex` dir
+         
         self.create_inp()
         self.create_job()
-        self.place_files_in_dir()
+        self.place_files_in_dir(self.is_complex)
         if frags_in_subdir:
-            self.create_inputs_for_fragments()
+            self.create_inputs_for_fragments() # negate self.is_complex
         
     def determine_fragments(self):
         if self.fmo:
@@ -172,7 +175,7 @@ molecule instance as self.indat and self.charg"""
        
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
 
-        for frag, data in self.fragments.items():
+        for frag, data in self.mol.fragments.items():
             info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
                           "charg" : str(data['charge'])}
         # items need sorting
@@ -303,12 +306,21 @@ molecule instance as self.indat and self.charg"""
         # write
         self.write_file(jobfile, filetype='job')
 
-    def place_files_in_dir(self):
+    def place_files_in_dir(self, is_complex):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
-        if not exists(self.base_name):
-            mkdir(self.base_name)
-        system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
+        if is_complex:
+            if not exists(join('complex', self.base_name)):
+                mkdir('complex')
+                mkdir(join('complex', self.base_name))
+                # copy the xyz over from the parent dir - only one in the dir, but no idea of the
+                # name- if _ in the name, the parent dir will be a number 
+                system('cp *.xyz complex/complex.xyz')
+            system(f'mv {self.base_name}.inp {self.base_name}.job complex/{self.base_name}/')
+        else:
+            if not exists(self.base_name):
+                mkdir(self.base_name)
+            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
@@ -331,36 +343,56 @@ molecule instance as self.indat and self.charg"""
             │       └── water4.xyz
             ├── spec.inp
         """
+        self.is_complex = False
         
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()
         #make subdir if not already there
         subdirectory = join(getcwd(), 'frags')
+        subdir_ionic = join(getcwd(), 'ionic')
         if not exists(subdirectory):
             mkdir(subdirectory)
+            mkdir(subdir_ionic)
 
         parent_dir = getcwd()
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
-            #make a directory inside the subdir for each fragment
-            name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
-            if not exists(join(subdirectory, name)):
-                mkdir(join(subdirectory, name)) # ./frags/water4/
-            chdir(join(subdirectory, name))
-            Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
+            if data['frag_type'] == 'frag':
+                #make a directory inside the subdir for each fragment
+                name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
+                if not exists(join(subdirectory, name)):
+                    mkdir(join(subdirectory, name)) # ./frags/water4/
+                chdir(join(subdirectory, name))
+                Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
             
-            # re-use settings from complex
-            if hasattr(self, 'merged'):
-                frag_settings = self.merged
-            else:
-                frag_settings = self.defaults
-            frag_settings.input.contrl.icharg = data['charge']
-            if data['multiplicity'] != 1:
-                frag_settings.input.contrl.mult = data['multiplicity']
-            job = GamessJob(using = name + str('.xyz'), settings=frag_settings) 
-            chdir(parent_dir)
-            count += 1
+                # re-use settings from complex
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.contrl.icharg = data['charge']
+                if data['multiplicity'] != 1:
+                    frag_settings.input.contrl.mult = data['multiplicity']
+                job = GamessJob(using = name + str('.xyz'), settings=frag_settings) 
+                chdir(parent_dir)
+                count += 1
+            elif data['frag_type'] == 'ionic':
+                # only 1 ionic network
+                name = 'ionic'
+                chdir(subdir_ionic)
+                Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
             
+                # re-use settings from complex
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.contrl.icharg = data['charge']
+                if data['multiplicity'] != 1:
+                    frag_settings.input.contrl.mult = data['multiplicity']
+                print('Creating input for the ionic network...')
+                job = GamessJob(using = name + str('.xyz'), settings=frag_settings, fmo = True) 
+                chdir(parent_dir)
         
 

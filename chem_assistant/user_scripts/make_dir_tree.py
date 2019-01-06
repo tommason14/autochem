@@ -98,11 +98,11 @@ def job_type(package, xyz, s):
     # ABOVE CODE RAN GAMESS FMO AND PSI4 REGARDLESS OF CHOICE-- WHY???
 
     if package == "gamess":
-        return GamessJob(using = xyz, frags_in_subdir = True, settings = s)
+        return GamessJob(using = xyz, frags_in_subdir = True, settings = s, is_complex = True)
     elif package == "gamess_fmo":
-        return GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s)
+        return GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s, is_complex = True)
     elif package == "psi4":
-        return PsiJob(using = xyz, frags_in_subdir = True, settings = s)
+        return PsiJob(using = xyz, frags_in_subdir = True, settings = s, is_complex = True)
     elif package == "lammps":
         return 'LAMMPS INP HERE'
     elif package == "gamess_no_frags":

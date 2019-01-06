@@ -257,7 +257,8 @@ the system"""
                                 "atoms": self.mol_dict[sym].coords, #not symbols, but the atom objects
                                 "charge": charge,
                                 "multiplicity": mult,
-                                "elements": sort_elements(self.mol_dict[sym])
+                                "elements": sort_elements(self.mol_dict[sym]),
+                                "frag_type": "frag"
                             }
                         molecules_dict[sym] = data
             return molecules_dict
@@ -272,6 +273,7 @@ the system"""
             # add number
             for i, atom in enumerate(data['atoms']):
                 atom.number = i + 1
+
 
     def renumber_molecules(self):
         """Molecule numbers (Mol: _) are sometimes not in a numerical order. This function takes the
@@ -304,19 +306,12 @@ the system"""
         def get_manual_assignments():
             manual = input("Fragments: ")
             manual_split = manual.split(',')
-            manual_assignment = []
-            # remove brackets/spaces
-            for i in manual_split:
-                val = i.strip()
-                if '(' in val:
-                    manual_assignment.append(int(val.split('(')[1].strip()))
-                if ')' in val:
-                    manual_assignment.append(int(val.split(')')[0].strip()))
+            manual_assignment = [int(i.strip()) for i in manual_split]
             frag_indices = []
             for i in range(0, len(manual_assignment) - 1, 2):
                 frag_indices.append((manual_assignment[i], manual_assignment[i + 1]))
             return frag_indices
-
+        
         def update_mol_dictionary(frag_indices):
             for molecule, pair in enumerate(frag_indices):
                 num = molecule + 1
@@ -335,9 +330,13 @@ the system"""
         print()
         print(f"Should have found {self.nfrags} fragments, but found {len(self.fragments)}...")
         print()
-        print("Fragments are too close together- there are bonds within fragments\nthat are longer\
- than the shortest distance between fragments")
-        print("Type in the fragments manually. For example, if you have 2 fragments of water,\ntype (1,3),(4,6).\nGive the atom numbers of the first and last atom in each fragment")
+        print("""\
+Fragments are too close together- there are bonds within fragments
+that are longer than the shortest distance between fragments.
+
+Type in the fragments manually. For example, if you have 
+2 fragments of water, type "1, 3, 4, 6", without quotes.
+Give the atom numbers of the first and last atom in each fragment""")
         print()
         frag_indices = get_manual_assignments()
         update_mol_dictionary(frag_indices)
@@ -349,7 +348,39 @@ the system"""
                 s += 1
         return s == len(self.coords)
 
-
+        
+    def add_ionic_network(self):
+        """Adds one item to self.fragments- removing all neutral species, along with the one-atom
+ions"""
+        coord_list = [coord for coord in self.coords] # copy of the list
+        for k, frag in self.fragments.items():
+            # remove neutrals
+            if frag['charge'] is 0:
+                for coord in frag['atoms']:
+                    # remove coord from coord_list
+                    for i, atom in enumerate(coord_list):
+                        if coord.index == atom.index:
+                            del coord_list[i]
+            # remove Li, Na, Cl, Br etc...
+            elif len(frag['atoms']) == 1:
+                for coord in frag['atoms']:
+                    # remove coord from coord_list
+                    for i, atom in enumerate(coord_list):
+                        if coord.index == atom.index:
+                            del coord_list[i]
+        if len(coord_list) == len(self.coords):
+            pass
+        else:
+            self.fragments[len(self.fragments) + 1] = {
+                "type": 'ionic',
+                "name" : 'ionic',
+                "atoms": coord_list, #not symbols, but the atom objects
+                "charge": 0,
+                "multiplicity": 1,
+                "elements": sort_elements(coord_list),
+                "frag_type": "ionic"
+            }
+   
     def separate(self):
         """Separates coordinates into specific fragments using the intermolecular distances. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
         self.split()
@@ -358,7 +389,8 @@ the system"""
         self.print_frags() 
         if not self.all_atoms_assigned():
             self.reassign_frags_manually()
-
+        self.add_ionic_network()
+        
     def find_h_bonds(self):
   
         frag_list = [frag['atoms'] for frag in self.fragments.values()]

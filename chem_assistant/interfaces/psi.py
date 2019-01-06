@@ -202,10 +202,24 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
+    def molecule_type(self):
+        """
+        Creating different subdirectories for every molecule in the system.
+        Create a:
+            - `complex` subdirectory for each complex
+            - `ionic` subdirectory for every complex with the neutral species (or single atom ions) removed 
+                - for water inclusion, N2 inclusion, alkali metal inclusion
+            - `frags` subdirectory for every fragment of the complex
+        """
+
+        if    
+
+
     def create_inp(self):
         self.make_header()
         self.add_globals()
         self.add_run()
+        self.molecule_type() # if frag, or complex, or ionic
         self.file_basename()
         self.write_file(self.inp, filetype = 'inp')
 
@@ -248,9 +262,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             │       └── water4.xyz
             ├── spec.inp
         """
-       
+    
+               
+        if self.merged.nfrags != {}: #automatically creates an empty dict if called
+            self.mol.nfrags = self.merged.nfrags
+        else:
+            self.mol.nfrags = int(input('Number of fragments: '))
+
         self.mol.separate() #creating frags 
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
+        
+        # after separation- create another frag with the ionic cluster!
 
         #make subdir if not already there
         subdirectory = join(getcwd(), 'frags')
