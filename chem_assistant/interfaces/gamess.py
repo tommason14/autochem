@@ -10,12 +10,11 @@ Description: Interface between Python and creating GAMESS input files
 """
 
 from ..core.atom import Atom
-from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
-from ..core.utils import sort_elements
+from ..core.utils import (sort_elements, write_xyz)
 
 from os import (chdir, mkdir, getcwd, system, walk)
 from os.path import (exists, join, dirname)
@@ -357,10 +356,8 @@ molecule instance as self.indat and self.charg"""
             self.mol.separate()
         #make subdir if not already there
         subdirectory = join(getcwd(), 'frags')
-        subdir_ionic = join(getcwd(), 'ionic')
         if not exists(subdirectory):
             mkdir(subdirectory)
-            mkdir(subdir_ionic)
 
         parent_dir = getcwd()
         count = 0 #avoid  overwriting files by iterating with a number
@@ -371,7 +368,7 @@ molecule instance as self.indat and self.charg"""
                 if not exists(join(subdirectory, name)):
                     mkdir(join(subdirectory, name)) # ./frags/water4/
                 chdir(join(subdirectory, name))
-                Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
+                write_xyz(atoms = data['atoms'], filename = name + str('.xyz'))
             
                 # re-use settings from complex
                 if hasattr(self, 'merged'):
@@ -385,10 +382,12 @@ molecule instance as self.indat and self.charg"""
                 chdir(parent_dir)
                 count += 1
             elif data['frag_type'] == 'ionic':
-                # only 1 ionic network
-                name = 'ionic'
+                # only 1 ionic network        
+                subdir_ionic = join(getcwd(), 'ionic')
+                if not exists(subdir_ionic):
+                    mkdir(subdir_ionic)
                 chdir(subdir_ionic)
-                Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz'))
+                write_xyz(atoms = data['atoms'], filename = 'ionic.xyz')
             
                 # re-use settings from complex
                 if hasattr(self, 'merged'):
@@ -399,7 +398,7 @@ molecule instance as self.indat and self.charg"""
                 if data['multiplicity'] != 1:
                     frag_settings.input.contrl.mult = data['multiplicity']
                 print('Creating input for the ionic network...')
-                job = GamessJob(using = name + str('.xyz'), settings=frag_settings, fmo = True) 
+                job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = True) 
                 chdir(parent_dir)
         
 

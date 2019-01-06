@@ -29,7 +29,7 @@ def thermo_initial_geom(file):
 def freq_data(file, write_freqs_to_file = False):
     """Parses GAMESS hessian calculation log file for the frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-    results = {'Modes': [], 'Frequencies [cm-1]': [], 'Reduced Mass [amu]': [], 'Intensities [Debye^2/(amu Å^2)]': []}
+    results = {'Modes': [], 'Frequencies [cm-1]': [], 'Reduced Mass [amu]': [], 'Intensities [Debye^2/(amu Å^2)]': []} # keys used as headers for csv
     with open(file, "r") as f:
         for line in f.readlines():
             if re.search(regex, line):

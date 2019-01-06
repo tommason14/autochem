@@ -98,75 +98,85 @@ store the iteration number.
         return 0
         
     def get_equil_coords(self, output = None):
+        # find the parent dir for the system, regardless of opt/rerun
+        # find the dir with complex/ionic/frags (for frags in subdir) /opt/spec/hess (not frags in
+        # subdir)
+        # first time that comes up- that's the parent!
         import re
         equil = []
         rerun = []
         regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
-        found = False
-        find = False
+        found_equil = False
+        found_some = False
         for line in self.read():
             if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
-                found = True
-            if 'ALWAYS THE LAST POINT COMPUTED' in line:
-                find = True
-            if found:
+                found_equil = True
+            if 'COORDINATES OF ALL ATOMS ARE (ANGS)' in line: #store every coord list
+                found_some = True
+                if len(rerun) > 0: # from last run, remove those coords
+                    rerun = []
+            if found_equil:
                 if re.search(regex, line):
                     if line.endswith('\n'):
                         equil.append(line[:-1]) # drop newline char
                     else:
                         equil.append(line)
-            if find:
+            if found_some:
                 if re.search(regex, line):
                     if line.endswith('\n'):
                         rerun.append(line[:-1]) # drop newline char
                     else:
                         rerun.append(line)
             if line is '\n':
-                find = False
-                found = False
+                found_equil = False
+                found_some = False
+       
         if len(equil) > 0:
-            print(f'{self.log}: Equilibrium geometry found')
-            write_xyz(equil, os.path.join(self.abspath, 'equil.xyz'))
+            print('found!')
+            # find parent dir- if multiple reruns, then don't know how far up tree to go to find
+            # parent
+            write_xyz(equil, os.path.join(self.path, os.pardir, 'equil.xyz'))
+            # self.create_spec_after_opt()
         else:
-            if len(rerun) > 0 and len(equil) == 0:
-                print(f'{self.log}: Needs resubmitting. Coords stored in rerun/rerun.xyz')
+            if len(rerun) > 0:
+                print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun/rerun.xyz')
                 # make new dir, and copy over input, replacing any coords
                 # TODO: Refactor this, but cba right now
-                rerun_dir = os.path.join(self.abspath, 'rerun')
-                if not os.path.exists(rerun_dir):
+                rerun_dir = os.path.join(self.path, 'rerun')
+                if not os.path.exists(rerun_dir): 
+                # if already exists, then simulation already re-run- skip this log, move to next
                     os.mkdir(rerun_dir)
-                write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
-                inp = self.log[:-3] + 'inp'
-                job = self.log[:-3] + 'job'
-                ext = self.log[-3:] # log or out, but use the same to remain consistent
-                orig_inp = os.path.join(self.abspath, inp) # path of the log file
-                orig_job = os.path.join(self.abspath, job)
-                rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
-                rerun_job = os.path.join(rerun_dir, 'rerun.job')
-                # copy old job into a string (small file), modify file names
-                if job in os.listdir('.'):
-                    with open(orig_job, "r") as jobfile:
-                        job = jobfile.read()
-                    newjob = job.replace(inp, 'rerun.inp')
-                    newjob = newjob.replace(self.log, 'rerun.' + ext)
-                    with open(rerun_job, 'w') as f:
-                        f.write(newjob) 
-                # parse original inp and add new coords
-                rerun_inp_file = []
-                with open(orig_inp, "r") as f:
-                    for line in f.readlines():
-                        if re.search(regex, line):
-                            break
-                        else:
-                            rerun_inp_file.append(line)
-                for line in rerun: #add coords
-                    rerun_inp_file.append(line + '\n') 
-                rerun_inp_file.append(' $END')
-                with open(rerun_inp, "w") as f:
-                    for line in rerun_inp_file:
-                        f.write(line)
+                    write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                    basename, ext = self.file.split('.')
+                    inp = basename + '.inp'
+                    job = basename + '.job'
+                    orig_inp = os.path.join(self.path, inp) # path of the log file
+                    orig_job = os.path.join(self.path, job)
+                    rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
+                    rerun_job = os.path.join(rerun_dir, 'rerun.job')
+                    print(orig_inp)                    
+                    print(orig_job) 
+                    print(rerun_inp)
+                    print(rerun_job)
+
+                    os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
+                    # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
+                    # parse original inp and add new coords
+                    rerun_inp_file = []
+                    with open(orig_inp, "r") as f:
+                        for line in f.readlines():
+                            if re.search(regex, line):
+                                break
+                            else:
+                                rerun_inp_file.append(line)
+                    for line in rerun: #add coords
+                        rerun_inp_file.append(line + '\n') 
+                    rerun_inp_file.append(' $END')
+                    with open(rerun_inp, "w") as f:
+                        for line in rerun_inp_file:
+                            f.write(line)
             else:
-                print('No iterations were cycled through!')   
+                print('no iterations were cycled through!')   
     
     def is_optimisation(self):
         return self.get_runtype() == 'optimize'

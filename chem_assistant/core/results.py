@@ -8,7 +8,7 @@ class Results:
     """Base class, only for inheritance"""
 
     def __init__(self, log):
-        self.log = log
+        self.log = log[2:]
         self.path, self.file = os.path.split(self.log)
         
     def read(self):

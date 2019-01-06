@@ -43,8 +43,9 @@ def search_for_coords(dir):
         r = get_results_class(log)
         if r.completed():
             if r.is_optimisation():
-                print(f'{r.log}: Finding equilibrium coordinates...')
+                print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
                 r.get_equil_coords()
+                print()
         else:
             print(f"{log}: Not completed")
 
