@@ -16,16 +16,3 @@ Create gif for geometry optimisations?
       (explicitly name the job as rerun[0-9].job) --> again, only run the
       latest rerun[0-9], don't rerun the lower numbers, if there are multiple
       repeats. (if rerun[0-9]- sort according to max, then run array[0])
-
-
-## ADD OPTION FOR LOCAL ASSIGNMENT IN PSI4 INPUT
-
-molecule complex {
-  ... 
-}
-
-<- ADD OPTION HERE
-
-set globals {
-  ...
-}

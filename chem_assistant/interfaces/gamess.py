@@ -62,6 +62,13 @@ class GamessJob(Job):
         >>> s.nfrags = 4
         >>> job = GamessJob(using = 'file.xyz', fmo = True, settings = s)
     
+    The class creates different subdirectories for every molecule in the system.
+    Using the class with `frags_in_subdir` set to true produces:
+        - a `complex` subdirectory- one per xyz
+        - an `ionic` subdirectory for every complex with the neutral species and/or single atom ions removed
+            - for water inclusion, N2 inclusion, alkali metal inclusion
+        - a `frags` subdirectory for every fragment of the complex
+    
     The names of files created default to the type of calculation: optimisation (opt), single point
 energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
 (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
@@ -74,6 +81,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         └── opt
             ├── opt.inp
             └── opt.job
+
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
 = None, is_complex = False):
@@ -313,8 +321,7 @@ molecule instance as self.indat and self.charg"""
             if not exists(join('complex', self.base_name)):
                 mkdir('complex')
                 mkdir(join('complex', self.base_name))
-                # copy the xyz over from the parent dir - only one in the dir, but no idea of the
-                # name- if _ in the name, the parent dir will be a number 
+                # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
                 system('cp *.xyz complex/complex.xyz')
             system(f'mv {self.base_name}.inp {self.base_name}.job complex/{self.base_name}/')
         else:

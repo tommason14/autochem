@@ -124,3 +124,12 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
                     return filename
         else:   
             print("Please select 'y' or 'n'")
+
+def search_dict_recursively(d):
+    ret = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            ret[k] = search_dict_recursively(v)
+        else:
+            ret[k] = v
+    return ret

@@ -15,6 +15,7 @@ from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
+from ..core.utils import search_dict_recursively
 
 from os import (chdir, mkdir, getcwd, system)
 from os.path import (exists, join, dirname)
@@ -67,14 +68,23 @@ class PsiJob(Job):
 
     Options are added in sections: 
         - self.input.molecule for any key value pair in the molecule section
+        - self.input.unbound for any key value pair outside of molecule and globals. The value can be a string or a list.
+            >>> self.input.unbound.key = 'value'
+            # key value
+             >>> self.input.unbound.key2 = 'value value value'
+            # key value value value
+            >>> self.input.unbound.key = ['value1', 'value2', 'value3']
+            # key value1 value2 value3
         - self.input.globals for the 'set globals' section
         - any options not enclosed in braces appear before the last line
         - To change the run type:
             >>> self.input.run = {'optimize': 'scf'}
-            # produces optimize('scf')
+            # optimize('scf')
         - If extra run options are required:
             >>> self.input.run.additional = {'dertype': 'energy'} 
-            # produces optimize('scf', dertype='energy')
+            # optimize('scf', dertype='energy')
+            >>> self.input.run.additional = {'dertype': 'energy', 'option2': 'value'} 
+            # optimize('scf', dertype='energy', 'option2'='value')
         NOTE: An option for adding commands outside of the molecule and globals section needs to be added.                        
     
     The names of files created default to the type of calculation: optimisation (opt), single point
@@ -136,16 +146,27 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if key not in ("charge", "multiplicity", "units", "symmetry"):
                 key = f"{key} {value}\n"
                 data.insert(-1, key) #insert before last item
-        self.header = data
-       
+        self.inp = data
+
+    def add_unbound(self):
+        """May never be required- but this adds options between the molecule and global sections.
+        Returns a dictionary of terms- might need more than two terms on same line = nested dict """
+
+        vals = search_dict_recursively(self.input.unbound)
+        if vals != {}: # if not empty
+            self.inp.append('\n')
+            for key, value in vals.items():
+                if isinstance(value, list):
+                    self.inp.append(f"{key} {' '.join(value)}\n")
+                elif isinstance(value, str):
+                    self.inp.append(f"{key} {value}\n")
+
     def add_globals(self):
-        inp = self.header
-        inp.append('\nset globals {\n')
+        self.inp.append('\nset globals {\n')
         for key, value in self.input.globals.items():
-            inp.append(f"    {key} {value}\n")
-        inp.append('}\n')
-        self.inp = inp
-    
+            self.inp.append(f"    {key} {value}\n")
+        self.inp.append('}\n')
+
     def add_run(self):
         res = []
         # list of tuples- to ensure the 'normal' entry, the one defined input.run, appears first
@@ -202,24 +223,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
-    def molecule_type(self):
-        """
-        Creating different subdirectories for every molecule in the system.
-        Create a:
-            - `complex` subdirectory for each complex
-            - `ionic` subdirectory for every complex with the neutral species (or single atom ions) removed 
-                - for water inclusion, N2 inclusion, alkali metal inclusion
-            - `frags` subdirectory for every fragment of the complex
-        """
-
-        if    
-
 
     def create_inp(self):
         self.make_header()
+        self.add_unbound()
         self.add_globals()
         self.add_run()
-        self.molecule_type() # if frag, or complex, or ionic
         self.file_basename()
         self.write_file(self.inp, filetype = 'inp')
 
