@@ -1,4 +1,5 @@
 from .atom import Atom
+from .utils import write_csv_from_dict
 import os
 import re
 import subprocess
@@ -25,25 +26,25 @@ def thermo_initial_geom(file):
         for atom in atoms:
             new.write(f"{atom.symbol:5s} {str(atom.atnum):3s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
 
-def freq_data(file, write_to_file = False):
+def freq_data(file, write_freqs_to_file = False):
     """Parses GAMESS hessian calculation log file for the frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-    results = {'modes': [], 'vibs': [], 'red_mass': [], 'intensities': []}
+    results = {'Modes': [], 'Frequencies [cm-1]': [], 'Reduced Mass [amu]': [], 'Intensities [Debye^2/(amu Å^2)]': []}
     with open(file, "r") as f:
         for line in f.readlines():
             if re.search(regex, line):
                 mode, vib, symmetry, mass, intensity = line.split()
                 mode = int(mode)
                 vib, mass, intensity = map(float, (vib, mass, intensity))
-                results['modes'].append(mode)
-                results['vibs'].append(vib)
-                results['red_mass'].append(mass)
-                results['intensities'].append(intensity)
+                results['Modes'].append(mode)
+                results['Frequencies [cm-1]'].append(vib)
+                results['Reduced Mass [amu]'].append(mass)
+                results['Intensities [Debye^2/(amu Å^2)]'].append(intensity)
 
     for key, value in results.items():
         results[key] = value[6:] #3N-6, with the 6 at the start = trans or rot modes.
 
-    if write_to_file:
+    if write_freqs_to_file:
         with open("freq.out", "w") as output:
             for i in results['vibs']:
                 output.write(f"{i}\n")
@@ -94,14 +95,14 @@ def thermo_data(file):
     """Uses a fortran script to produce thermochemical data for GAMESS Hessian calculations- the
 results produced in the log file have been shown to be inaccurate."""
     thermo_initial_geom(file)
-    freq_data(file, write_to_file = True)
+    freq_data(file, write_freqs_to_file = True)
     run(file)
     fort = read_fort()    
     data = grep_data(fort)
     cleanup()
     return data
 
-def make_ir_spectra(file, file_name = None):
+def make_ir_spectra(file):
     """Plot of wavenumber against intensities for vibrations found by diagonalisation of a computed
 hessian matrix"""
 
@@ -113,7 +114,9 @@ hessian matrix"""
 
     res = freq_data(file)
     sns.set_style('darkgrid')
-    sns.lineplot(x = "vibs", y = "intensities", data = res)
+    sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
     plt.xlabel('Wavenumber (cm$^{-1}$)')
     plt.ylabel('Intensity')
     plt.show()
+    write_csv_from_dict(res)
+    

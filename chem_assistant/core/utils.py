@@ -91,12 +91,18 @@ def write_csv_from_dict(data):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                filename = input('Filename: ')
-                with open(filename, "w") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(data.keys())
-                    content = zip(*[data[key] for key in data.keys()])
-                    writer.writerows(content) 
+                correct = False
+                while not correct:
+                    filename = input('Filename: ')
+                    if not filename.endswith('.csv'):
+                        print("Please end the filename in '.csv'")
+                    else:
+                        correct = True
+                    with open(filename, "w", encoding = 'utf-8-sig') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(data.keys())
+                        content = zip(*[data[key] for key in data.keys()])
+                        writer.writerows(content) 
         else:   
             print("Please select 'y' or 'n'")
 
@@ -115,13 +121,19 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                filename = input('Filename: ')
-                with open(filename, "w", encoding = 'utf-8-sig') as f:
-                    writer = csv.writer(f)
-                    writer.writerow(col_names)       
-                    writer.writerows(data)
-                if return_name:
-                    return filename
+                correct = False
+                while not correct:
+                    filename = input('Filename: ')
+                    if not filename.endswith('.csv'):
+                        print("Please end the filename in '.csv'")
+                    else:
+                        correct = True
+                    with open(filename, "w", encoding = 'utf-8-sig') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(col_names)       
+                        writer.writerows(data)
+                    if return_name:
+                        return filename
         else:   
             print("Please select 'y' or 'n'")
 
