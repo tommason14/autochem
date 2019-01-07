@@ -70,9 +70,7 @@ def make_files_from_meta(base_dir):
                 if not any(file.endswith('.xyz') for file in os.listdir('.')):
                     raise TypeError(f'Meta file requires an xyz file in the same directory. Check {os.getcwd()}')
                 else:
-                    for file in os.listdir('.'):
-                        if file.endswith('.xyz'):
-                            print(os.path.join(os.getcwd(), file))
+                    print(os.getcwd())
                 os.system('python3 meta.py')
                 os.chdir(parent)
         

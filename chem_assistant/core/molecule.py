@@ -207,6 +207,14 @@ the system"""
 
         def collect_atoms():
             # modify the molecule dictionary, and drop keys when the atoms are assigned to a new molecule
+            if self.nfrags is None:
+                done = False
+                while not done:
+                    try:
+                        self.nfrags = int(input('Number of fragments: '))
+                        done = True
+                    except ValueError:
+                        print('Must give an integer number of fragments!')
             while len(set(self.mol_dict.keys())) > self.nfrags:
                 dist = distances()    
                 dist.sort(key = lambda item: item[2]) # sort on distance of [i, j, dist]

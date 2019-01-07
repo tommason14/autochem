@@ -103,7 +103,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
          
         self.create_inp()
         self.create_job()
-        self.place_files_in_dir(self.is_complex)
+        self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments() # negate self.is_complex
         
@@ -112,7 +112,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if self.merged.nfrags != {}: #automatically creates an empty dict if called
                 self.mol.nfrags = self.merged.nfrags
             else:
-                self.mol.nfrags = int(input('Number of fragments: '))
+                self.mol.nfrags = int(input('Number of fragments for : '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -176,12 +176,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     #format for fmo run of complete system 
     def fmo_meta(self):
         """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
-molecule instance as self.indat and self.charg"""
-        
+        molecule instance as self.indat and self.charg"""
         info = {}
-       
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
-
         for frag, data in self.mol.fragments.items():
             info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
                           "charg" : str(data['charge'])}
@@ -200,12 +197,12 @@ molecule instance as self.indat and self.charg"""
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file        
-        self.mol.indat = []
-        self.mol.charg = []
+        self.indat = []
+        self.charg = []
         for val in sorted_info:
-            self.mol.indat.append(val[1]['indat'])
-            self.mol.charg.append(val[1]['charg'])
-        self.mol.indat.append('0')
+            self.indat.append(val[1]['indat'])
+            self.charg.append(val[1]['charg'])
+        self.indat.append('0')
 
     def fmo_formatting(self):
         self.fmo_meta() # gives self.mol.indat, self.mol.charg
@@ -220,7 +217,7 @@ molecule instance as self.indat and self.charg"""
         string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
         string += "     MPLEVL(1)=2\n"
         string += f"     INDAT(1)={self.mol.indat[0]}\n"
-        for d in self.mol.indat[1:]:
+        for d in self.indat[1:]:
             string += f"{' '*14}{d}\n"
         string += f"     ICHARG(1)={','.join(self.mol.charg)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
@@ -243,9 +240,7 @@ molecule instance as self.indat and self.charg"""
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian
-        matrix calculation for vibrational frequencies (hess). This method creates an attribute
-        ``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (hess). This method creates an attribute ``base_name``, used in creating the input and job files."""
 
         if self.filename is not None:
             self.base_name = self.filename
@@ -275,7 +270,7 @@ molecule instance as self.indat and self.charg"""
             job = f.read()       
             return job
     
-    def frags_mgs_replace(self, job):
+    def change_mgs_job(self, job):
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace('nodes=1', f'nodes={num_frags}')
@@ -283,7 +278,7 @@ molecule instance as self.indat and self.charg"""
             return jobfile
         return job
             
-    def frags_rjn_replace(self, job):
+    def change_rjn_job(self, job):
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace('ncpus=32', f'ncpus={16 * num_frags}')
@@ -297,26 +292,19 @@ molecule instance as self.indat and self.charg"""
         jobfile = self.get_job_template()
         # modify
         if str(self.sc) == 'mgs':
-            jobfile = self.frags_mgs_replace(jobfile)
+            jobfile = self.change_mgs_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif str(self.sc) == 'rjn':
-            jobfile = self.frags_rjn_replace(jobfile)
+            jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif self.sc == 'mon':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        #     if hasattr(self.mol, 'fragments'):
-        #         job = job.replace('mem=64G', f'mem={16 * num_frags}G') # 2IP --> 64G, 2IP + water --> 80G 
-        #     job = job.replace('base_name', f'{self.base_name}')
-        # elif self.sc == 'gaia':
-        #     pass
-
-        # write
         self.write_file(jobfile, filetype='job')
 
-    def place_files_in_dir(self, is_complex):
+    def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
-        if is_complex:
+        if self.is_complex:
             if not exists(join('complex', self.base_name)):
                 mkdir('complex')
                 mkdir(join('complex', self.base_name))
@@ -350,7 +338,6 @@ molecule instance as self.indat and self.charg"""
             ├── spec.inp
         """
         self.is_complex = False
-        
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()

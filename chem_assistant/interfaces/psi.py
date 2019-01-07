@@ -100,7 +100,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             ├── opt.inp
             └── opt.job
     """
-    def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None):
+    def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None, is_complex = False):
         super().__init__(using)
         self.filename = filename
         self.defaults = read_template('psi.json') #settings object 
@@ -119,6 +119,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         else:
             self.title = using[:-4]
         
+        self.is_complex = is_complex # creates a `complex` dir
+
         self.create_inp()
         self.create_job()
         self.place_files_in_dir()
@@ -232,23 +234,40 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.file_basename()
         self.write_file(self.inp, filetype = 'inp')
 
-    def create_job(self):
-        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+    def get_job_template(self):
         job_file = self.find_job()
         with open(job_file) as f:
-            job = f.read()
+            job = f.read()       
+            return job
 
+    def create_job(self):
+        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+        jobfile = self.get_job_template()
         # modify
-        job = job.replace('name', f'{self.base_name}')
-        # write
-        self.write_file(job, filetype="job")               
+        if str(self.sc) == 'mgs':
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
+        elif str(self.sc) == 'rjn':
+            # should alter the job time as they never need 4 hours- 
+            # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
+        elif self.sc == 'mon':
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
+        self.write_file(jobfile, filetype='job')        
 
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
-        if not exists(self.base_name):    
-            mkdir(self.base_name)
-        system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
+        if self.is_complex:
+            if not exists(join('complex', self.base_name)):
+                mkdir('complex')
+                mkdir(join('complex', self.base_name))
+                # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
+                system('cp *.xyz complex/complex.xyz')
+            system(f'mv {self.base_name}.inp {self.base_name}.job complex/{self.base_name}/')
+        else:
+            if not exists(self.base_name):    
+                mkdir(self.base_name)
+            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
@@ -271,12 +290,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             │       └── water4.xyz
             ├── spec.inp
         """
-    
+        # not necessarily any splitting prior to this
+        self.is_complex = False
                
-        if self.merged.nfrags != {}: #automatically creates an empty dict if called
-            self.mol.nfrags = self.merged.nfrags
-        else:
-            self.mol.nfrags = int(input('Number of fragments: '))
+        # if self.merged.nfrags != {}: #automatically creates an empty dict if called
+        #     self.mol.nfrags = self.merged.nfrags
+        # else:
+        #     self.mol.nfrags = int(input('Number of fragments: '))
 
         self.mol.separate() #creating frags 
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
@@ -291,24 +311,45 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         parent_dir = getcwd()
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
-            #make a directory inside the subdir for each fragment
-            name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
-            if not exists(join(subdirectory, name)):
-                mkdir(join(subdirectory, name)) # ./frags/water4/
-            chdir(join(subdirectory, name))
-            Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
+            if data['frag_type'] == 'frag':
+                #make a directory inside the subdir for each fragment
+                name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
+                if not exists(join(subdirectory, name)):
+                    mkdir(join(subdirectory, name)) # ./frags/water4/
+                chdir(join(subdirectory, name))
+                Molecule.write_xyz(self, atoms = data['atoms'], filename = name + str('.xyz')) #using the method, but with no class
+                
+                #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.molecule.charge = data['charge']
+                if data['multiplicity'] != 1:
+                    frag_settings.input.molecule.multiplicity = data['multiplicity']
+                job = PsiJob(using = name + str('.xyz'), settings=frag_settings) 
+                chdir(parent_dir)
+                count += 1
+            elif data['frag_type'] == 'ionic':
+                # only 1 ionic network        
+                subdir_ionic = join(getcwd(), 'ionic')
+                if not exists(subdir_ionic):
+                    mkdir(subdir_ionic)
+                chdir(subdir_ionic)
+                write_xyz(atoms = data['atoms'], filename = 'ionic.xyz')
             
-            #use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
-            if hasattr(self, 'merged'):
-                frag_settings = self.merged
-            else:
-                frag_settings = self.defaults
-            frag_settings.input.molecule.charge = data['charge']
-            if data['multiplicity'] != 1:
-                frag_settings.input.molecule.multiplicity = data['multiplicity']
-            job = PsiJob(using = name + str('.xyz'), settings=frag_settings) 
-            chdir(parent_dir)
-            count += 1
+                # re-use settings from complex
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.molecule.charge = data['charge']
+                if data['multiplicity'] != 1:
+                    frag_settings.input.molecule.multiplicity = data['multiplicity']
+                job = PsiJob(using = name + str('.xyz'), settings=frag_settings) 
+                chdir(parent_dir)
+        
+
             
         
 
