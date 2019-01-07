@@ -85,9 +85,10 @@ def sort_elements(lst):
 
 def write_csv_from_dict(data):
     """Write to file from dictionary"""
+    # convert to try/except
     done = False
     while not done:
-        to_file = input('Print to csv? [y/n] ')
+        to_file = input('Print to csv? [Y/N] ')
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
@@ -104,7 +105,7 @@ def write_csv_from_dict(data):
                         content = zip(*[data[key] for key in data.keys()])
                         writer.writerows(content) 
         else:   
-            print("Please select 'y' or 'n'")
+            print("Please select 'Y' or 'N'")
 
 def write_csv_from_nested(data,*,col_names = None, return_name = False):
     """
@@ -114,10 +115,10 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
     """
     if type(col_names) not in (list, tuple):
         raise AttributeError('Must pass in column names as a list or tuple of values')
-
+    # convert to try/except
     done = False
     while not done:
-        to_file = input('Print to csv? [y/n] ')
+        to_file = input('Print to csv? [Y/N] ')
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
@@ -135,7 +136,7 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
                     if return_name:
                         return filename
         else:   
-            print("Please select 'y' or 'n'")
+            print("Please select 'Y' or 'N'")
 
 def search_dict_recursively(d):
     ret = {}

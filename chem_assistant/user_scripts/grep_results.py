@@ -30,6 +30,7 @@ from ..core.thermo import thermo_data
 from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
+from .make_files_meta import make_files_from_meta
 import os
 import re
 import csv
@@ -46,9 +47,60 @@ def search_for_coords(dir):
                 print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
                 r.get_equil_coords()
                 print()
+                create_extra_jobs()
+                
+
+            
         else:
             print(f"{log}: Not completed")
 
+def create_extra_jobs():
+    """Using `equil.xyz` files found from a previous search, create additional files"""
+    answer = False
+    while not answer:
+        try:
+            extra = input('Create additional jobs using the `equil.xyz` files just found, by placing meta.py files into the appropriate directories? [Y/N]')
+        except ValueError: # type error?
+            print("Please choose 'Y' or 'N'")
+        if extra.upper() in ('Y', 'N'):
+            answer = True
+        else:
+            print("Please choose 'Y' or 'N'")
+
+    if extra == "Y":
+        # add meta.py to file  (dir of grep_results.py = user_scripts)
+        template_dir = os.path.join(dirname(__file__), os.pardir, 'templates/meta_files')
+        predefined = {
+            'gamess spec': os.path.join(template_dir, 'gamess/spec/meta.py'),
+            'gamess opt': os.path.join(template_dir, 'gamess/opt/meta.py'),
+            'gamess freq': os.path.join(template_dir, 'gamess/freq/meta.py'),
+            'psi spec': os.path.join(template_dir, 'psi/spec/meta.py')
+        }
+        good = False
+        while not good:
+            try:
+                user_choice = int(input(\
+"""Use a predefined file or one of your own:
+
+1. Predefined
+2. Own meta.py
+
+Choice: """))
+            except ValueError:
+                print('Please choose 1 or 2')
+            if user_choice in (1, 2):
+                good = True
+            else:
+                print('Please choose a number, 1 or 2')
+        if user_choice == 1:
+           pass 
+        else:
+            p = input('Give path to your own meta.py (relative from the directory you are running this script from)')  
+            # load script from os.path.join(os.getcwd(), p)
+            # if no meta.py there, ask again
+        
+        # run meta.py recursively
+        make_files_from_meta('.') 
 
 def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
@@ -163,7 +215,8 @@ def get_h_bonds(dir):
         path, f = os.path.split(file)
         if not any((re.search('cation-?_?[0-9]*', f), re.search('anion-?_?[0-9]*', f), re.search('neutral-?_?[0-9]*', f))) and not any((f.split('_')[0] in Molecule.Anions, f.split('_')[0] in Molecule.Cations, f.split('_')[0] in Molecule.Neutrals)) and 'frags' not in path:
             # no frags in path of xyz- and no files named, cation_1.xyz, cation-1.xyz, anion, neutral
-            # check for names in Anions, Cations, Neutrals- only want complexes
+            # check for names in Anions, Cations, Neutrals- only want files with multiple molecules
+            
             print(file + '\n')
             mol = Molecule(using = file)
             mol.nfrags = int(input('Number of fragments: '))
