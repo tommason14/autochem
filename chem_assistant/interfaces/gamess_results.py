@@ -108,6 +108,14 @@ store the iteration number.
         regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
         found_equil = False
         found_some = False
+        par_dir = []
+        print(self.log)
+        for part in self.path.split('/'):
+            if part not in ('opt', 'spec', 'hess'):
+                par_dir.append(part)
+            else:
+                break
+        MOLECULE_PARENT_DIR = '/'.join(par_dir)
         for line in self.read():
             if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
                 found_equil = True
@@ -135,7 +143,7 @@ store the iteration number.
             print('found!')
             # find parent dir- if multiple reruns, then don't know how far up tree to go to find
             # parent
-            write_xyz(equil, os.path.join(self.path, os.pardir, 'equil.xyz'))
+            write_xyz(equil, os.path.join(MOLECULE_PARENT_DIR, 'equil.xyz'))
             # self.create_spec_after_opt()
         else:
             if len(rerun) > 0:

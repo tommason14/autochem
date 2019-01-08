@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-__all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class',
-'search_for_coords', 'get_h_bonds']
+__all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class', 'search_for_coords', 'get_h_bonds',
+'create_extra_jobs']
 
 """
 File: grep_results.py 
@@ -32,6 +32,7 @@ from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 from .make_files_meta import make_files_from_meta
 import os
+import subprocess
 import re
 import csv
 
@@ -47,60 +48,127 @@ def search_for_coords(dir):
                 print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
                 r.get_equil_coords()
                 print()
-                create_extra_jobs()
-                
-
-            
         else:
-            print(f"{log}: Not completed")
+            print(f"{log}: Not completed\n")
 
-def create_extra_jobs():
+def create_extra_jobs(dir):
     """Using `equil.xyz` files found from a previous search, create additional files"""
-    answer = False
-    while not answer:
-        try:
-            extra = input('Create additional jobs using the `equil.xyz` files just found, by placing meta.py files into the appropriate directories? [Y/N]')
-        except ValueError: # type error?
-            print("Please choose 'Y' or 'N'")
-        if extra.upper() in ('Y', 'N'):
-            answer = True
-        else:
-            print("Please choose 'Y' or 'N'")
 
-    if extra == "Y":
-        # add meta.py to file  (dir of grep_results.py = user_scripts)
-        template_dir = os.path.join(dirname(__file__), os.pardir, 'templates/meta_files')
-        predefined = {
-            'gamess spec': os.path.join(template_dir, 'gamess/spec/meta.py'),
-            'gamess opt': os.path.join(template_dir, 'gamess/opt/meta.py'),
-            'gamess freq': os.path.join(template_dir, 'gamess/freq/meta.py'),
-            'psi spec': os.path.join(template_dir, 'psi/spec/meta.py')
-        }
-        good = False
-        while not good:
+    def is_complex():
+        complex = False
+        while not complex:
             try:
-                user_choice = int(input(\
+                user_choice = input("Are these systems made of more than one molecule? [Y/N] ")
+            except ValueError:
+                print("Please enter 'Y' or 'N'")
+            if user_choice.upper() not in ('Y', 'N'):
+                print("Please enter 'Y' or 'N'")
+            else:
+                complex = True
+        return complex
+
+    def add_to_meta(scomp, complexes):
+        with open('meta.py', "r") as f:
+            lines = [line for line in f.readlines()]
+        lines.insert(-1, f"s.supercomp = '{scomp}'\n")
+        if complexes:
+            lines[-1] = lines[-1][:-1] + ', is_complex = True)'
+        with open('meta.py', "w") as writer:
+            for line in lines:
+                writer.write(line)
+
+    def copy_meta(file_to_copy, scomp):
+        """Give the path anf filename of meta.py file to copy over to any directory containing an `equil.xyz` file"""
+        complex = is_complex()
+        parent = os.getcwd()
+        for path, _, files in os.walk('.'):
+            for file in files:
+                if file == 'equil.xyz':
+                    os.chdir(path)
+                    os.system(f'cp {file_to_copy} .')
+                    add_to_meta(scomp, complex)
+                    os.chdir(parent)
+
+
+    def get_supercomp():
+        sc = False
+        while not sc:
+            try:
+                sc_choice = int(input(\
+"""Which supercomputer do you want to use?
+
+1. Raijin
+2. Magnus
+3. Massive
+
+Choice: """))
+            except ValueError:
+                print('Please enter a number between 1 and 3')
+            if sc_choice not in range(1,4):
+                print('Please enter a number between 1 and 3')
+            else:
+                sc = True
+
+        supercomps = {1: 'rjn', 2: 'mgs', 3: 'mas'}
+        scomp = supercomps[sc_choice]
+        return scomp
+
+    # os.path.dirname(__file__) = user_scripts
+    template_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'templates/meta_files')
+    predefined = {
+        1: os.path.join(template_dir, 'gamess/spec/meta.py'),
+        2: os.path.join(template_dir, 'gamess/freq/meta.py'),
+        3: os.path.join(template_dir, 'psi/spec/meta.py')
+    }
+    good = False
+    while not good:
+        try:
+            user_choice = int(input(\
 """Use a predefined file or one of your own:
 
 1. Predefined
 2. Own meta.py
 
 Choice: """))
-            except ValueError:
-                print('Please choose 1 or 2')
-            if user_choice in (1, 2):
-                good = True
-            else:
-                print('Please choose a number, 1 or 2')
-        if user_choice == 1:
-           pass 
+        except ValueError:
+            print('Please choose 1 or 2')
+        if user_choice in (1, 2):
+            good = True
         else:
-            p = input('Give path to your own meta.py (relative from the directory you are running this script from)')  
-            # load script from os.path.join(os.getcwd(), p)
-            # if no meta.py there, ask again
-        
-        # run meta.py recursively
-        make_files_from_meta('.') 
+            print('Please choose a number, 1 or 2')
+    if user_choice == 1:
+        done = False
+        while not done:
+            try:
+                choice = int(input(\
+"""Which type of file do you want to make?
+
+1. Gamess single point energy
+2. Gamess hessian
+3. Psi4 single point energy
+
+Choice: """))
+            except ValueError:
+                print('Please enter a number between 1 and 3')
+            if choice not in range(1,4):
+                print('Please enter a number between 1 and 3')
+            else:
+                done = True
+
+        # add desired meta.py
+        meta_file = predefined[choice]
+        scomp = get_supercomp()
+        copy_meta(meta_file, scomp)
+    else:
+        user_path = input('Give path to your own meta.py (relative from the directory you are running this script from)')  
+        user_given = os.path.join(os.getcwd(), user_path)
+        scomp = get_supercomp()
+        copy_meta(user_path, scomp)
+        # load script from os.path.join(os.getcwd(), p)
+        # if no meta.py there, ask again
+    
+    # run meta.py recursively
+    make_files_from_meta('.') 
 
 def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""

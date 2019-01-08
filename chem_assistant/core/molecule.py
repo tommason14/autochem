@@ -379,7 +379,7 @@ ions"""
         if len(coord_list) == len(self.coords):
             pass
         else:
-            self.fragments[len(self.fragments) + 1] = {
+            self.ionic = {
                 "type": 'ionic',
                 "name" : 'ionic',
                 "atoms": coord_list, #not symbols, but the atom objects

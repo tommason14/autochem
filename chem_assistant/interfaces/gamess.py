@@ -16,7 +16,7 @@ from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
 from ..core.utils import (sort_elements, write_xyz)
 
-from os import (chdir, mkdir, getcwd, system, walk)
+from os import (chdir, mkdir, getcwd, system, walk, listdir)
 from os.path import (exists, join, dirname)
 
 __all__ = ['GamessJob']
@@ -83,7 +83,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
-= None, is_complex = False):
+= None, is_complex = False, run_dir = None):
         super().__init__(using)
         self.fmo = fmo # Boolean
         self.filename = filename
@@ -100,9 +100,15 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.title = using[:-4]
         
         self.is_complex = is_complex # creates a `complex` dir
+
+        if run_dir is not None:
+            self.made_run_dir = True
+        else:
+            self.made_run_dir = False
          
         self.create_inp()
         self.create_job()
+        self.make_run_dir()
         self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments() # negate self.is_complex
@@ -112,7 +118,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if self.merged.nfrags != {}: #automatically creates an empty dict if called
                 self.mol.nfrags = self.merged.nfrags
             else:
-                self.mol.nfrags = int(input('Number of fragments for : '))
+                self.mol.nfrags = int(input('Number of fragments: '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -180,8 +186,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         info = {}
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
         for frag, data in self.mol.fragments.items():
-            info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
-                          "charg" : str(data['charge'])}
+            if frag is not 'ionic':
+                info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
+                "charg" : str(data['charge'])}
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
         # 0,8,28,
@@ -216,10 +223,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
         string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
         string += "     MPLEVL(1)=2\n"
-        string += f"     INDAT(1)={self.mol.indat[0]}\n"
+        string += f"     INDAT(1)={self.indat[0]}\n"
         for d in self.indat[1:]:
             string += f"{' '*14}{d}\n"
-        string += f"     ICHARG(1)={','.join(self.mol.charg)}\n"
+        string += f"     ICHARG(1)={','.join(self.charg)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         return string
 
@@ -301,20 +308,25 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')
 
+    def make_run_dir(self):
+        if not self.made_run_dir: # only do it once
+            mkdir(self.base_name) # make opt/spec/hessin parent dir
+            self.made_run_dir = True
+
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
         if self.is_complex:
-            if not exists(join('complex', self.base_name)):
-                mkdir('complex')
-                mkdir(join('complex', self.base_name))
-                # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
-                system('cp *.xyz complex/complex.xyz')
-            system(f'mv {self.base_name}.inp {self.base_name}.job complex/{self.base_name}/')
-        else:
-            if not exists(self.base_name):
-                mkdir(self.base_name)
-            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
+            if not exists(join(self.base_name, 'complex')):
+                mkdir(join(self.base_name, 'complex'))
+        #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
+                if 'equil.xyz' in listdir('.'):
+                    system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
+            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
+        # else:
+        #     if not exists(self.base_name):
+        #         mkdir(self.base_name)
+        #     system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
@@ -342,7 +354,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()
         #make subdir if not already there
-        subdirectory = join(getcwd(), 'frags')
+        subdirectory = join(getcwd(), self.base_name, 'frags')
         if not exists(subdirectory):
             mkdir(subdirectory)
 
@@ -350,6 +362,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         count = 0 #avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             if data['frag_type'] == 'frag':
+
                 #make a directory inside the subdir for each fragment
                 name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
                 if not exists(join(subdirectory, name)):
@@ -365,27 +378,28 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 frag_settings.input.contrl.icharg = data['charge']
                 if data['multiplicity'] != 1:
                     frag_settings.input.contrl.mult = data['multiplicity']
-                job = GamessJob(using = name + str('.xyz'), settings=frag_settings) 
+                job = GamessJob(using = name + str('.xyz'), settings=frag_settings, run_dir = True) 
                 chdir(parent_dir)
                 count += 1
-            elif data['frag_type'] == 'ionic':
-                # only 1 ionic network        
-                subdir_ionic = join(getcwd(), 'ionic')
-                if not exists(subdir_ionic):
-                    mkdir(subdir_ionic)
-                chdir(subdir_ionic)
-                write_xyz(atoms = data['atoms'], filename = 'ionic.xyz')
-            
-                # re-use settings from complex
-                if hasattr(self, 'merged'):
-                    frag_settings = self.merged
-                else:
-                    frag_settings = self.defaults
-                frag_settings.input.contrl.icharg = data['charge']
-                if data['multiplicity'] != 1:
-                    frag_settings.input.contrl.mult = data['multiplicity']
-                print('Creating input for the ionic network...')
-                job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = True) 
-                chdir(parent_dir)
+
+        if hasattr(self.mol, 'ionic'):
+            # only 1 ionic network        
+            subdir_ionic = join(getcwd(), self.base_name, 'ionic')
+            if not exists(subdir_ionic):
+                mkdir(subdir_ionic)
+            chdir(subdir_ionic)
+            write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
         
+            # re-use settings from complex
+            if hasattr(self, 'merged'):
+                frag_settings = self.merged
+            else:
+                frag_settings = self.defaults
+            frag_settings.input.contrl.icharg = self.mol.ionic['charge']
+            if self.mol.ionic['multiplicity'] != 1:
+                frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
+            print('Creating input for the ionic network...')
+            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = True, run_dir = True) 
+            chdir(parent_dir)
+    
 

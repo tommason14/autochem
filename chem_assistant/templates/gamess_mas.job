@@ -12,4 +12,4 @@
 
 module load gamess/16srs1-v2
 
-rungms.monarch base_name.inp 00 $SLURM_NTASKS > base_name.log
+rungms.m3 base_name.inp 00 $SLURM_NTASKS > base_name.log
