@@ -83,36 +83,28 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
-= None, is_complex = False, run_dir = None):
-        super().__init__(using)
+= None, is_complex = False, run_dir = None, **kwargs):
+        super().__init__(using, run_dir)
         self.fmo = fmo # Boolean
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
         if settings is not None:
-            self.merged = self.defaults.merge(settings) # merges inp, job data 
-            self.input = self.merged.input
-            self.job = self.merged.job
+            self.fetch_info(settings)
         else:
             self.input = self.defaults.input
-        if '/' in using:
-            self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
-        else:
-            self.title = using[:-4]
+        super().title()
         
         self.is_complex = is_complex # creates a `complex` dir
-
-        if run_dir is not None:
-            self.made_run_dir = True
-        else:
-            self.made_run_dir = False
          
-        self.create_inp()
-        self.create_job()
-        self.make_run_dir()
-        self.place_files_in_dir()
-        if frags_in_subdir:
-            self.create_inputs_for_fragments() # negate self.is_complex
+        super().output_data(GamessJob, 'contrl.icharg', 'contrl.mult', frags_in_subdir)
         
+
+    def fetch_info(self, settings):
+        self.merged = self.defaults.merge(settings) # merges inp, job data 
+        self.input = self.merged.input
+        self.job = self.merged.job
+
+
     def determine_fragments(self):
         if self.fmo:
             if self.merged.nfrags != {}: #automatically creates an empty dict if called
@@ -172,7 +164,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     ret += ' {}={}'.format(el.upper(), str(value[el]).upper())
                 ret += ' $END\n'
             else:
-                ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
+                ret += ' ${} {}\n $END\n'.format(key.upper(), str(value).upper())
             return ret
 
         inp = [parse(item, self.input[item])
@@ -254,14 +246,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         else:
             options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess'}
             self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
-
-    def write_file(self, data, filetype):
-        """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
-
-        NOTE: Must pass data as a string, not a list!""" 
-        with open(f"{self.base_name}.{filetype}", "w") as f:
-            f.write(data)
-
+    
     def create_inp(self):
         self.determine_fragments() #add fmo info to input settings, if self.fmo is True
         self.make_automatic_changes()
@@ -269,13 +254,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.order_header() #create self.header variable
         inp = self.make_inp()
         self.file_basename()
-        self.write_file(inp, filetype = 'inp')
+        super().write_file(inp, filetype = 'inp')
    
-    def get_job_template(self):
-        job_file = self.find_job()
-        with open(job_file) as f:
-            job = f.read()       
-            return job
     
     def change_mgs_job(self, job):
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
@@ -294,112 +274,5 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             return jobfile
         return job
     
-    def create_job(self):
-        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        jobfile = self.get_job_template()
-        # modify
-        if str(self.sc) == 'mgs':
-            jobfile = self.change_mgs_job(jobfile)
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'rjn':
-            jobfile = self.change_rjn_job(jobfile)
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif self.sc == 'mon':
-            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        self.write_file(jobfile, filetype='job')
-
-    def make_run_dir(self):
-        if not self.made_run_dir: # only do it once
-            mkdir(self.base_name) # make opt/spec/hessin parent dir
-            self.made_run_dir = True
-
-    def place_files_in_dir(self):
-        """Move input and job files into a directory named with the input name (``base_name``) i.e.
-        moves opt.inp and opt.job into a directory called ``opt``."""
-        if self.is_complex:
-            if not exists(join(self.base_name, 'complex')):
-                mkdir(join(self.base_name, 'complex'))
-        #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
-                if 'equil.xyz' in listdir('.'):
-                    system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
-            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
-        # else:
-        #     if not exists(self.base_name):
-        #         mkdir(self.base_name)
-        #     system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
-
-    def create_inputs_for_fragments(self):
-        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
-            .
-            ├── frags
-            │   ├── acetate0
-            │   │   ├── acetate0.xyz
-            │   │   └── spec.inp
-            │   ├── acetate1
-            │   │   ├── acetate1.xyz
-            │   │   └── spec.inp
-            │   ├── choline2
-            │   │   ├── choline2.xyz
-            │   │   └── spec.inp
-            │   ├── choline3
-            │   │   ├── choline3.xyz
-            │   │   └── spec.inp
-            │   └── water4
-            │       ├── spec.inp
-            │       └── water4.xyz
-            ├── spec.inp
-        """
-        self.is_complex = False
-        #look over self.mol.fragments, generate inputs- make a settings object with the desired features
-        if not hasattr(self.mol, 'fragments'):
-            self.mol.separate()
-        #make subdir if not already there
-        subdirectory = join(getcwd(), self.base_name, 'frags')
-        if not exists(subdirectory):
-            mkdir(subdirectory)
-
-        parent_dir = getcwd()
-        count = 0 #avoid  overwriting files by iterating with a number
-        for frag, data in self.mol.fragments.items():
-            if data['frag_type'] == 'frag':
-
-                #make a directory inside the subdir for each fragment
-                name = f"{data['name']}_{count}" # i.e. acetate0, acetate1, choline2, choline3, water4
-                if not exists(join(subdirectory, name)):
-                    mkdir(join(subdirectory, name)) # ./frags/water4/
-                chdir(join(subdirectory, name))
-                write_xyz(atoms = data['atoms'], filename = name + str('.xyz'))
-            
-                # re-use settings from complex
-                if hasattr(self, 'merged'):
-                    frag_settings = self.merged
-                else:
-                    frag_settings = self.defaults
-                frag_settings.input.contrl.icharg = data['charge']
-                if data['multiplicity'] != 1:
-                    frag_settings.input.contrl.mult = data['multiplicity']
-                job = GamessJob(using = name + str('.xyz'), settings=frag_settings, run_dir = True) 
-                chdir(parent_dir)
-                count += 1
-
-        if hasattr(self.mol, 'ionic'):
-            # only 1 ionic network        
-            subdir_ionic = join(getcwd(), self.base_name, 'ionic')
-            if not exists(subdir_ionic):
-                mkdir(subdir_ionic)
-            chdir(subdir_ionic)
-            write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
-        
-            # re-use settings from complex
-            if hasattr(self, 'merged'):
-                frag_settings = self.merged
-            else:
-                frag_settings = self.defaults
-            frag_settings.input.contrl.icharg = self.mol.ionic['charge']
-            if self.mol.ionic['multiplicity'] != 1:
-                frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
-            print('Creating input for the ionic network...')
-            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = True, run_dir = True) 
-            chdir(parent_dir)
     
 
