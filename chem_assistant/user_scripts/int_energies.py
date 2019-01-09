@@ -44,9 +44,6 @@ def group_files(csv, header = True):
         for line in file_obj:
             file, path, basis, hf, mp2 = line.split(',')
             # split path
-            par_dir = []
-            file_path = []
-
             molecule, path_to_file = split_path(path)
             file = path_to_file + '/' + file      
             if molecule not in groups:
