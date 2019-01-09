@@ -2,6 +2,7 @@ __all__ = ['calculate_interaction_energies']
 
 import csv
 import re
+import math
 from ..core.molecule import Molecule
 # pandas is slow, maybe try something different?
 
@@ -44,9 +45,6 @@ def group_files(csv, header = True):
         for line in file_obj:
             file, path, basis, hf, mp2 = line.split(',')
             # split path
-            par_dir = []
-            file_path = []
-
             molecule, path_to_file = split_path(path)
             file = path_to_file + '/' + file      
             if molecule not in groups:
@@ -96,6 +94,8 @@ def calculate_energies(d):
                 hf, mp2 = map(float, (hf, mp2))
         return hf, mp2
 
+    HARTREE_TO_kJ = 2625.5
+
     purely_ionic = True
     results_dict = {}
     for k, v in d.items():
@@ -125,13 +125,13 @@ def calculate_energies(d):
                     ionic_hf = hf
                     ionic_mp2 = mp2
             
-        elec_hf = (complex_hf - sum_frags_hf) * 2625.5
-        elec_mp2 = (complex_mp2 - sum_frags_mp2) * 2625.5
+        elec_hf = (complex_hf - sum_frags_hf) * HARTREE_TO_kJ
+        elec_mp2 = (complex_mp2 - sum_frags_mp2) * HARTREE_TO_kJ
         disp_hf = 0.0
         disp_mp2 = 0.0
         if ionic_hf != 0.0:
-            disp_hf = (complex_hf - ionic_hf - sum_neutral_hf) * 2625.5
-            disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neutral_mp2) * 2625.5
+            disp_hf = (complex_hf - ionic_hf - sum_neutral_hf) * HARTREE_TO_kJ
+            disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neutral_mp2) * HARTREE_TO_kJ
         total_hf = elec_hf + disp_hf
         total_mp2 = elec_mp2 + disp_mp2
         electrostatics = (total_hf / total_mp2) * 100
@@ -149,13 +149,13 @@ def calculate_energies(d):
 def write_csv(data, purely_ionic, filename):
 
     if purely_ionic:
-        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
+        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]', 'Boltzmann Weighting')
 
-        variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE')
+        variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]', 'Boltzmann Weighting')
 
-        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE')
+        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
     
     def update_csv(path, cat, an, d, variables):
         locals().update(d) #create variables
@@ -217,6 +217,9 @@ def rank_configs(data):
     """
     Ranks each configuration according to its interaction energies.
     """
+    KJ_TO_J = 1000
+    R = 8.3145
+    T = 298.15
 
     # create groups
     cations = sorted(set([v['cation'] for v in data.values()]))
@@ -242,10 +245,14 @@ def rank_configs(data):
             for path, data in groups[cation][anion].items():
                 energies.append((path, data['total_mp2']))
             sorted_vals = sorted(energies, key = lambda tup: tup[1]) #sort on the energies
+            min_energy = sorted_vals[0][1]
             for index, val in enumerate(sorted_vals, 1): #start index at 1
                 path, energy = val
+                deltaE = groups[cation][anion][path]['total_mp2'] - min_energy
                 groups[cation][anion][path]['rank'] = index
-                groups[cation][anion][path]['deltaE'] = groups[cation][anion][path]['total_mp2'] - sorted_vals[0][1] # minimum energy
+                groups[cation][anion][path]['deltaE'] = deltaE
+                groups[cation][anion][path]['boltzmann_factor'] = math.exp((-1 * KJ_TO_J * deltaE) / (R * T))
+
 
     # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
 

@@ -24,6 +24,7 @@ class Molecule:
     Anions["mes"] = ['S', 'O', 'O', 'O', 'C', 'H', 'H', 'H']
     Anions["ntf2"] = ['F', 'F', 'F', 'F', 'F', 'N', 'S', 'S',
                         'O', 'O', 'O', 'O', 'C', 'C', 'F']
+    Anions["bis-fsi"] = ['F', 'S', 'O', 'O', 'N', 'S', 'O', 'O', 'F']
     Anions["tos"] = ['C', 'C', 'C', 'C', 'H', 'H', 'H', 'H',
                         'H', 'H', 'H', 'S', 'O', 'O', 'O', 'C', 'C', 'C']
     Anions["dhp"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
