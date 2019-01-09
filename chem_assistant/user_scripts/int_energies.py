@@ -149,11 +149,11 @@ def calculate_energies(d):
 def write_csv(data, purely_ionic, filename):
 
     if purely_ionic:
-        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]', 'Boltzmann Weighting')
+        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE_Int [kJ/mol]', 'Boltzmann Weighting')
 
         variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]', 'Boltzmann Weighting')
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE_Int [kJ/mol]', 'Boltzmann Weighting')
 
         variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
     
@@ -280,9 +280,12 @@ assumes that variables will be present in the csv.
     ranked = rank_configs(assigned)
     correct = False
     while not correct:
-        filename = input('Filename of output: ')
+        try:
+            filename = input('Filename of output: ')
+        except ValueError:
+            print("Please enter a filename ending in '.csv'")
         if not filename.endswith('.csv'):
-            print("Please end the filename in '.csv'")
+            print("Please enter a filename ending in '.csv'")
         else:
             correct = True
     write_csv(ranked, purely_ionic, filename)
