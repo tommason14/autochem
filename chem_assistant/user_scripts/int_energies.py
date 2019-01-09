@@ -63,23 +63,8 @@ def calculate_energies(d):
     INT = E_COMPLEX - SUM(E_ION)
     INT_NEUTRAL SPECIES = E_COMPLEX - E_IONIC_CLUSTER - SUM(E_NEUTRAL_SPECIES)
     """
-
-    def calc_results_per_system(system):
-        results_dict = {}
-        for job in system:
-            resulta_dict[path] = calc_results_per_job(job)
-
-
-    def calc_results_per_job(job, results_dict):
-        complex_hf = 0.0
-        complex_mp2 = 0.0
-        sum_frag_hf = 0.0
-        sum_frag_mp2 = 0.0
-        ionic_hf = 0.0
-        ionic_mp2 = 0.0
-        sum_neu_hf = 0.0
-        sum_neu_mp2 = 0.0
-            
+    def get_results_per_job(job):
+        """Returns HF and MP2 energies"""
         file, basis, hf, mp2 = job
 
         # find type of system
@@ -97,68 +82,68 @@ def calculate_energies(d):
         if 'complex' in job:
             _, _, hf, mp2, _ = job
             hf, mp2 = map(float, (hf, mp2))
-            complex_hf = hf
-            complex_mp2 = mp2
-        
+
         if 'ionic' in job:
             _, _, hf, mp2, _ = job
             hf, mp2 = map(float, (hf, mp2))
-            ionic_hf = hf
-            ionic_mp2 = mp2
 
         if 'frag' in job:
             if 'neutral' in job:
                 _, _, hf, mp2, _, _ = job
                 hf, mp2 = map(float, (hf, mp2))
-                sum_neu_hf += hf
-                sum_neu_mp2 += mp2
-                sum_frag_hf += hf
-                sum_frag_mp2 += mp2
             else:
                 _, _, hf, mp2, _, = job
                 hf, mp2 = map(float, (hf, mp2))
-                sum_frag_hf += hf
-                sum_frag_mp2 += mp2
-
-
-
-        elec_hf = (complex_hf - sum_frag_hf) * 2625.5
-        elec_mp2 = (complex_mp2 - sum_frag_mp2) * 2625.5
-
-        print(elec_hf, elec_mp2)
-        # disp_hf = 0.0
-        # disp_mp2 = 0.0
-        # if ionic_hf != 0.0: #then reassign
-        #     disp_hf = (complex_mp2 - ionic_hf - sum_neu_hf) * 2625.5
-        #     disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neu_mp2) * 2625.5
-
-        # total_hf = elec_hf + disp_hf # always apply- if no neutral molecules, then disp_hf = 0
-        # total_mp2 = elec_mp2 + disp_mp2
-
-        # electro = (total_hf / total_mp2) * 100
-        # disp = total_mp2 - total_hf
-
-        # if ionic_hf != 0.0:
-        #     purely_ionic = False
-        #     return {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro} # all the neutral stuff
-        # else:
-        #     return {'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro}
-
-            # separate out purely ionic interaction energies from mixed
+        return hf, mp2
 
     purely_ionic = True
     results_dict = {}
     for k, v in d.items():
-        print(k, v)
-    #     for job in v:
-    #         file = job[0]
-    #         if 'spec' in file: # spec
-    #             results_dict[k] = calc_results(job, results_dict)
+        sum_frags_hf = 0.0
+        sum_frags_mp2 = 0.0
+        complex_hf = 0.0
+        complex_mp2 = 0.0
+        ionic_hf = 0.0
+        ionic_mp2 = 0.0
+        sum_neutral_hf = 0.0
+        sum_neutral_mp2 = 0.0
+        for job in v:
+            file = job[0]
+            if 'spec' in file:
+                hf, mp2 = get_results_per_job(job) # now determine type of job
+                if 'frags' in file:
+                    sum_frags_hf += hf
+                    sum_frags_mp2 += mp2
+                    for mol in Molecule.Neutrals:
+                        if mol in file:
+                            sum_neutral_hf += hf
+                            sum_neutral_mp2 += mp2
+                if 'complex' in file:
+                    complex_hf = hf
+                    complex_mp2 = mp2
+                if 'ionic' in file:
+                    ionic_hf = hf
+                    ionic_mp2 = mp2
+            
+        elec_hf = (complex_hf - sum_frags_hf) * 2625.5
+        elec_mp2 = (complex_mp2 - sum_frags_mp2) * 2625.5
+        disp_hf = 0.0
+        disp_mp2 = 0.0
+        if ionic_hf != 0.0:
+            disp_hf = (complex_hf - ionic_hf - sum_neutral_hf) * 2625.5
+            disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neutral_mp2) * 2625.5
+        total_hf = elec_hf + disp_hf
+        total_mp2 = elec_mp2 + disp_mp2
+        electrostatics = (total_hf / total_mp2) * 100
+        dispersion = total_mp2 - total_hf
 
-    # for val in results_dict.values():
-    #     if len(val) > 4:
-    #         purely_ionic = False
-    # return results_dict, purely_ionic
+        if ionic_hf != 0.0:
+            purely_ionic = False
+            results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'dispersion': dispersion, 'electrostatics': electrostatics} # all the neutral stuff
+        else:
+            results_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'dispersion': dispersion, 'electrostatics': electrostatics}        
+                
+    return results_dict, purely_ionic
 
 
 def write_csv(data, purely_ionic, filename):
@@ -166,11 +151,11 @@ def write_csv(data, purely_ionic, filename):
     if purely_ionic:
         col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
 
-        variables = ('total_hf', 'total_mp2', 'disp', 'electro', 'rank', 'deltaE')
+        variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE')
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]' 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE [kJ/mol]')
 
-        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'disp', 'electro', 'rank', 'deltaE')
+        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE')
     
     def update_csv(path, cat, an, d, variables):
         locals().update(d) #create variables
