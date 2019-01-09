@@ -252,6 +252,8 @@ def rank_configs(data):
                 groups[cation][anion][path]['rank'] = index
                 groups[cation][anion][path]['deltaE'] = deltaE
                 groups[cation][anion][path]['boltzmann_factor'] = math.exp((-1 * KJ_TO_J * deltaE) / (R * T))
+            # add boltzmann-weighted average energy, 
+            # add energies per IP
 
 
     # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
