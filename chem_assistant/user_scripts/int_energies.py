@@ -9,6 +9,31 @@ def group_files(csv, header = True):
     """
     Parses a csv file produced by python script
     """
+
+    def split_path(path):
+        """
+        Returns two strings- one upto the molecule directory, the other further into it.
+        Example: c4mim/ac/4/p2/spec/frags/water_4/ --> 
+        c4mim/ac/4/p2, spec/frags/water_4
+
+        - Data pre-processing
+        """
+        upto = 0
+        path_split = path.split('/')
+        for ind, part in enumerate(path_split):
+            if part in ('opt', 'spec', 'hess'):
+                upto = ind
+                break
+        
+        if upto != 0:
+            path_to_mol = path_split[0: upto]
+            path_to_each_calc = path_split[upto + 1:]
+            
+        path_to = '/'.join(path_to_mol)
+        path_after_run = '/'.join(path_to_each_calc)
+        return path_to, path_after_run
+
+
     groups = {}   
     with open(csv, "r") as f:
         if header:
@@ -18,10 +43,18 @@ def group_files(csv, header = True):
 
         for line in file_obj:
             file, path, basis, hf, mp2 = line.split(',')
-            if path not in groups:
-                groups[path] = [[file, basis, hf, mp2]]
+            # split path
+            par_dir = []
+            file_path = []
+
+            molecule, path_to_file = split_path(path)
+            file = path_to_file + '/' + file      
+            if molecule not in groups:
+                groups[molecule] = [[file, basis, hf, mp2]]
             else:
-                groups[path].append([file, basis, hf, mp2])# need to be lists, as later, add on a frag term
+                groups[molecule].append([file, basis, hf, mp2])# need to be lists, as later, add on a frag term
+
+
     return groups
 
 def calculate_energies(d):
@@ -30,75 +63,102 @@ def calculate_energies(d):
     INT = E_COMPLEX - SUM(E_ION)
     INT_NEUTRAL SPECIES = E_COMPLEX - E_IONIC_CLUSTER - SUM(E_NEUTRAL_SPECIES)
     """
-    purely_ionic = True
-    new_dict = {}
-    for k, v in d.items():
-        if k.endswith('spec'):
-            complex_hf = 0.0
-            complex_mp2 = 0.0
-            sum_frag_hf = 0.0
-            sum_frag_mp2 = 0.0
-            ionic_hf = 0.0
-            ionic_mp2 = 0.0
-            sum_neu_hf = 0.0
-            sum_neu_mp2 = 0.0
+
+    def calc_results_per_system(system):
+        results_dict = {}
+        for job in system:
+            resulta_dict[path] = calc_results_per_job(job)
+
+
+    def calc_results_per_job(job, results_dict):
+        complex_hf = 0.0
+        complex_mp2 = 0.0
+        sum_frag_hf = 0.0
+        sum_frag_mp2 = 0.0
+        ionic_hf = 0.0
+        ionic_mp2 = 0.0
+        sum_neu_hf = 0.0
+        sum_neu_mp2 = 0.0
             
-            for result in v:
-                file, basis, hf, mp2 = result
-                name = file.split('_')[0]
-                if name in Molecule.Cations or name in Molecule.Anions or name in Molecule.Neutrals or name in ('cation', 'anion', 'neutral'):
-                    result.append('frag')
-                    if name in Molecule.Neutrals:
-                        result.append('neutral')
-                # add option for 2IP here- now good for bigger systems
-                if 'ionic' in file.lower() or '2ip' in file.lower():
-                    result.append('ionic')
-            # do the maths
-                if 'frag' in result:
-                    *_, hf, mp2, _ = result
-                    hf, mp2 = map(float, (hf, mp2))
-                    sum_frag_hf += hf
-                    sum_frag_mp2 += mp2
-                # if 2ip in result:
-                if 'ionic' in result:
-                    *_, hf, mp2, _ = result
-                    hf, mp2 = map(float, (hf, mp2))
-                    ionic_hf += hf
-                    ionic_mp2 += mp2
-                if 'neutral' in result:
-                    *_, hf, mp2, _ = result
-                    hf, mp2 = map(float, (hf, mp2))
-                    sum_neu_hf += hf
-                    sum_neu_mp2 += mp2
-                if 'frag' not in result: # and 2IP not in result
-                    # one file per path
-                    _, _, hf, mp2 = result 
-                    hf, mp2 = map(float, (hf, mp2))
-                    complex_hf = hf
-                    complex_mp2 = mp2
-            elec_hf = (complex_hf - sum_frag_hf) * 2625.5
-            elec_mp2 = (complex_mp2 - sum_frag_mp2) * 2625.5
+        file, basis, hf, mp2 = job
 
-            disp_hf = 0.0
-            disp_mp2 = 0.0
-            if ionic_hf != 0.0: #then reassign
-                disp_hf = (complex_mp2 - ionic_hf - sum_neu_hf) * 2625.5
-                disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neu_mp2) * 2625.5
+        # find type of system
+        name = '/'.join(file.split('/')[:-1])
+        if 'frags' in name:
+            job.append('frag')
+            for mol in Molecule.Neutrals:
+                if mol in name:
+                    job.append('neutral')
+        if 'ionic' in name:
+            job.append('ionic')
+        if 'complex' in name:
+            job.append('complex')
+        
+        if 'complex' in job:
+            _, _, hf, mp2, _ = job
+            hf, mp2 = map(float, (hf, mp2))
+            complex_hf = hf
+            complex_mp2 = mp2
+        
+        if 'ionic' in job:
+            _, _, hf, mp2, _ = job
+            hf, mp2 = map(float, (hf, mp2))
+            ionic_hf = hf
+            ionic_mp2 = mp2
 
-            total_hf = elec_hf + disp_hf # always apply- if no neutral molecules, then disp_hf = 0
-            total_mp2 = elec_mp2 + disp_mp2
-
-            electro = (total_hf / total_mp2) * 100
-            disp = total_mp2 - total_hf
-
-            if ionic_hf != 0.0:
-                purely_ionic = False
-                new_dict[k] = {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro} # all the neutral stuff
+        if 'frag' in job:
+            if 'neutral' in job:
+                _, _, hf, mp2, _, _ = job
+                hf, mp2 = map(float, (hf, mp2))
+                sum_neu_hf += hf
+                sum_neu_mp2 += mp2
+                sum_frag_hf += hf
+                sum_frag_mp2 += mp2
             else:
-                new_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro}
+                _, _, hf, mp2, _, = job
+                hf, mp2 = map(float, (hf, mp2))
+                sum_frag_hf += hf
+                sum_frag_mp2 += mp2
+
+
+
+        elec_hf = (complex_hf - sum_frag_hf) * 2625.5
+        elec_mp2 = (complex_mp2 - sum_frag_mp2) * 2625.5
+
+        print(elec_hf, elec_mp2)
+        # disp_hf = 0.0
+        # disp_mp2 = 0.0
+        # if ionic_hf != 0.0: #then reassign
+        #     disp_hf = (complex_mp2 - ionic_hf - sum_neu_hf) * 2625.5
+        #     disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neu_mp2) * 2625.5
+
+        # total_hf = elec_hf + disp_hf # always apply- if no neutral molecules, then disp_hf = 0
+        # total_mp2 = elec_mp2 + disp_mp2
+
+        # electro = (total_hf / total_mp2) * 100
+        # disp = total_mp2 - total_hf
+
+        # if ionic_hf != 0.0:
+        #     purely_ionic = False
+        #     return {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro} # all the neutral stuff
+        # else:
+        #     return {'total_hf': total_hf, 'total_mp2': total_mp2, 'disp': disp, 'electro': electro}
 
             # separate out purely ionic interaction energies from mixed
-    return new_dict, purely_ionic
+
+    purely_ionic = True
+    results_dict = {}
+    for k, v in d.items():
+        print(k, v)
+    #     for job in v:
+    #         file = job[0]
+    #         if 'spec' in file: # spec
+    #             results_dict[k] = calc_results(job, results_dict)
+
+    # for val in results_dict.values():
+    #     if len(val) > 4:
+    #         purely_ionic = False
+    # return results_dict, purely_ionic
 
 
 def write_csv(data, purely_ionic, filename):
@@ -119,21 +179,6 @@ def write_csv(data, purely_ionic, filename):
             lst.append(locals()[key])
         return lst
 
-    # def add_data(writer_obj, data, cat, an, vars, plotting):
-    #     """
-    #     Layout data differently depending on if using the data for plotting or not.
-    #     """
-    #     if plotting:
-            
-    #     else:
-    #         il = f"{cat} {an}"
-    #         writer.writerow((il,)) # accepts one item only, so a tuple
-    #         writer.writerow(()) # blank line
-    #         for path, d in data[cation][anion].items():
-    #             numbers = update_csv(path, d, variables)
-    #             writer.writerow(numbers)
-    #             writer.writerow(())
-
     with open(filename, "w", encoding = 'utf-8-sig') as new:
         writer = csv.writer(new)
         # writer.writerow(('Int_MP2 = SRS interaction energies if possible',))
@@ -150,14 +195,6 @@ def sort_data(data):
     Adds a -1 to the first configuration of each IL, if not already there, then sorts the data into alphanumerical order
     """
     collapsed = [[k, v] for k, v in data.items()]
-    for index, item in enumerate(collapsed):
-        path = item[0]
-        *parent, il, spec = path.split('/')
-        if not re.match('.*-[0-9]*$', il):
-            il = il + '-1'
-        parent = '/'.join(parent)
-        path = '/'.join((parent, il))
-        item[0] = path # needs to be a list of lists to rename the filepath
     sorted_data = sorted(collapsed, key = lambda kv: kv[0])
     sorted_dict  = {}
     for data in sorted_data:
@@ -175,6 +212,10 @@ def assign_molecules(data):
         vals = key.split('/')
         for val in vals:
             # different names for the same anion
+            if val == 'ch':
+                val = 'choline'
+            if val == 'ac':
+                val = 'acetate'
             if val == 'h2po4':
                 val = 'dhp' # in Molecules.Anions
             if val == 'mesylate':
