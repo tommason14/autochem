@@ -259,6 +259,9 @@ def thermochemistry(dir):
                         collected[k].append(v)
         except AttributeError:
             continue
+        except UnicodeDecodeError:
+            print(f'{log}- UnicodeDecodeError')
+            continue
 
     # add units to dict keys   
 

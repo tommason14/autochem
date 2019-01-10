@@ -272,6 +272,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('mem=125gb', f'mem={4 * 16 * num_frags}gb') # 4gb cpus
             jobfile = jobfile.replace('jobfs=150gb', f'jobfs={4 * 16 * num_frags + 20}gb')
             return jobfile
+        # if fragment- modify walltime!
+        print(vars(self))
         return job
     
     

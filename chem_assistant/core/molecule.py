@@ -30,6 +30,8 @@ class Molecule:
     Anions["dhp"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
     Anions["h2po4"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
     Anions["acetate"] = ['C','H', 'H', 'H', 'C', 'O', 'O']
+    Anions['saccharinate'] = ['C', 'C', 'C', 'C', 'C', 'C', 'H',
+                     'H', 'H', 'H', 'C', 'O', 'N', 'S', 'O', 'O']
 
     Cations = {"c1mim": ['C', 'N', 'C', 'N',
                         'C', 'C', 'C', 'H',
