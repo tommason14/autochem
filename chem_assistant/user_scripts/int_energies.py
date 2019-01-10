@@ -44,6 +44,10 @@ def group_files(csv, header = True):
             file_obj = f.readlines
 
         for line in file_obj:
+            # disregard any opts
+            for cell in line.split(','):
+                if 'opt' in cell:
+                    continue
             file, path, basis, hf, mp2 = line.split(',')
             # split path
             molecule, path_to_file = split_path(path)
@@ -81,10 +85,14 @@ def calculate_energies(d):
             hf, mp2 = map(float, (hf, mp2))
 
         if 'ionic' in job:
-            _, _, hf, mp2, _ = job
-            hf, mp2 = map(float, (hf, mp2))
+            if 'frag' in job: # happens if ionic is ran in the frags dir
+                _, _, hf, mp2, _, _ = job
+                hf, mp2 = map(float, (hf, mp2))
+            else:
+                _, _, hf, mp2, _ = job
+                hf, mp2 = map(float, (hf, mp2))
 
-        if 'frag' in job:
+        if 'frag' in job and 'ionic' not in job:
             if 'neutral' in job:
                 _, _, hf, mp2, _, _ = job
                 hf, mp2 = map(float, (hf, mp2))
@@ -291,8 +299,54 @@ def rank_configs(data, num_ip):
 
 def calculate_interaction_energies(csv):
     """
-    Calculate interaction energies from a csv file created with this python script; the function
-assumes that variables will be present in the csv.
+    Calculate interaction energies for ionic clusters from a csv file created with this python script; the function assumes that variables will be present in the csv.
+
+    For this script to work, the following directory structure is required:
+    .
+    ├── ch2_ac_2_p2.xyz
+    ├── equil.xyz
+    ├── opt
+    │   ├── opt.inp
+    │   ├── opt.job
+    │   └── opt.log
+    └── spec
+        ├── complex
+        │   ├── spec.inp
+        │   ├── spec.job
+        │   └── spec.out
+        ├── frags
+        │   ├── acetate_0
+        │   │   ├── acetate_0.xyz
+        │   │   ├── spec.inp
+        │   │   ├── spec.job
+        │   │   └── spec.out
+        │   ├── acetate_1
+        │   │   ├── acetate_1.xyz
+        │   │   ├── spec.inp
+        │   │   ├── spec.job
+        │   │   └── spec.out
+        │   ├── choline_2
+        │   │   ├── choline_2.xyz
+        │   │   ├── spec.inp
+        │   │   ├── spec.job
+        │   │   └── spec.out
+        │   ├── choline_3
+        │   │   ├── choline_3.xyz
+        │   │   ├── spec.inp
+        │   │   ├── spec.job
+        │   │   └── spec.out
+        │   └── water_4
+        │       ├── spec.inp
+        │       ├── spec.job
+        │       ├── spec.out
+        │       └── water_4.xyz
+        └── ionic
+            ├── ionic_5.xyz
+            ├── spec.inp
+            ├── spec.job
+            └── spec.out
+        
+        The ionic directory is optional. If present, electrostatic and dispersive contributions to the interaction energy are calculated and returned separately- the ionic directory contains a structure with all neutral species removed, to calculate the entire electrostatic contribution and collect it in one fragment. In this case, the water molecule is removed.
     """
     data = group_files(csv)
     new_data, purely_ionic, num_ip = calculate_energies(data)
