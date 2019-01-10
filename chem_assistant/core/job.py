@@ -25,11 +25,6 @@ molecular dynamics. This class also creates job files in the same directory as t
             #self.mol.separate() # in the "user side" file
             #self.mol.gamess_format() # in the "user side" file
             # for frag in self.mol.fragments: Input_type(using=f'fragments/{frag}') -> no fmo though
-        if run_dir is not None:
-            self.made_run_dir = True
-        else:
-            self.made_run_dir = False
-
     # get_sc() and create_job() are meaningless when not used in either interfaces/gamess.py or
     # interfaces/psi.py
 
@@ -90,12 +85,6 @@ molecular dynamics. This class also creates job files in the same directory as t
                     if 'equil.xyz' in listdir('.'):
                         system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
                 system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
-
-    def make_run_dir(self):
-        if not self.made_run_dir: # only do it once
-            if not exists(self.base_name):
-                mkdir(self.base_name) # make opt/spec/hessin parent dir
-            self.made_run_dir = True
 
 
     def output_data(self, job_class, charge, mult, frags_in_subdir):

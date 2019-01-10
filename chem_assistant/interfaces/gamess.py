@@ -84,7 +84,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
 = None, is_complex = False, run_dir = None, **kwargs):
-        super().__init__(using, run_dir)
+        super().__init__(using)
         self.fmo = fmo # Boolean
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
@@ -95,8 +95,20 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         super().title()
         
         self.is_complex = is_complex # creates a `complex` dir
+
+        if run_dir is not None:
+            self.made_run_dir = True
+        else:
+            self.made_run_dir = False
+
          
         super().output_data(GamessJob, 'contrl.icharg', 'contrl.mult', frags_in_subdir)
+
+    def make_run_dir(self):
+        if not self.made_run_dir: # only do it once
+            if not exists(self.base_name):
+                mkdir(self.base_name) # make opt/spec/hessin parent dir
+            self.made_run_dir = True
         
 
     def fetch_info(self, settings):
@@ -273,7 +285,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('jobfs=150gb', f'jobfs={4 * 16 * num_frags + 20}gb')
             return jobfile
         # if fragment- modify walltime!
-        print(vars(self))
         return job
     
     

@@ -116,7 +116,19 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
         self.is_complex = is_complex # creates a `complex` dir
 
+        if run_dir is not None:
+            self.made_run_dir = True
+        else:
+            self.made_run_dir = False
+
+
         super().output_data(PsiJob, 'molecule.charge', 'molecule.multiplicity', frags_in_subdir)
+
+    def make_run_dir(self):
+        if not self.made_run_dir: # only do it once
+            if not exists(self.base_name):
+                mkdir(self.base_name) # make opt/spec/hessin parent dir
+            self.made_run_dir = True
 
     def fetch_info(self, settings):
         self.merged = self.defaults.merge(settings) # merges inp, job data 
