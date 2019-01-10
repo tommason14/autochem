@@ -7,7 +7,7 @@ import csv
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
 
-__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements', 'write_csv_from_dict', 'write_csv_from_nested']
+__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements', 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input']
 
 def read_file(file):
     with open(file, "r") as f:
@@ -92,18 +92,12 @@ def write_csv_from_dict(data):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                correct = False
-                while not correct:
-                    filename = input('Filename: ')
-                    if not filename.endswith('.csv'):
-                        print("Please end the filename in '.csv'")
-                    else:
-                        correct = True
-                    with open(filename, "w", encoding = 'utf-8-sig') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(data.keys())
-                        content = zip(*[data[key] for key in data.keys()])
-                        writer.writerows(content) 
+                filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
+                with open(filename, "w", encoding = 'utf-8-sig') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(data.keys())
+                    content = zip(*[data[key] for key in data.keys()])
+                    writer.writerows(content) 
         else:   
             print("Please select 'Y' or 'N'")
 
@@ -122,19 +116,13 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                correct = False
-                while not correct:
-                    filename = input('Filename: ')
-                    if not filename.endswith('.csv'):
-                        print("Please end the filename in '.csv'")
-                    else:
-                        correct = True
-                    with open(filename, "w", encoding = 'utf-8-sig') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(col_names)       
-                        writer.writerows(data)
-                    if return_name:
-                        return filename
+                filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
+                with open(filename, "w", encoding = 'utf-8-sig') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(col_names)       
+                    writer.writerows(data)
+                if return_name:
+                    return filename
         else:   
             print("Please select 'Y' or 'N'")
 
@@ -146,3 +134,35 @@ def search_dict_recursively(d):
         else:
             ret[k] = v
     return ret
+
+
+def check_user_input(user_input, condition, if_error):
+    """
+    Uses a try/except statement to create a scenario where the end user cannot give unexpected input. Give the condition referring to an item in a lambda expression i.e. lambda item: item.endswith('.csv'), or lambda item: item in range(...)
+
+    Usage:
+        >>> check_user_input('Filename of output', lambda item: item.endswith('.csv'), "Please print a name ending in '.csv'")
+        # Produces:
+        while not correct:
+            try:
+                item = input('Filename of output: ')
+            except ValueError:
+                print("Please enter a filename ending in '.csv'")
+            if not filename.endswith('.csv'):
+                print("Please enter a filename ending in '.csv'")
+            else:
+                correct = True
+        return item
+    """
+    f = condition
+    correct = False
+    while not correct:
+        try:
+            item = input(user_input + ': ')
+        except ValueError:
+            print(if_error)
+        if not f(item):
+            print(if_error)
+        else:
+            correct = True
+    return item

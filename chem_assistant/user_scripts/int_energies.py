@@ -4,6 +4,7 @@ import csv
 import re
 import math
 from ..core.molecule import Molecule
+from ..core.utils import check_user_input
 # pandas is slow, maybe try something different?
 
 def group_files(csv, header = True):
@@ -298,14 +299,7 @@ assumes that variables will be present in the csv.
     sorted_data = sort_data(new_data)
     assigned = assign_molecules(sorted_data)
     ranked = rank_configs(assigned, num_ip)
-    correct = False
-    while not correct:
-        try:
-            filename = input('Filename of output: ')
-        except ValueError:
-            print("Please enter a filename ending in '.csv'")
-        if not filename.endswith('.csv'):
-            print("Please enter a filename ending in '.csv'")
-        else:
-            correct = True
+
+    filename = check_user_input('Filename of output', lambda item: item.endswith('.csv'), "Please enter a filename ending in '.csv'")
+
     write_csv(ranked, purely_ionic, filename)
