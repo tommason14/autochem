@@ -1,0 +1,3 @@
+rsync -rav -e ssh --include '*/' --include='*.out' --include='*.log' --include='*.xyz' --include='*.inp' --include='*.py' --include='*.ok' --exclude='*' tm3124@raijin.nci.org.au:/short/k96/tm3124/ ./monash_8_7_18/
+
+rsync -rav -e ssh --include '*/' --include='*.out' --include='*.log' --include='*.xyz' --include='*.inp' --include='*.py' --include='*.ok' --include='*.job*' --include='*.md' --exclude='*' tm3124@raijin.nci.org.au:/short/k96/tm3124/metal_ion_clusters/ ./

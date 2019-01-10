@@ -67,6 +67,9 @@ class Molecule:
     Cations['choline'] = ['N', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
                         'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
                         'C', 'H', 'H', 'O', 'H']
+    Cations['Li'] = ['Li']
+    Cations['Na'] = ['Na']
+    Cations['K'] = ['K']
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['water'] = ['H', 'H', 'O']
