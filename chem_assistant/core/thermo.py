@@ -46,11 +46,12 @@ def freq_data(file, write_freqs_to_file = False):
 
     if write_freqs_to_file:
         with open("freq.out", "w") as output:
-            for i in results['vibs']:
+            for i in results['Frequencies [cm-1]']:
                 output.write(f"{i}\n")
     return results
     
 def run(file):
+    print('Running')
     p = subprocess.Popen(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'thermo-gamess.exe'), shell=True, stdin=subprocess.PIPE,
     stdout=subprocess.PIPE, universal_newlines=True) 
     # os.path.dirname(os.path.realpath(__file__)) = dir of this file, irrespective of where the
@@ -59,7 +60,7 @@ def run(file):
     commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
     # print("\033[30;46mThermodynamics for", file +"\033[0m")
-    # os.system("cat fort.10")
+    os.system("cat fort.10")
 
 def read_fort():
     with open('fort.10', 'r') as f:

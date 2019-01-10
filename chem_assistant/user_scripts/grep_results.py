@@ -249,13 +249,16 @@ def thermochemistry(dir):
 
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
-        if r.completed():
-            if r.is_hessian():
-                print(f'Thermo data for {log}')
-                res = thermo_data(r.log) # run fortran script
-                res['File'] = log
-                for k, v in res.items():
-                    collected[k].append(v)
+        try:
+            if r.completed():
+                if r.is_hessian():
+                    print(f'Thermo data for {log}')
+                    res = thermo_data(r.log) # run fortran script
+                    res['File'] = log
+                    for k, v in res.items():
+                        collected[k].append(v)
+        except AttributeError:
+            continue
 
     # add units to dict keys   
 
