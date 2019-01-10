@@ -51,8 +51,6 @@ def group_files(csv, header = True):
                 groups[molecule] = [[file, basis, hf, mp2]]
             else:
                 groups[molecule].append([file, basis, hf, mp2])# need to be lists, as later, add on a frag term
-
-
     return groups
 
 def calculate_energies(d):
@@ -124,8 +122,16 @@ def calculate_energies(d):
                 if 'ionic' in file:
                     ionic_hf = hf
                     ionic_mp2 = mp2
-            
-        elec_hf = (complex_hf - sum_frags_hf) * HARTREE_TO_kJ
+
+
+        # calculate num of ion pairs
+        num_ions = 0
+        for job in v:
+            if 'frag' in job and 'neutral' not in job:
+                num_ions += 1
+        num_ip = num_ions // 2 # floor division, 5 // 2 = 2
+
+        elec_hf = (complex_hf - sum_frags_hf) * HARTREE_TO_kJ 
         elec_mp2 = (complex_mp2 - sum_frags_mp2) * HARTREE_TO_kJ
         disp_hf = 0.0
         disp_mp2 = 0.0
@@ -137,25 +143,35 @@ def calculate_energies(d):
         electrostatics = (total_hf / total_mp2) * 100
         dispersion = total_mp2 - total_hf
 
+        total_mp2_per_ip = total_mp2 / num_ip
+
         if ionic_hf != 0.0:
             purely_ionic = False
-            results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'dispersion': dispersion, 'electrostatics': electrostatics} # all the neutral stuff
+            results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,
+            'dispersion': dispersion, 'electrostatics': electrostatics} # all the neutral stuff
         else:
-            results_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'dispersion': dispersion, 'electrostatics': electrostatics}        
+            results_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,'dispersion': dispersion, 'electrostatics': electrostatics}        
                 
-    return results_dict, purely_ionic
+    return results_dict, purely_ionic, num_ip
 
 
 def write_csv(data, purely_ionic, filename):
 
+    def calc_boltz_ave_int(d):
+        boltz_ave_int = 0
+        for config in d:
+            boltz_ave_int += d[config]['total_mp2'] * d[config]['boltzmann_factor']
+        return boltz_ave_int
+            # needs adding only once per cat-an
+
     if purely_ionic:
-        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE_Int [kJ/mol]', 'Boltzmann Weighting')
+        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
 
-        variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
+        variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'total_mp2_per_ip', 'deltaE', 'boltzmann_factor')
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'ΔE_Int [kJ/mol]', 'Boltzmann Weighting')
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
 
-        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'deltaE', 'boltzmann_factor')
+        variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'total_mp2_per_ip','deltaE', 'boltzmann_factor')
     
     def update_csv(path, cat, an, d, variables):
         locals().update(d) #create variables
@@ -170,8 +186,12 @@ def write_csv(data, purely_ionic, filename):
         writer.writerow(col_names)
         for cation in data:
             for anion in data[cation]:
-                for path, d in data[cation][anion].items():
+                boltz_ave_int = calc_boltz_ave_int(data[cation][anion])
+                for index, value in enumerate(data[cation][anion].items()):
+                    path, d = value
                     numbers = update_csv(path, cation, anion, d, variables)
+                    if index == 0:
+                        numbers = numbers + [boltz_ave_int]
                     writer.writerow(numbers)
             
             
@@ -213,7 +233,7 @@ def assign_molecules(data):
         data[key]['anion'] = anion
     return data
 
-def rank_configs(data):
+def rank_configs(data, num_ip):
     """
     Ranks each configuration according to its interaction energies.
     """
@@ -250,10 +270,8 @@ def rank_configs(data):
                 path, energy = val
                 deltaE = groups[cation][anion][path]['total_mp2'] - min_energy
                 groups[cation][anion][path]['rank'] = index
-                groups[cation][anion][path]['deltaE'] = deltaE
+                groups[cation][anion][path]['deltaE'] = deltaE / num_ip
                 groups[cation][anion][path]['boltzmann_factor'] = math.exp((-1 * KJ_TO_J * deltaE) / (R * T))
-            # add boltzmann-weighted average energy, 
-            # add energies per IP
 
 
     # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
@@ -276,10 +294,10 @@ def calculate_interaction_energies(csv):
 assumes that variables will be present in the csv.
     """
     data = group_files(csv)
-    new_data, purely_ionic = calculate_energies(data)
+    new_data, purely_ionic, num_ip = calculate_energies(data)
     sorted_data = sort_data(new_data)
     assigned = assign_molecules(sorted_data)
-    ranked = rank_configs(assigned)
+    ranked = rank_configs(assigned, num_ip)
     correct = False
     while not correct:
         try:
