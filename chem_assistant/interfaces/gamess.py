@@ -10,6 +10,7 @@ Description: Interface between Python and creating GAMESS input files
 """
 
 from ..core.atom import Atom
+from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
@@ -117,7 +118,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
-            self.input.gddi.ngroup = len(self.mol.fragments)
+            num_ions = len([frag['name'] for frag in self.mol.fragments.values() if frag['name'] not in Molecule.Neutrals])
+            self.input.gddi.ngroup = num_ions # for hy2ip use 4 groups not 5
 
     def order_header(self):
         if self.fmo:
