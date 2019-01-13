@@ -60,7 +60,7 @@ def run(file):
     commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
     # print("\033[30;46mThermodynamics for", file +"\033[0m")
-    os.system("cat fort.10")
+    # os.system("cat fort.10")
 
 def read_fort():
     with open('fort.10', 'r') as f:
