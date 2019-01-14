@@ -184,8 +184,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         #group together indat and charge for each fragment, and order according to the atom indices of indat 
         for frag, data in self.mol.fragments.items():
             if frag is not 'ionic':
-                info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
-                "charg" : str(data['charge'])}
+                if len(data['atoms']) == 1:
+                    info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
+                    "charg" : str(data['charge'])}
+                else:
+                    info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
+                    "charg" : str(data['charge'])}
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
         # 0,8,28,
@@ -238,7 +242,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             inp += " $END\n"
             inp += " $FMOXYZ\n"
         for atom in self.mol.coords:
-            inp += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol)}.0 {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
+            inp += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
         inp += ' $END'
         return inp
 
@@ -306,7 +310,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def make_run_dir(self):
         if not self.made_run_dir: # only do it once
-            mkdir(self.base_name) # make opt/spec/hessin parent dir
+            if not exists(self.base_name):
+                mkdir(self.base_name) # make opt/spec/hessin parent dir
             self.made_run_dir = True
 
     def place_files_in_dir(self):

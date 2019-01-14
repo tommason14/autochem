@@ -320,13 +320,37 @@ the system"""
         def get_manual_assignments():
             manual = input("Fragments: ")
             manual_split = manual.split(',')
-            manual_assignment = [int(i.strip()) for i in manual_split]
+
+            manual_assignment = [i.strip() for i in manual_split]
             frag_indices = []
-            for i in range(0, len(manual_assignment) - 1, 2):
-                frag_indices.append((manual_assignment[i], manual_assignment[i + 1]))
-            return frag_indices
+
+            start = 0
+            end = 0
+            # # pair up, but how if only one element?
+            for frag in manual_assignment:
+                if '[' in frag:
+                    print(frag)
+                    start = int(frag[1:])
+                elif ']' in frag:
+                    end = int(frag[:-1])
+                if start != 0 and end != 0:
+                    frag_indices.append((start, end))
+                    start, end  = 0, 0 # start looking again
+                elif start != 0 and end == 0:
+                    # found first atom
+                    pass
+                else:
+                    frag_indices.append(int(frag)) # single number
+
+            return frag_indices 
+            # [(start of frag, end of frag), single atom, (...), (...)]
         
         def update_mol_dictionary(frag_indices):
+            for item in enumerate(frag_indices):
+                num = item + 1
+                # start here
+
+                
             for molecule, pair in enumerate(frag_indices):
                 num = molecule + 1
                 start, end = pair
@@ -349,8 +373,11 @@ Fragments are too close together- there are bonds within fragments
 that are longer than the shortest distance between fragments.
 
 Type in the fragments manually. For example, if you have 
-2 fragments of water, type "1, 3, 4, 6", without quotes.
-Give the atom numbers of the first and last atom in each fragment""")
+2 fragments of water, type "[1, 3], [4, 6]", without quotes.
+Give the atom numbers of the first and last atom in each fragment.
+
+If you have ions of one element, say Lithium, include the number without brackets: [1, 3], 4, [5, 7]
+""")
         print()
         frag_indices = get_manual_assignments()
         update_mol_dictionary(frag_indices)
