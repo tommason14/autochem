@@ -16,8 +16,8 @@ __all__ = ['Molecule']
 class Molecule:
     """Class implementing the concept of a molecular system. Crucial is the separation of molecules in a given system, with output for Fragment Molecular Orbital calculations"""
 
-    Anions = {"br" : ["Br"]}
-    Anions["cl"] = ["Cl"]
+    Anions = {"bromide" : ["Br"]}
+    Anions["chloride"] = ["Cl"]
     Anions["bf4"] = ['B', 'F', 'F', 'F', 'F']
     Anions["dca"] = ['N', 'C', 'N', 'C', 'N']
     Anions["pf6"] = ['F', 'P', 'F', 'F', 'F', 'F', 'F']
@@ -67,9 +67,9 @@ class Molecule:
     Cations['choline'] = ['N', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
                         'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
                         'C', 'H', 'H', 'O', 'H']
-    Cations['Li'] = ['Li']
-    Cations['Na'] = ['Na']
-    Cations['K'] = ['K']
+    Cations['lithium'] = ['Li']
+    Cations['sodium'] = ['Na']
+    Cations['potassium'] = ['K']
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['water'] = ['H', 'H', 'O']
@@ -329,7 +329,6 @@ the system"""
             # # pair up, but how if only one element?
             for frag in manual_assignment:
                 if '[' in frag:
-                    print(frag)
                     start = int(frag[1:])
                 elif ']' in frag:
                     end = int(frag[:-1])
@@ -346,17 +345,17 @@ the system"""
             # [(start of frag, end of frag), single atom, (...), (...)]
         
         def update_mol_dictionary(frag_indices):
-            for item in enumerate(frag_indices):
-                num = item + 1
-                # start here
-
-                
-            for molecule, pair in enumerate(frag_indices):
+            for molecule, item in enumerate(frag_indices):
                 num = molecule + 1
-                start, end = pair
-                for ind in range(start, end + 1):
-                    self.coords[ind - 1].index = ind
-                    self.coords[ind - 1].mol = num
+                if isinstance(item, tuple): # if molecule (1, 21) --> choline
+                    start, end = item
+                    for ind in range(start, end + 1):
+                        self.coords[ind - 1].index = ind
+                        self.coords[ind - 1].mol = num
+                else: # single-atom 'molecule' i.e. Li, Na, K, Cl, Br
+                    self.coords[item - 1].index = item
+                    self.coords[item - 1].mol = num
+        
             # reassign mol dict, check db
             self.mol_dict.clear()
             mols = set([atom.mol for atom in self.coords])
@@ -376,7 +375,7 @@ Type in the fragments manually. For example, if you have
 2 fragments of water, type "[1, 3], [4, 6]", without quotes.
 Give the atom numbers of the first and last atom in each fragment.
 
-If you have ions of one element, say Lithium, include the number without brackets: [1, 3], 4, [5, 7]
+If you have ions of one element, say Lithium, included with the two water molecules, include the number without brackets: [1, 3], 4, [5, 7]
 """)
         print()
         frag_indices = get_manual_assignments()
