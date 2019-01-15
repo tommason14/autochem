@@ -287,17 +287,17 @@ def get_h_bonds(dir):
     output = []
     for file in get_files(dir, ("xyz")):
         path, f = os.path.split(file)
-        if not any((re.search('cation-?_?[0-9]*', f), re.search('anion-?_?[0-9]*', f), re.search('neutral-?_?[0-9]*', f))) and not any((f.split('_')[0] in Molecule.Anions, f.split('_')[0] in Molecule.Cations, f.split('_')[0] in Molecule.Neutrals)) and 'frags' not in path:
+        # if not any((re.search('cation-?_?[0-9]*', f), re.search('anion-?_?[0-9]*', f), re.search('neutral-?_?[0-9]*', f))) and not any((f.split('_')[0] in Molecule.Anions, f.split('_')[0] in Molecule.Cations, f.split('_')[0] in Molecule.Neutrals)) and 'frags' not in path:
             # no frags in path of xyz- and no files named, cation_1.xyz, cation-1.xyz, anion, neutral
             # check for names in Anions, Cations, Neutrals- only want files with multiple molecules
             
-            print(file + '\n')
-            mol = Molecule(using = file)
-            mol.nfrags = int(input('Number of fragments: '))
-            mol.separate()
-            res = mol.find_h_bonds()
-            for i in res:
-                i.insert(0, f)
-                i.insert(1, path)
-            output += res
+        print(file + '\n')
+        mol = Molecule(using = file)
+        mol.nfrags = int(input('Number of fragments: '))
+        mol.separate()
+        res = mol.find_h_bonds()
+        for i in res:
+            i.insert(0, f)
+            i.insert(1, path)
+        output += res
     write_csv_from_nested(output, col_names=('File', 'Path', 'Molecules', 'Length (Å)'))

@@ -292,9 +292,8 @@ the system"""
     def renumber_molecules(self):
         """Molecule numbers (Mol: _) are sometimes not in a numerical order. This function takes the
         molecules and gives them a number from 1 to the number of fragments""" 
-        current = set([atom.mol for atom in self.coords])
-        converter = {k: v for k, v in enumerate(current, 1)}
 
+        current = set([atom.mol for atom in self.coords])
         convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)} # old: new
         frags = list(self.fragments.items())
         self.fragments.clear()
@@ -302,11 +301,9 @@ the system"""
             for key, val in convert_keys.items():
                 if k == val:
                     self.fragments[key] = v
-       
-        for atom in self.coords:
-            for k, v in converter.items():
-                if atom.mol == v:
-                    atom.mol = k
+                    for atom in self.fragments[key]['atoms']:
+                        atom.mol = key
+
         
     def print_frags(self):
         print()
@@ -432,25 +429,26 @@ ions"""
         self.add_ionic_network()
         
     def find_h_bonds(self):
-  
-        frag_list = [frag['atoms'] for frag in self.fragments.values()]
 
-        h_bonders = ['O', 'F', 'H', 'N']
-        H_BOND_DIST = 2.0 
-        
-        # in one case a methyl hydrogen was 1.998Å away from O;
-        # need to correct for that! Look at connecting atoms
+        def find_partners(self):
+            frag_list = [frag['atoms'] for frag in self.fragments.values()]
 
-        for i, mol in enumerate(frag_list):
-            for j, mol2 in enumerate(frag_list):
-                if i != j:
-                    for atom1 in mol: # for every atom in first frag
-                        for atom2 in mol2: # for every atom in second frag
-                            if atom1.distance_to(atom2) < H_BOND_DIST:
-                                if atom1.symbol and atom2.symbol in h_bonders and atom1.symbol is not atom2.symbol:
-                                    atom1.h_bonded_to.append(atom2) 
-                        # assigning twice- could be cut down
-                        # could say for atom2 in mol2 if mol2 != mol- and change the iteration above?
+            h_bonders = ['O', 'F', 'H', 'N']
+            H_BOND_DIST = 2.0 
+            
+            # in one case a methyl hydrogen was 1.998Å away from O;
+            # need to correct for that! Look at connecting atoms
+
+            for i, mol in enumerate(frag_list):
+                for j, mol2 in enumerate(frag_list):
+                    if i != j:
+                        for atom1 in mol: # for every atom in first frag
+                            for atom2 in mol2: # for every atom in second frag
+                                if atom1.distance_to(atom2) < H_BOND_DIST:
+                                    if atom1.symbol and atom2.symbol in h_bonders and atom1.symbol is not atom2.symbol:
+                                        atom1.h_bonded_to.append(atom2) 
+                            # assigning twice- could be cut down
+                            # could say for atom2 in mol2 if mol2 != mol- and change the iteration above?
 
 
         def remove_duplicate_bonds(self):
@@ -477,15 +475,11 @@ ions"""
                         if sorted(bond[:2]) == sorted(bonds[:2]): # if same atoms are involved
                             del h_bonded_flat[j] # remove second instance
             return h_bonded_flat
-
-        hbonds = remove_duplicate_bonds(self)
                         
         def bond_components(self, tup):
             one, two, length = tup
             atom = self.coords[one - 1]
             atom2 = self.coords[two - 1]    
-
-            # print(f"({atom.symbol}, mol: {atom.mol}, atom: {atom.number})--- {length:.3f}Å ---({atom2.symbol}, mol: {atom2.mol}, atom: {atom2.number})")
 
             mol1 = self.fragments[atom.mol]['name']
             mol2 = self.fragments[atom2.mol]['name']
@@ -500,6 +494,8 @@ ions"""
             length = round(length, 3)
             return [connection, length]
 
+        find_partners(self)
+        hbonds = remove_duplicate_bonds(self)
         bonds_in_mol = []
         print('Hydrogen bonds:')
         for bond in hbonds:
