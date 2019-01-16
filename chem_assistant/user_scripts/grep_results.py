@@ -252,9 +252,9 @@ def thermochemistry(dir):
         try:
             if r.completed():
                 if r.is_hessian():
-                    print(f'Thermo data for {log}')
+                    print(f'Thermo data for {r.log}')
                     res = thermo_data(r.log) # run fortran script
-                    res['File'] = log
+                    res['File'] = r.log
                     for k, v in res.items():
                         collected[k].append(v)
         except AttributeError:

@@ -150,7 +150,7 @@ def calculate_energies(d):
         total_hf = elec_hf + disp_hf
         total_mp2 = elec_mp2 + disp_mp2
         electrostatics = (total_hf / total_mp2) * 100
-        dispersion = total_mp2 - total_hf
+        dispersion = (total_mp2 - total_hf) / num_ip
 
         total_mp2_per_ip = total_mp2 / num_ip
 
@@ -174,11 +174,11 @@ def write_csv(data, purely_ionic, filename):
             # needs adding only once per cat-an
 
     if purely_ionic:
-        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
+        col_names = ('Path', 'Cation', 'Anion', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/(mol IP)]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
 
         variables = ('total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'total_mp2_per_ip', 'deltaE', 'boltzmann_factor')
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/mol]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
+        col_names = ('Path', 'Cation', 'Anion', 'Elec Int_HF [kJ/mol]', 'Elec Int_MP2 [kJ/mol]', 'Disp Int_HF [kJ/mol]', 'Disp Int_MP2 [kJ/mol]', 'Total Int_HF [kJ/mol]', 'Total Int_MP2 [kJ/mol]', 'Dispersion [kJ/(mol IP)]', '% Electrostatics', 'Rank', 'Total Int_MP2 [kJ/(mol IP)]', 'ΔE_Int [kJ/(mol IP)]', 'Boltzmann Weighting', 'BW Total Int_MP2 [kJ/mol]')
 
         variables = ('elec_hf', 'elec_mp2', 'disp_hf', 'disp_mp2', 'total_hf', 'total_mp2', 'dispersion', 'electrostatics', 'rank', 'total_mp2_per_ip','deltaE', 'boltzmann_factor')
     

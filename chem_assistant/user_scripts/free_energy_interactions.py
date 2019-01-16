@@ -1,5 +1,23 @@
 __all__ = ['calculate_free_energy_interactions']
 
+# Free energy of interaction between:
+# - complex and the constituent ions (pure electrostatics)
+# - neutral species and the ionic network
+# - can be extended to work with the lithium/sodium
+
+#  (from interaction energies found from single points)
+#                     |
+# deltaH = Dispersion [kJ/(mol IP)] + [TC(complex) - TC(ionic_network) - TC(neutrals)] * 1/ num_ip 
+
+# deltaS = ([Stot(complex) - Stot(ionic) - Stot(neutrals)] / num_ip) * 298.15 / 1000
+# (unit conversion J/mol.K -> kJ/mol)
+
+# Also give the electrostatic free energy (between complex and all ions)
+# Use total SRS interaction energies, TC(complex) - sum(TC(ions))
+# Stot(complex) - sum(Stot(ions))
+
+# give ratio of free energies between water and cluster to the free energy between cluster and ions
+
 import csv
 import re
 import math
@@ -57,11 +75,22 @@ def group_files(csv, header = True):
                 groups[molecule].append([file, zpve, tc, s_elec, s_trans, s_rot, s_vib, s_tot, tc_ts])# need to be lists, as later, add on a frag term
     return groups
 
-def calculate_energies(d):
+def find_e_int(path, csvfile):
+    """Gets the dispersion component of the interaction energy (per ion pair) for each configuration, each key of the groups dictionary. This value, when temperature corrected, is the enthalpy of interaction."""
+    with open(csvfile, 'r') as f:
+        for line in f.readlines()[1:]:
+            splitup = line.split(',')
+            if splitup[0] == path: #filepath is the first column of csv
+                if len(splitup) == 15 or len(splitup) == 16:
+                    disp_contribution = float(splitup[6])
+                    elec = float(splitup[4]) # neutral species included
+                else:
+                    disp_contribution = 0.0
+                    elec = float(splitup[8]) # just ionic clusters- check index- total mp2 is 
+    return disp_contribution, elec
+def get_tc_s_tot(d):
     """
-    Calculates interaction energies from single point energy calculations
-    INT = E_COMPLEX - SUM(E_ION)
-    INT_NEUTRAL SPECIES = E_COMPLEX - E_IONIC_CLUSTER - SUM(E_NEUTRAL_SPECIES)
+    
     """
     def get_results_per_job(job):
         """Returns HF and MP2 energies"""
@@ -81,57 +110,60 @@ def calculate_energies(d):
         
         # CHANGE FROM HERE
         if 'complex' in job:
-            _, _, hf, mp2, _ = job
-            hf, mp2 = map(float, (hf, mp2))
+            tc = job[2]
+            s_tot = job[-3]
+            tc, s_tot = map(float, (tc, s_tot))
 
         if 'ionic' in job:
             if 'frag' in job: # happens if ionic is ran in the frags dir
-                _, _, hf, mp2, _, _ = job
-                hf, mp2 = map(float, (hf, mp2))
+                tc = job[2]
+                s_tot = job[-4]
+                tc, s_tot = map(float, (tc, s_tot))
             else:
-                _, _, hf, mp2, _ = job
-                hf, mp2 = map(float, (hf, mp2))
+                tc = job[2]
+                s_tot = job[-3]
+                tc, s_tot = map(float, (tc, s_tot))
 
         if 'frag' in job and 'ionic' not in job:
             if 'neutral' in job:
-                _, _, hf, mp2, _, _ = job
-                hf, mp2 = map(float, (hf, mp2))
+                tc = job[2]
+                s_tot = job[-4]
+                tc, s_tot = map(float, (tc, s_tot))
             else:
-                _, _, hf, mp2, _, = job
-                hf, mp2 = map(float, (hf, mp2))
-        return hf, mp2
+                tc = job[2]
+                s_tot = job[-3]
+                tc, s_tot = map(float, (tc, s_tot))
+        return tc, s_tot
 
-    HARTREE_TO_kJ = 2625.5
+    int_energy_csvfile = check_user_input('Filename of csv containing interaction energies- created by script', lambda item: item.endswith('.csv'), "Please print a name ending in '.csv'")
 
-    purely_ionic = True
     results_dict = {}
     for k, v in d.items():
-        sum_frags_hf = 0.0
-        sum_frags_mp2 = 0.0
-        complex_hf = 0.0
-        complex_mp2 = 0.0
-        ionic_hf = 0.0
-        ionic_mp2 = 0.0
-        sum_neutral_hf = 0.0
-        sum_neutral_mp2 = 0.0
+        sum_frags_s_tot = 0.0
+        sum_frags_tc = 0.0
+        complex_tc = 0.0
+        complex_s_tot = 0.0
+        ionic_tc = 0.0
+        ionic_s_tot = 0.0
+        sum_neutral_tc = 0.0
+        sum_neutral_s_tot = 0.0
         for job in v:
-            file = job[0]
-            if 'spec' in file:
-                hf, mp2 = get_results_per_job(job) # now determine type of job
+            file = job[0] # filepath- ..../hess/frags/water_4/
+            if 'hess' in file:
+                tc, s_tot = get_results_per_job(job) # now determine type of job
                 if 'frags' in file:
-                    sum_frags_hf += hf
-                    sum_frags_mp2 += mp2
+                    sum_frags_tc += tc
+                    sum_frags_s_tot += s_tot
                     for mol in Molecule.Neutrals:
                         if mol in file:
-                            sum_neutral_hf += hf
-                            sum_neutral_mp2 += mp2
+                            sum_neutral_tc += tc
+                            sum_neutral_s_tot += s_tot
                 if 'complex' in file:
-                    complex_hf = hf
-                    complex_mp2 = mp2
+                    complex_tc = tc
+                    complex_s_tot = s_tot
                 if 'ionic' in file:
-                    ionic_hf = hf
-                    ionic_mp2 = mp2
-
+                    ionic_tc = tc
+                    ionic_s_tot = s_tot
 
         # calculate num of ion pairs
         num_ions = 0
@@ -140,29 +172,35 @@ def calculate_energies(d):
                 num_ions += 1
         num_ip = num_ions // 2 # floor division, 5 // 2 = 2
 
-        elec_hf = (complex_hf - sum_frags_hf) * HARTREE_TO_kJ 
-        elec_mp2 = (complex_mp2 - sum_frags_mp2) * HARTREE_TO_kJ
-        disp_hf = 0.0
-        disp_mp2 = 0.0
-        if ionic_hf != 0.0:
-            disp_hf = (complex_hf - ionic_hf - sum_neutral_hf) * HARTREE_TO_kJ
-            disp_mp2 = (complex_mp2 - ionic_mp2 - sum_neutral_mp2) * HARTREE_TO_kJ
-        total_hf = elec_hf + disp_hf
-        total_mp2 = elec_mp2 + disp_mp2
-        electrostatics = (total_hf / total_mp2) * 100
-        dispersion = total_mp2 - total_hf
 
-        total_mp2_per_ip = total_mp2 / num_ip
+        # dispersion interaction per configuration
+        disp, elec = find_e_int(k, int_energy_csvfile)
+        disp_int_per_ip = disp / num_ip
+        elec_int_per_ip = elec / num_ip
 
-        if ionic_hf != 0.0:
-            purely_ionic = False
-            results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,
-            'dispersion': dispersion, 'electrostatics': electrostatics} # all the neutral stuff
-        else:
-            results_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,'dispersion': dispersion, 'electrostatics': electrostatics}        
+        T = 298.15
+        J_TO_KJ = 1000
+
+        dH_neutral = disp_int_per_ip + ((complex_tc - ionic_tc - sum_neutral_tc) / num_ip)
+        TdS_neutral = ((complex_s_tot - ionic_s_tot - sum_neutral_s_tot) / num_ip) * T / J_TO_KJ
+        dG_neutral = dH_neutral - TdS_neutral
+        print(k, dG_neutral) 
+  
+        dH_elec = elec_int_per_ip + ((complex_tc - sum_frags_tc) / num_ip)
+        TdS_elec = ((complex_s_tot - sum_frags_s_tot) / num_ip) * T / J_TO_KJ
+        dG_elec = dH_elec - TdS_elec
+        print(k, dG_elec) 
+
+        # boltzmann weight it- use the same functions as in other file
+
+
+    #         results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,
+    #         'dispersion': dispersion, 'electrostatics': electrostatics} # all the neutral stuff
+    #     else:
+    #         results_dict[k] = {'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,'dispersion': dispersion, 'electrostatics': electrostatics}        
                 
-    return results_dict, purely_ionic, num_ip
+    # return results_dict, num_ip
 
 def calculate_free_energy_interactions(csv):
     groups = group_files(csv, header = True)
-    return groups
+    get_tc_s_tot(groups)
