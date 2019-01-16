@@ -10,18 +10,13 @@ def thermo_initial_geom(file):
     """Parses GAMESS hessian calculation log file for the initial geometry"""
     atoms = []
     regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
-    found = False
-    with open(file, "r") as f:
+    inp = file[:-3] + 'inp'
+    with open(inp, "r") as f:
         for line in f.readlines():
-            if 'CHARGE         X                   Y                   Z' in line:
-                found = True
-            if found:
-                if re.search(regex, line):
-                    sym, _, x, y, z = line.split()
-                    x, y, z = map(float, (x, y, z))
-                    atoms.append(Atom(symbol = sym, coords = (x, y, z)))
-            if line is '\n':
-                found = False
+            if re.search(regex, line):
+                sym, _, x, y, z = line.split()
+                x, y, z = map(float, (x, y, z))
+                atoms.append(Atom(symbol = sym, coords = (x, y, z)))
     with open('geom.input', 'w') as new:
         for atom in atoms:
             new.write(f"{atom.symbol:5s} {str(atom.atnum):3s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
@@ -47,7 +42,7 @@ def freq_data(file, write_freqs_to_file = False):
     if write_freqs_to_file:
         with open("freq.out", "w") as output:
             for i in results['Frequencies [cm-1]']:
-                output.write(f"{i}\n")
+                output.write(f"{i:.3f}\n")
     return results
     
 def run(file):
