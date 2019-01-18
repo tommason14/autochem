@@ -79,11 +79,12 @@ class Molecule:
         if using is not None:
             self.coords = self.read_xyz(using)
             #list of Atom objects, more useful than list of coordinates
-            for index, atom in enumerate(self.coords):
-                atom.index = index + 1 #so first atom has index 1
         self.bonds = []
         if atoms is not None and using is None:
             self.coords = atoms
+        
+        for index, atom in enumerate(self.coords):
+            atom.index = index + 1 #so first atom has index 1
 
         self.nfrags = nfrags
 
