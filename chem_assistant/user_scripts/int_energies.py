@@ -4,7 +4,7 @@ import csv
 import re
 import math
 from ..core.molecule import Molecule
-from ..core.utils import check_user_input
+from ..core.utils import check_user_input, sort_data
 # pandas is slow, maybe try something different?
 
 def group_files(csv, header = True):
@@ -203,20 +203,7 @@ def write_csv(data, purely_ionic, filename):
                         numbers = numbers + [boltz_ave_int]
                     writer.writerow(numbers)
             
-            
-def sort_data(data):
-    """ 
-    Adds a -1 to the first configuration of each IL, if not already there, then sorts the data into alphanumerical order
-    """
-    collapsed = [[k, v] for k, v in data.items()]
-    sorted_data = sorted(collapsed, key = lambda kv: kv[0])
-    sorted_dict  = {}
-    for data in sorted_data:
-        k, v = data
-        sorted_dict[k] = v # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
-    return sorted_dict
-
-def assign_molecules(data):
+def assign_molecules_from_dict_keys(data):
     """ 
     Assign a cation and anion to each path.
     """
@@ -242,6 +229,7 @@ def assign_molecules(data):
         data[key]['anion'] = anion
     return data
 
+            
 def rank_configs(data, num_ip):
     """
     Ranks each configuration according to its interaction energies.
@@ -351,7 +339,7 @@ def calculate_interaction_energies(csv):
     data = group_files(csv)
     new_data, purely_ionic, num_ip = calculate_energies(data)
     sorted_data = sort_data(new_data)
-    assigned = assign_molecules(sorted_data)
+    assigned = assign_molecules_from_dict_keys(sorted_data)
     ranked = rank_configs(assigned, num_ip)
 
     filename = check_user_input('Filename of output', lambda item: item.endswith('.csv'), "Please enter a filename ending in '.csv'")

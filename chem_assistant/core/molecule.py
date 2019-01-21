@@ -389,7 +389,7 @@ If you have ions of one element, say Lithium, included with the two water molecu
         
     def add_ionic_network(self):
         """Adds one item to self.fragments- removing all neutral species, along with the one-atom
-ions"""
+        ions"""
         coord_list = [coord for coord in self.coords] # copy of the list
         for k, frag in self.fragments.items():
             # remove neutrals
@@ -420,7 +420,8 @@ ions"""
             }
    
     def separate(self):
-        """Separates coordinates into specific fragments using the intermolecular distances. Note this function only works with intermolecular fragments and cannot split molecules on bonds."""
+        """Separates coordinates into specific fragments using the intermolecular distances. Note
+        this function only works with intermolecular fragments and cannot split molecules on bonds."""
         self.split()
         self.check_db()
         self.renumber_molecules()

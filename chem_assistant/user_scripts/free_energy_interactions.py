@@ -22,7 +22,7 @@ import csv
 import re
 import math
 from ..core.molecule import Molecule
-from ..core.utils import check_user_input
+from ..core.utils import check_user_input, sort_data
 # pandas is slow, maybe try something different?
 
 def group_files(csv, header = True):
@@ -77,6 +77,8 @@ def group_files(csv, header = True):
 
 def find_e_int(path, csvfile):
     """Gets the dispersion component of the interaction energy (per ion pair) for each configuration, each key of the groups dictionary. This value, when temperature corrected, is the enthalpy of interaction."""
+    disp_contribution = 0.0
+    elec = 0.0
     with open(csvfile, 'r') as f:
         for line in f.readlines()[1:]:
             splitup = line.split(',')
@@ -86,59 +88,62 @@ def find_e_int(path, csvfile):
                     elec = float(splitup[4]) # neutral species included
                 else:
                     disp_contribution = 0.0
-                    elec = float(splitup[8]) # just ionic clusters- check index- total mp2 is 
+                    elec = float(splitup[8]) # just ionic clusters- check index- total mp2 is elec
     return disp_contribution, elec
-def get_tc_s_tot(d):
-    """
-    
-    """
-    def get_results_per_job(job):
-        """Returns HF and MP2 energies"""
-        file, zpve, tc, s_elec, s_trans, s_rot, s_vib, s_tot, tc_ts = job
 
-        # find type of system
-        name = '/'.join(file.split('/')[:-1])
-        if 'frags' in name:
-            job.append('frag')
-            for mol in Molecule.Neutrals:
-                if mol in name:
-                    job.append('neutral')
-        if 'ionic' in name:
-            job.append('ionic')
-        if 'complex' in name:
-            job.append('complex')
-        
-        # CHANGE FROM HERE
-        if 'complex' in job:
+
+def get_results_per_job(job):
+    """Returns HF and MP2 energies"""
+    file, zpve, tc, s_elec, s_trans, s_rot, s_vib, s_tot, tc_ts = job
+
+    # find type of system
+    name = '/'.join(file.split('/')[:-1])
+    if 'frags' in name:
+        job.append('frag')
+        for mol in Molecule.Neutrals:
+            if mol in name:
+                job.append('neutral')
+    if 'ionic' in name:
+        job.append('ionic')
+    if 'complex' in name:
+        job.append('complex')
+    
+    # CHANGE FROM HERE
+    if 'complex' in job:
+        tc = job[2]
+        s_tot = job[-3]
+        tc, s_tot = map(float, (tc, s_tot))
+
+    if 'ionic' in job:
+        if 'frag' in job: # happens if ionic is ran in the frags dir
+            tc = job[2]
+            s_tot = job[-4]
+            tc, s_tot = map(float, (tc, s_tot))
+        else:
             tc = job[2]
             s_tot = job[-3]
             tc, s_tot = map(float, (tc, s_tot))
 
-        if 'ionic' in job:
-            if 'frag' in job: # happens if ionic is ran in the frags dir
-                tc = job[2]
-                s_tot = job[-4]
-                tc, s_tot = map(float, (tc, s_tot))
-            else:
-                tc = job[2]
-                s_tot = job[-3]
-                tc, s_tot = map(float, (tc, s_tot))
+    if 'frag' in job and 'ionic' not in job:
+        if 'neutral' in job:
+            tc = job[2]
+            s_tot = job[-4]
+            tc, s_tot = map(float, (tc, s_tot))
+        else:
+            tc = job[2]
+            s_tot = job[-3]
+            tc, s_tot = map(float, (tc, s_tot))
+    return tc, s_tot
 
-        if 'frag' in job and 'ionic' not in job:
-            if 'neutral' in job:
-                tc = job[2]
-                s_tot = job[-4]
-                tc, s_tot = map(float, (tc, s_tot))
-            else:
-                tc = job[2]
-                s_tot = job[-3]
-                tc, s_tot = map(float, (tc, s_tot))
-        return tc, s_tot
 
+def calc_free_energies(d):
+    """
+    
+    """
     int_energy_csvfile = check_user_input('Filename of csv containing interaction energies- created by script', lambda item: item.endswith('.csv'), "Please print a name ending in '.csv'")
 
-    results_dict = {}
-    for k, v in d.items():
+    results = {}
+    for config, v in d.items():
         sum_frags_s_tot = 0.0
         sum_frags_tc = 0.0
         complex_tc = 0.0
@@ -174,24 +179,29 @@ def get_tc_s_tot(d):
 
 
         # dispersion interaction per configuration
-        disp, elec = find_e_int(k, int_energy_csvfile)
+        disp, elec = find_e_int(config, int_energy_csvfile)
         disp_int_per_ip = disp / num_ip
         elec_int_per_ip = elec / num_ip
 
         T = 298.15
         J_TO_KJ = 1000
 
-        dH_neutral = disp_int_per_ip + ((complex_tc - ionic_tc - sum_neutral_tc) / num_ip)
-        TdS_neutral = ((complex_s_tot - ionic_s_tot - sum_neutral_s_tot) / num_ip) * T / J_TO_KJ
-        dG_neutral = dH_neutral - TdS_neutral
-        print(k, dG_neutral) 
+        dG_neutral = 0.0
+
+        if sum_neutral_tc != 0.0:
+            dH_neutral = disp_int_per_ip + ((complex_tc - ionic_tc - sum_neutral_tc) / num_ip)
+            TdS_neutral = ((complex_s_tot - ionic_s_tot - sum_neutral_s_tot) / num_ip) * T / J_TO_KJ
+            dG_neutral = dH_neutral - TdS_neutral
   
         dH_elec = elec_int_per_ip + ((complex_tc - sum_frags_tc) / num_ip)
         TdS_elec = ((complex_s_tot - sum_frags_s_tot) / num_ip) * T / J_TO_KJ
         dG_elec = dH_elec - TdS_elec
-        print(k, dG_elec) 
-
-        # boltzmann weight it- use the same functions as in other file
+    
+        dG_total = dG_elec + dG_neutral
+        
+        results[config] = {'dG_neutral': dG_neutral, 'dG_elec': dG_elec, 'dG_total': dG_total}
+        
+    return results
 
 
     #         results_dict[k] =  {'elec_hf': elec_hf, 'elec_mp2': elec_mp2, 'disp_hf': disp_hf, 'disp_mp2': disp_mp2, 'total_hf': total_hf, 'total_mp2': total_mp2, 'total_mp2_per_ip': total_mp2_per_ip,
@@ -201,6 +211,173 @@ def get_tc_s_tot(d):
                 
     # return results_dict, num_ip
 
+def assign_molecules_from_dict_keys(data):
+    """ 
+    Assign a cation and anion to each path.
+    """
+    for key in data.keys():
+        cation = ''
+        anion = ''
+        vals = key.split('/')
+        for val in vals:
+            # different names for the same anion
+            if val == 'ch':
+                val = 'choline'
+            if val == 'ac':
+                val = 'acetate'
+            if val == 'h2po4':
+                val = 'dhp' # in Molecules.Anions
+            if val == 'mesylate':
+                val = 'mes'
+            if val in Molecule.Cations:
+                cation = val
+            elif val in Molecule.Anions:
+                anion = val
+        data[key]['cation'] = cation
+        data[key]['anion'] = anion
+    return data
+
+
+def rank_configs(data):
+    """
+    Ranks each configuration according to its interaction energies.
+    """
+    KJ_TO_J = 1000
+    R = 8.3145
+    T = 298.15
+
+    # create groups
+    cations = sorted(set([v['cation'] for v in data.values()]))
+    anions  = sorted(set([v['anion']  for v in data.values()]))
+    # add to groups in alphabetical order
+
+    groups = {}
+    for c in cations:
+        groups[c] = {}
+        for a in anions:
+            groups[c][a] = {}
+
+    # add data to correct bin
+    for k, v in data.items():
+        for cation in cations:
+            for anion in anions:
+                if cation == v['cation'] and anion == v['anion']:
+                    groups[cation][anion][k] = v
+    
+    for cation in groups:
+        for anion in groups[cation]:
+            energies = []
+            for path, data in groups[cation][anion].items():
+                if data['dG_neutral'] != 0.0: 
+                    energies.append((path, data['dG_neutral']))
+                else:
+                    energies.append((path, data['dG_elec']))
+            sorted_vals = sorted(energies, key = lambda tup: tup[1]) #sort on the energies
+            min_energy = sorted_vals[0][1]
+            for index, val in enumerate(sorted_vals, 1): #start index at 1
+                path, energy = val
+                if data['dG_neutral'] != 0.0:
+                    ddG = groups[cation][anion][path]['dG_neutral'] - min_energy
+                else:
+                    ddG = groups[cation][anion][path]['dG_elec'] - min_energy
+                groups[cation][anion][path]['rank'] = index
+                groups[cation][anion][path]['ddG'] = ddG
+                groups[cation][anion][path]['boltzmann_factor'] =\
+                math.exp((-1 * KJ_TO_J * ddG * num_ip) / (R * T))
+                # missing a division somewhere- when we use the BF to weight the average
+
+    # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
+
+    ordered_dict = {}
+    for cat in groups:
+        ordered_dict[cat] = {}
+        for an in groups[cat]:
+            ordered_dict[cat][an] = {}
+            lst = [(k, v) for k, v in groups[cat][an].items()]
+            sorted_lst = sorted(lst, key = lambda kv: kv[1]['rank'])
+            for kv in sorted_lst:
+                k, v = kv
+                ordered_dict[cat][an][k] = v 
+    return ordered_dict
+
+def write_csv(data, filename):
+
+    neutral_included = False
+    for cation in data:
+        for anion in data[cation]:
+            for config in data[cation][anion]:
+                if data[cation][anion][config]['dG_neutral'] != 0.0:
+                    neutral_included = True
+                    break # check once only
+
+    def calc_boltz_ave(d, neu):
+        boltz_ave_neu = 0.0
+        boltz_ave_elec = 0.0
+        boltz_ave_tot = 0.0
+        for config in d:
+            if neu:
+                boltz_ave_neu += d[config]['dG_neutral'] * d[config]['boltzmann_factor']
+                boltz_ave_elec += d[config]['dG_elec'] * d[config]['boltzmann_factor']
+                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
+            else:
+                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
+        
+        if neu:
+            return boltz_ave_elec, boltz_ave_neu, boltz_ave_tot
+        else:
+            return boltz_ave_tot
+            # needs adding only once per cat-an
+
+    if neutral_included:
+        col_names = ('Path', 'Cation', 'Anion', 'ΔG Electrostatics [kJ/(mol IP)]', 'ΔG neutral [kJ/(mol IP)]', 
+        'ΔG Total [kJ/(mol IP)]','ΔΔG Neutral [kJ/(mol IP)]', 'Rank', 'Boltzmann Weighting', 
+        'BW ΔG Electrostatics [kJ/(mol IP)]', 'BW ΔG Neutral [kJ/(mol IP)]', 'BW ΔG Total [kJ/(mol IP)]')
+
+        variables = ('dG_elec', 'dG_neutral', 'dG_total', 'ddG', 'rank', 'boltzmann_factor') 
+    else:
+        col_names = ('Path', 'Cation', 'Anion', 'ΔG Total [kJ/(mol IP)]','ΔΔG Total [kJ/(mol IP)]', 'Rank', 
+        'Boltzmann Weighting', 'BW ΔG Total [kJ/(mol IP)]')
+
+        variables = ('dG_total', 'ddG', 'rank', 'boltzmann_factor')
+    
+    def update_csv(path, cat, an, d, variables):
+        locals().update(d) #create variables
+        lst = [path, cat, an]
+        for key in variables:
+            lst.append(locals()[key])
+        return lst
+
+    with open(filename, "w", encoding = 'utf-8-sig') as new:
+        writer = csv.writer(new)
+        # writer.writerow(('Int_MP2 = SRS interaction energies if possible',))
+        writer.writerow(col_names)
+        for cation in data:
+            for anion in data[cation]:
+                if neutral_included:
+                    boltz_ave_elec, boltz_ave_neu, boltz_ave_tot =\
+                    calc_boltz_ave(data[cation][anion], neutral_included)
+                else:
+                    boltz_ave_tot =\
+                    calc_boltz_ave(data[cation][anion], neutral_included)
+
+                for index, value in enumerate(data[cation][anion].items()):
+                    path, d = value
+                    numbers = update_csv(path, cation, anion, d, variables)
+                    if index == 0:
+                        if neutral_included:
+                            numbers = numbers + [boltz_ave_elec, boltz_ave_neu, boltz_ave_tot]
+                        else:
+                            numbers = numbers + [boltz_ave_tot]
+                    writer.writerow(numbers)
+ 
+
+
 def calculate_free_energy_interactions(csv):
     groups = group_files(csv, header = True)
-    get_tc_s_tot(groups)
+    res = calc_free_energies(groups)
+    sorted_data = sort_data(res)
+    assigned = assign_molecules_from_dict_keys(sorted_data)
+    ranked = rank_configs(assigned)
+    filename = check_user_input('Filename of output', lambda item: item.endswith('.csv'), "Please enter a filename ending in '.csv'")
+
+    write_csv(ranked, filename)

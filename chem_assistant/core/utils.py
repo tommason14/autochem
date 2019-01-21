@@ -7,7 +7,10 @@ import csv
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
 
-__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements', 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input']
+
+__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
+'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
+'assign_molecules_from_dict_keys']
 
 def read_file(file):
     with open(file, "r") as f:
@@ -166,3 +169,41 @@ def check_user_input(user_input, condition, if_error):
         else:
             correct = True
     return item
+
+def sort_data(data):
+    """ 
+    Sorts the data into alphanumerical order
+    """
+    collapsed = [[k, v] for k, v in data.items()]
+    sorted_data = sorted(collapsed, key = lambda kv: kv[0])
+    sorted_dict  = {}
+    for data in sorted_data:
+        k, v = data
+        sorted_dict[k] = v # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
+    return sorted_dict
+
+def assign_molecules_from_dict_keys(data):
+    """ 
+    Assign a cation and anion to each path.
+    """
+    for key in data.keys():
+        cation = ''
+        anion = ''
+        vals = key.split('/')
+        for val in vals:
+            # different names for the same anion
+            if val == 'ch':
+                val = 'choline'
+            if val == 'ac':
+                val = 'acetate'
+            if val == 'h2po4':
+                val = 'dhp' # in Molecules.Anions
+            if val == 'mesylate':
+                val = 'mes'
+            if val in Molecule.Cations:
+                cation = val
+            elif val in Molecule.Anions:
+                anion = val
+        data[key]['cation'] = cation
+        data[key]['anion'] = anion
+    return data
