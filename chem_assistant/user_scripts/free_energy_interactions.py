@@ -64,7 +64,7 @@ def group_files(csv, header = True):
         for line in file_obj:
             # disregard any opts
             for cell in line.split(','):
-                if 'opt' in cell:
+                if 'opt' in cell or 'spec' in cell:
                     continue
             path, zpve, tc, s_elec, s_trans, s_rot, s_vib, s_tot, tc_ts = line.split(',')
             # split path
@@ -79,16 +79,21 @@ def find_e_int(path, csvfile):
     """Gets the dispersion component of the interaction energy (per ion pair) for each configuration, each key of the groups dictionary. This value, when temperature corrected, is the enthalpy of interaction."""
     disp_contribution = 0.0
     elec = 0.0
+    if path[0] == '.':
+        config = path[2:]
+    else:
+        config = path
     with open(csvfile, 'r') as f:
         for line in f.readlines()[1:]:
             splitup = line.split(',')
-            if splitup[0] == path: #filepath is the first column of csv
+            if splitup[0] == config : #filepath is the first column of csv
                 if len(splitup) == 15 or len(splitup) == 16:
                     disp_contribution = float(splitup[6])
                     elec = float(splitup[4]) # neutral species included
                 else:
                     disp_contribution = 0.0
                     elec = float(splitup[8]) # just ionic clusters- check index- total mp2 is elec
+    print(disp_contribution, elec)
     return disp_contribution, elec
 
 
@@ -274,6 +279,7 @@ def rank_configs(data):
                     energies.append((path, data['dG_elec']))
             sorted_vals = sorted(energies, key = lambda tup: tup[1]) #sort on the energies
             min_energy = sorted_vals[0][1]
+            print(sorted_vals)
             for index, val in enumerate(sorted_vals, 1): #start index at 1
                 path, energy = val
                 if data['dG_neutral'] != 0.0:
@@ -283,7 +289,7 @@ def rank_configs(data):
                 groups[cation][anion][path]['rank'] = index
                 groups[cation][anion][path]['ddG'] = ddG
                 groups[cation][anion][path]['boltzmann_factor'] =\
-                math.exp((-1 * KJ_TO_J * ddG * num_ip) / (R * T))
+                math.exp((-1 * KJ_TO_J * ddG) / (R * T))
                 # missing a division somewhere- when we use the BF to weight the average
 
     # change the order of the paths of each config in the groups dict for each cation-anion pair, by their rank
@@ -314,15 +320,28 @@ def write_csv(data, filename):
         boltz_ave_neu = 0.0
         boltz_ave_elec = 0.0
         boltz_ave_tot = 0.0
+
+        KJ_TO_J = 1000
+        R = 8.3145
+        T = 298.15
+        lookup = 'dG_neutral' if neu else 'dG_total'
+        
+        total_prob = 0.0
+        for config in d:
+            total_prob += math.exp((-1 * d[config][lookup]) / (R * T))
         for config in d:
             if neu:
-                boltz_ave_neu += d[config]['dG_neutral'] * d[config]['boltzmann_factor']
-                boltz_ave_elec += d[config]['dG_elec'] * d[config]['boltzmann_factor']
-                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
+                print(config)
+                print(d[config])
+                print(d[config]['dG_neutral'])
+                boltz_ave_neu += d[config]['dG_neutral'] * (d[config]['boltzmann_factor'] / total_prob)
+                boltz_ave_elec += d[config]['dG_elec'] * (d[config]['boltzmann_factor'] / total_prob)
+                boltz_ave_tot += d[config]['dG_total'] * (d[config]['boltzmann_factor'] / total_prob)
             else:
-                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
+                boltz_ave_tot += d[config]['dG_total'] * (d[config]['boltzmann_factor'] / total_prob)
         
         if neu:
+            print(boltz_ave_neu)
             return boltz_ave_elec, boltz_ave_neu, boltz_ave_tot
         else:
             return boltz_ave_tot

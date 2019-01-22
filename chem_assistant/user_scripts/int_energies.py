@@ -168,8 +168,9 @@ def write_csv(data, purely_ionic, filename):
 
     def calc_boltz_ave_int(d):
         boltz_ave_int = 0
+        total_prob = sum(d[config]['boltzmann_factor'] for config in d)
         for config in d:
-            boltz_ave_int += d[config]['total_mp2'] * d[config]['boltzmann_factor']
+            boltz_ave_int += d[config]['total_mp2'] * d[config]['boltzmann_factor'] / total_prob
         return boltz_ave_int
             # needs adding only once per cat-an
 
@@ -263,6 +264,7 @@ def rank_configs(data, num_ip):
                 energies.append((path, data['total_mp2']))
             sorted_vals = sorted(energies, key = lambda tup: tup[1]) #sort on the energies
             min_energy = sorted_vals[0][1]
+            
             for index, val in enumerate(sorted_vals, 1): #start index at 1
                 path, energy = val
                 deltaE = groups[cation][anion][path]['total_mp2'] - min_energy
