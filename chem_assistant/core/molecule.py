@@ -426,8 +426,11 @@ If you have ions of one element, say Lithium, included with the two water molecu
         self.check_db()
         self.renumber_molecules()
         self.print_frags() 
-        if not self.all_atoms_assigned():
+        all_assigned = False
+        while not all_assigned:
             self.reassign_frags_manually()
+            if self.all_atoms_assigned():
+                all_assigned = True
         self.add_ionic_network()
         
     def find_h_bonds(self):
