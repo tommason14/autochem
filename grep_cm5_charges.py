@@ -37,11 +37,32 @@ for file in files:
 
     mol = Molecule(atoms = coords)
     mol.separate()
+    
+    # # naming- i.e. c4mim_1, c4mim_2, water_1
+    # print(mol.fragments)
+    #
+    # mols = {}    
+    #
+    # for data in mol.fragments.values():
+    #     if data['name'] not in mols:
+    #         mols[data['name']] = 1
+    #     else:
+    #         mols[data['name']] += 1
+    # print(mols)
+    #
+    # molecules = []
+    # for mole, num in mols.items():
+    #     for i in range(1, num + 1):
+    #         molecules.append(mole + '_' + str(i))
+    # print(molecules)
+
     for atom in mol.coords:
+        # print(atom.mol, molecules[atom.mol], atom.index)
         parsed.append([atom.x, atom.y, atom.z, mol.fragments[atom.mol]['name'] + '_' + str(atom.mol)])
+    
 
     for line in zip(data, parsed):
         cm5_results.append((*line[0], *line[1]))
 
 write_csv_from_nested(cm5_results, col_names = ('Path', 'Index', 'Element', 'Hirshfeld', 'Dx', 'Dy',
-'Dz', 'CM5', 'Rx', 'Ry', 'Rz', 'Molecule'))
+'Dz', 'CM5', 'Rx', 'Ry', 'Rz', 'Fragment'))

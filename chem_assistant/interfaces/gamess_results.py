@@ -184,7 +184,7 @@ store the iteration number.
                         for line in rerun_inp_file:
                             f.write(line)
             else:
-                print('no iterations were cycled through!')   
+                print('No iterations were cycled through!')   
     
     def is_optimisation(self):
         return self.get_runtype() == 'optimize'

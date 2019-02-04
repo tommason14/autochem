@@ -30,6 +30,7 @@ from ..core.thermo import thermo_data
 from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
+from ..interfaces.gaussian_results import GaussianResults
 from .make_files_meta import make_files_from_meta
 import os
 import subprocess
@@ -174,7 +175,8 @@ def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
-            'psi': PsiResults(log)}
+            'psi': PsiResults(log),
+            'gaussian': GaussianResults(log)}
     return logs.get(log_type, None)
 
 
@@ -191,6 +193,8 @@ def get_type(filepath):
             elif 'PSI4' in line:
                 calc = 'psi'
                 break
+            elif 'Gaussian' in line:
+                calc = 'gaussian'
     return calc
 
 def parse_results(dir):
@@ -217,7 +221,7 @@ def results_table(dir):
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
     output = parse_results(dir)
-    print(f"{'File':^30s} | {'Path':^60s} | {'Basis':^8s} | {'HF':^15s} | {'MP2/SRS':^15s}")
+    print(f"{'File':^30s} | {'Path':^60s} | {'Basis':^8s} | {'HF/DFT':^15s} | {'MP2/SRS':^15s}")
     print('-'*140)
     for res in output:
         # need to convert empty HF to numeric
@@ -225,7 +229,7 @@ def results_table(dir):
         if hf == '':
             hf = 0
         print(f"{f:^30s} | {p:^60s} | {b:^8s} | {hf:^15.6f} | {mp2:^15.6f}")
-    name = write_csv_from_nested(output, col_names = ('File', 'Path', 'Basis', 'HF', 'MP2/SRS'), return_name = True)
+    name = write_csv_from_nested(output, col_names = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS'), return_name = True)
     return name # for use in other calculations (chem_assist -r uses this name)
 
 
