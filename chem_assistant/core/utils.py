@@ -86,7 +86,7 @@ def sort_elements(lst):
     sorted_els = sorted(els, key = lambda val: val[1])
     return sorted_els
 
-def write_csv_from_dict(data):
+def write_csv_from_dict(data, return_name = False):
     """Write to file from dictionary"""
     # convert to try/except
     done = False
@@ -101,6 +101,8 @@ def write_csv_from_dict(data):
                     writer.writerow(data.keys())
                     content = zip(*[data[key] for key in data.keys()])
                     writer.writerows(content) 
+                if return_name:
+                    return filename
         else:   
             print("Please select 'Y' or 'N'")
 

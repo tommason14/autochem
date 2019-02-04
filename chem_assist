@@ -12,6 +12,9 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
 parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory', action='store_true')
+parser.add_argument('-f', '--free-energies', help='Calculates free energies from a csv produced by running `chem_assist -t`.\
+ Also asks for a csv containing the interaction energies from single point energy calculations,\
+ written using `chem_assist -c`, preferably in the same directory as the thermo data csv', action='store')
 parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
 parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
 parser.add_argument('-e', '--equil-coords', help='Searches for equilibrium coordinates recursively', action='store_true')
@@ -64,7 +67,20 @@ if args.meta:
    make_files_from_meta('.') 
 
 if args.thermochem:
-    thermochemistry('.')
+    name = thermochemistry('.')
+    done = False
+    while not done:
+        ints = input('Calculate free energies? [Y/N] ')
+        if ints.lower() in ('y', 'n'):
+            done = True
+            if ints.lower() == 'y':
+                calculate_free_energy_interactions(name)
+        else:   
+            print("Please select 'y' or 'n'")
+    
+if args.free_energies:
+    calculate_free_energy_interactions(args.free_energies)
+    
 
 if args.results:
     name = results_table('.')

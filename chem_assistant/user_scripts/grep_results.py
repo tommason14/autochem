@@ -280,7 +280,8 @@ def thermochemistry(dir):
             collected[k + ' [J/(mol K)]'] = v
         else:
             collected[k] = v 
-    write_csv_from_dict(collected)
+    name = write_csv_from_dict(collected, return_name = True)
+    return name
 
 def get_h_bonds(dir):
     """

@@ -93,7 +93,6 @@ def find_e_int(path, csvfile):
                 else:
                     disp_contribution = 0.0
                     elec = float(splitup[8]) # just ionic clusters- check index- total mp2 is elec
-    print(disp_contribution, elec)
     return disp_contribution, elec
 
 
@@ -204,7 +203,8 @@ def calc_free_energies(d):
     
         dG_total = dG_elec + dG_neutral
         
-        results[config] = {'dG_neutral': dG_neutral, 'dG_elec': dG_elec, 'dG_total': dG_total}
+        results[config] = {'dH_neutral': dH_neutral, 'dH_elec': dH_elec,
+        'TdS_neutral': TdS_neutral, 'TdS_elec': TdS_elec, 'dG_neutral': dG_neutral, 'dG_elec': dG_elec, 'dG_total': dG_total}
         
     return results
 
@@ -279,7 +279,6 @@ def rank_configs(data):
                     energies.append((path, data['dG_elec']))
             sorted_vals = sorted(energies, key = lambda tup: tup[1]) #sort on the energies
             min_energy = sorted_vals[0][1]
-            print(sorted_vals)
             for index, val in enumerate(sorted_vals, 1): #start index at 1
                 path, energy = val
                 if data['dG_neutral'] != 0.0:
@@ -329,35 +328,37 @@ def write_csv(data, filename):
         total_prob = 0.0
         for config in d:
             total_prob += math.exp((-1 * d[config][lookup]) / (R * T))
+            d[config]['boltzmann_factor'] = d[config]['boltzmann_factor'] / total_prob
         for config in d:
             if neu:
-                print(config)
-                print(d[config])
-                print(d[config]['dG_neutral'])
-                boltz_ave_neu += d[config]['dG_neutral'] * (d[config]['boltzmann_factor'] / total_prob)
-                boltz_ave_elec += d[config]['dG_elec'] * (d[config]['boltzmann_factor'] / total_prob)
-                boltz_ave_tot += d[config]['dG_total'] * (d[config]['boltzmann_factor'] / total_prob)
+                boltz_ave_neu += d[config]['dG_neutral'] * d[config]['boltzmann_factor']
+                boltz_ave_elec += d[config]['dG_elec'] * d[config]['boltzmann_factor']
+                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
             else:
-                boltz_ave_tot += d[config]['dG_total'] * (d[config]['boltzmann_factor'] / total_prob)
+                boltz_ave_tot += d[config]['dG_total'] * d[config]['boltzmann_factor']
         
         if neu:
-            print(boltz_ave_neu)
             return boltz_ave_elec, boltz_ave_neu, boltz_ave_tot
         else:
             return boltz_ave_tot
             # needs adding only once per cat-an
 
     if neutral_included:
-        col_names = ('Path', 'Cation', 'Anion', 'ΔG Electrostatics [kJ/(mol IP)]', 'ΔG neutral [kJ/(mol IP)]', 
+        col_names = ('Path', 'Cation', 'Anion',
+        'ΔH Electrostatics [kJ/(mol IP)]', 'ΔH neutral [kJ/(mol IP)]',
+        'TΔS Electrostatics [kJ/(mol IP)]', 'TΔS neutral [kJ/(mol IP)]',
+        'ΔG Electrostatics [kJ/(mol IP)]', 'ΔG neutral [kJ/(mol IP)]', 
         'ΔG Total [kJ/(mol IP)]','ΔΔG Neutral [kJ/(mol IP)]', 'Rank', 'Boltzmann Weighting', 
         'BW ΔG Electrostatics [kJ/(mol IP)]', 'BW ΔG Neutral [kJ/(mol IP)]', 'BW ΔG Total [kJ/(mol IP)]')
 
-        variables = ('dG_elec', 'dG_neutral', 'dG_total', 'ddG', 'rank', 'boltzmann_factor') 
+        variables = ('dH_elec', 'dH_neutral', 'TdS_elec', 'TdS_neutral', 'dG_elec', 'dG_neutral', 'dG_total', 'ddG', 'rank', 'boltzmann_factor') 
     else:
-        col_names = ('Path', 'Cation', 'Anion', 'ΔG Total [kJ/(mol IP)]','ΔΔG Total [kJ/(mol IP)]', 'Rank', 
+        col_names = ('Path', 'Cation', 'Anion', 
+        'ΔH Total [kJ/(mol IP)]','TΔS Total [kJ/(mol IP)]',
+        'ΔG Total [kJ/(mol IP)]','ΔΔG Total [kJ/(mol IP)]', 'Rank', 
         'Boltzmann Weighting', 'BW ΔG Total [kJ/(mol IP)]')
 
-        variables = ('dG_total', 'ddG', 'rank', 'boltzmann_factor')
+        variables = ('dH_elec', 'TdS_elec', 'dG_total', 'ddG', 'rank', 'boltzmann_factor')
     
     def update_csv(path, cat, an, d, variables):
         locals().update(d) #create variables
