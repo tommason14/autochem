@@ -1,5 +1,6 @@
 from ..core.utils import read_file, write_xyz
 from ..core.results import Results
+from ..core.periodic_table import PeriodicTable as PT
 
 import re
 import os
