@@ -113,21 +113,21 @@ if args.graph:
 if args.equil_coords:
     search_for_coords('.')
     
-    answer = False
-    while not answer:
-        try:
-            extra = input(\
-"""Create additional jobs using the `equil.xyz` files just found, 
-by placing meta.py files into the appropriate directories? [Y/N] """)
-        except ValueError: # type error?
-            print("Please choose 'Y' or 'N'")
-        if extra.upper() in ('Y', 'N'):
-            answer = True
-        else:
-            print("Please choose 'Y' or 'N'")
+#     answer = False
+#     while not answer:
+#         try:
+#             extra = input(\
+# """Create additional jobs using the `equil.xyz` files just found, 
+# by placing meta.py files into the appropriate directories? [Y/N] """)
+#         except ValueError: # type error?
+#             print("Please choose 'Y' or 'N'")
+#         if extra.upper() in ('Y', 'N'):
+#             answer = True
+#         else:
+#             print("Please choose 'Y' or 'N'")
 
-    if extra.upper() == "Y":
-        create_extra_jobs('.')
+#     if extra.upper() == "Y":
+#         create_extra_jobs('.')
 
 if args.ir:
     make_ir_spectra(args.ir)
