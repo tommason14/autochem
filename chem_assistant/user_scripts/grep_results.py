@@ -44,13 +44,14 @@ def search_for_coords(dir):
     
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
-        if r.completed():
-            if r.is_optimisation():
-                print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
-                r.get_equil_coords()
-                print()
-        else:
-            print(f"{log}: Not completed\n")
+        if r is not None:
+            if r.completed():
+                if r.is_optimisation():
+                    print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
+                    r.get_equil_coords()
+                    print()
+            else:
+                print(f"{log}: Not completed\n")
 
 def create_extra_jobs(dir):
     """Using `equil.xyz` files found from a previous search, create additional files"""
