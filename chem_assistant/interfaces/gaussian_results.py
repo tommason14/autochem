@@ -72,24 +72,24 @@ class GaussianResults(Results):
                     sym = PT.get_symbol(atnum)
                     coords.append(Atom(sym, coords = (x, y, z)))
             if found_some:
-                if len(rerun) > 0: # from last run, remove those coords
-                    rerun = []
+                if len(some_coords) > 0: # from last run, remove those coords
+                    some_coords = []
                 if re.search(regex, line):
                     _, atnum, _, x, y, z = line.split()
                     atnum, x, y, z = map(float, (atnum, x, y, z))
                     sym = PT.get_symbol(atnum)
                     some_coords.append(Atom(sym, coords = (x, y, z)))
-        if len(equil) > 0:
+        if len(coords) > 0:
             print('found!')
             write_xyz(coords, os.path.join(MOLECULE_PARENT_DIR, 'equil.xyz'))
         else:
-            if len(rerun) > 0:
+            if len(some_coords) > 0:
                 print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun/rerun.xyz')
                 rerun_dir = os.path.join(self.path, 'rerun')
                 if not os.path.exists(rerun_dir): 
                 # if already exists, then simulation already re-run- skip this log, move to next
                     os.mkdir(rerun_dir)
-                    write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                    write_xyz(some_coords, os.path.join(rerun_dir, 'rerun.xyz'))
             else:
                 print('No iterations were cycled through!')
 
