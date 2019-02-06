@@ -114,7 +114,7 @@ class GaussianResults(Results):
         MP2 = 0.0
         
         for line in self.read():
-            if '#P' in line:
+            if re.search('^\s*?#P', line):
                 basis = line.split()[1].rsplit('/')[1]
             if re.search('^\sE=\s*-?[0-9]*.[0-9]*', line):
                 HF = float(line.split()[1])
