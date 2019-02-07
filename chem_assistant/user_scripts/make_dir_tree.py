@@ -106,11 +106,11 @@ def job_type(package, xyz, s):
     elif package == "lammps":
         return 'LAMMPS INP HERE'
     elif package == "gamess_no_frags":
-        return GamessJob(using = xyz, frags_in_subdir = False, settings = s)
+        return GamessJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
     elif package == "psi4_no_frags":
-        return PsiJob(using = xyz, frags_in_subdir = False, settings = s)
+        return PsiJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
     elif package == "gamess_fmo_no_frags":
-        return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s)
+        return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s, is_complex = True)
 
 def make_parent_dir():
     calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
