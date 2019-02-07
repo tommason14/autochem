@@ -1,13 +1,13 @@
 #!/bin/env bash
 #SBATCH --qos=partner
 #SBATCH --job-name=base_name
-#SBATCH --time=24:00:00
-#SBATCH --mem=64G
-#SBATCH --ntasks=32
+#SBATCH --time=04:00:00
+#SBATCH --mem=32G
+#SBATCH --ntasks=16
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=thomas.mason1@monash.edu
+#SBATCH --mail-user=thomas.mason1+monarch@monash.edu
 #SBATCH --partition=comp,short
 
 module load gamess/16srs1-v2
