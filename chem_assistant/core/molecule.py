@@ -341,6 +341,7 @@ the system"""
 
             return frag_indices 
             # [(start of frag, end of frag), single atom, (...), (...)]
+
         
         def update_mol_dictionary(frag_indices):
             for molecule, item in enumerate(frag_indices):
