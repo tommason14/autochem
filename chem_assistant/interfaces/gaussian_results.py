@@ -112,6 +112,7 @@ class GaussianResults(Results):
         Currently implemented for DFT only.
         """
         basis = ''
+        HF = 0.0
         MP2 = 0.0
 
         for line in self.read():
