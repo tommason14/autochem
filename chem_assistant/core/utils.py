@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import csv
-
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
 
@@ -57,6 +54,8 @@ def get_files(directory, ext):
         >>> for filepath in get_files('.', ("log", "out")):
         >>>     parse_file(filepath)
     """
+    import os
+
     fileLst = []
     for path, dirs, files in os.walk(directory):
         for file in files:
@@ -88,7 +87,11 @@ def sort_elements(lst):
 
 def write_csv_from_dict(data, return_name = False):
     """Write to file from dictionary"""
+
+    import csv
+
     # convert to try/except
+
     done = False
     while not done:
         to_file = input('Print to csv? [Y/N] ')
@@ -112,6 +115,9 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
     
     NB: requires a list or tuple of column names passed to the `col_names` parameter
     """
+
+    import csv
+
     if type(col_names) not in (list, tuple):
         raise AttributeError('Must pass in column names as a list or tuple of values')
     # convert to try/except
