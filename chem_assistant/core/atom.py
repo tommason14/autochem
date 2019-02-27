@@ -30,7 +30,7 @@ class Atom:
 
         self.mol = mol
         self.bonds = bonds or []
-        self.connected_atoms = []
+        self.connected_atoms = set()
         self.h_bonded_to = []
 
         if coords is None:

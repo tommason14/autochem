@@ -85,6 +85,7 @@ class Molecule:
         
         for index, atom in enumerate(self.coords):
             atom.index = index + 1 #so first atom has index 1
+            atom.pos_in_list = index + 1
 
         self.nfrags = nfrags
 
@@ -203,9 +204,9 @@ class Molecule:
             return min(distances)
 
         def distances():
-            """Returns a list of lists of [i, j, min_dist(i, j)] for each combination of atoms in
-the system"""
+            """Returns a list of lists of [i, j, min_dist(i, j)] for each combination of atoms in the system"""
             dist_list = []
+            # here, decide if bonded!
             # for every combination of atoms in the list, find their distance
             for i, j in itertools.combinations(self.mol_dict.keys(), 2):
                 minimum_dist = min_dist(self.mol_dict[i], self.mol_dict[j])
@@ -223,9 +224,9 @@ the system"""
                     except ValueError:
                         print('Must give an integer number of fragments!')
             while len(set(self.mol_dict.keys())) > self.nfrags:
-                dist = distances()    
+                dist = distances()
                 dist.sort(key = lambda item: item[2]) # sort on distance of [i, j, dist]
-                # take the second atom, append it to the list of atoms in the value of the first
+                # take the second atom, append it to the list of atoms in the value of the first                                                                                                             
                 mol1, mol2 = dist[0][:2] # dist = [[i,j,dist], [i,j,dist], [i,j,dist]...]
                 # adding all atoms in 'mol2' to the list of atoms of the first molecule
                 for index, atom in enumerate(self.mol_dict[mol2]):
@@ -374,7 +375,8 @@ Type in the fragments manually. For example, if you have
 2 fragments of water, type "[1, 3], [4, 6]", without quotes.
 Give the atom numbers of the first and last atom in each fragment.
 
-If you have ions of one element, say Lithium, included with the two water molecules, include the number without brackets: [1, 3], 4, [5, 7]
+If you have ions of one element, say Lithium, included with the two water 
+molecules, include the number without brackets: [1, 3], 4, [5, 7]
 """)
         print()
         frag_indices = get_manual_assignments()
@@ -386,6 +388,34 @@ If you have ions of one element, say Lithium, included with the two water molecu
             for atom in frag['atoms']:
                 s += 1
         return s == len(self.coords)
+
+    def assign_neighbours(self):
+        """
+        Checks each atom, either per fragment or in whole list, for bonded atoms by considering separation and van der waals radii
+        """
+        # if hasattr(self, 'fragments'):
+        #     for frag in self.fragments.values():
+        #         print(frag['name'])
+        #         for i, atom_i in enumerate(frag['atoms']):
+        #             for j, atom_j in enumerate(frag['atoms']):
+        #                 if i != j:
+        #                     dist = atom_i.distance_to(atom_j)
+        #                     vdw_dist = PT.get_vdw(atom_i.symbol) + PT.get_vdw(atom_j.symbol)
+        #                     if dist < vdw_dist:
+        #                         atom_i.connected_atoms.add(atom_j)
+        #                         atom_j.connected_atoms.add(atom_i)
+
+
+        # else:
+        for i, atom_i in enumerate(self.coords):
+            for j, atom_j in enumerate(self.coords):
+                if i != j:
+                    dist = atom_i.distance_to(atom_j)
+                    vdw_dist = PT.get_vdw(atom_i.symbol) + PT.get_vdw(atom_j.symbol)
+                    if dist < vdw_dist:
+                        atom_i.connected_atoms.add(atom_j)
+                        atom_j.connected_atoms.add(atom_i)
+                        # also finds hydrogen bonds to atoms in other molecules
 
         
     def add_ionic_network(self):
@@ -437,24 +467,66 @@ If you have ions of one element, say Lithium, included with the two water molecu
     def find_h_bonds(self):
 
         def find_partners(self):
+
+            self.assign_neighbours()
             frag_list = [frag['atoms'] for frag in self.fragments.values()]
 
             h_bonders = ['O', 'F', 'H', 'N']
-            H_BOND_DIST = 2.0 
+            H_BOND_DIST = 2.0
             
             # in one case a methyl hydrogen was 1.998Å away from O;
             # need to correct for that! Look at connecting atoms
-
+            counted = []
+            h_bonded = []
             for i, mol in enumerate(frag_list):
                 for j, mol2 in enumerate(frag_list):
                     if i != j:
                         for atom1 in mol: # for every atom in first frag
                             for atom2 in mol2: # for every atom in second frag
                                 if atom1.distance_to(atom2) < H_BOND_DIST:
-                                    if atom1.symbol and atom2.symbol in h_bonders and atom1.symbol is not atom2.symbol:
-                                        atom1.h_bonded_to.append(atom2) 
+                                    pairs = [(atom1.pos_in_list, atom1.mol), (atom2.pos_in_list, atom2.mol)]
+                                    pairs.sort() #sort by pos_in_list first- doesn't matter how it sorts, only that it is applied to every atom in list
+
+
+                                    # remove alkyl proton interactions
+
+                                    if atom1.symbol == 'H' and 'C' in [atom.symbol for atom in atom1.connected_atoms]:
+                                        pass
+                                    if atom2.symbol == 'H' and 'C' in [atom.symbol for atom in atom2.connected_atoms]:
+                                        pass
+
+                                    if atom1.symbol and atom2.symbol in h_bonders and pairs not in counted:
+                                        
+                                        h_bonded.append([atom1, atom2, atom1.distance_to(atom2)])
+                                        counted.append(pairs) 
+
+                                        
+
+
                             # assigning twice- could be cut down
                             # could say for atom2 in mol2 if mol2 != mol- and change the iteration above?
+            for bond in h_bonded:
+                one, two, dist = bond
+                one_name = self.fragments[one.mol]['name']
+                two_name = self.fragments[two.mol]['name']
+                # to form a h-bond, must contain two of the h-bonding atoms in that molecule (O-H bonds, N-H bonds)
+                
+                if any(name in Molecule.Cations for name in (one_name, two_name)) and any(name in Molecule.Anions for name in (one_name, two_name)):
+                    print('Cat-An')
+                    print(f"({one.symbol}, {self.fragments[one.mol]['name']} (mol {one.mol}))--- {dist:.3f}Å ---({two.symbol}, {self.fragments[two.mol]['name']} (mol {two.mol}))")
+
+                if any(name in Molecule.Cations for name in (one_name, two_name)) and any(name in Molecule.Neutrals for name in (one_name, two_name)):
+                    print('Cat-Neu')
+                    print(f"({one.symbol}, {self.fragments[one.mol]['name']} (mol {one.mol}))--- {dist:.3f}Å ---({two.symbol}, {self.fragments[two.mol]['name']} (mol {two.mol}))")
+
+                if any(name in Molecule.Anions for name in (one_name, two_name)) and any(name in Molecule.Neutrals for name in (one_name, two_name)):
+                    print('An-Neu')
+                    print(f"({one.symbol}, {self.fragments[one.mol]['name']} (mol {one.mol}))--- {dist:.3f}Å ---({two.symbol}, {self.fragments[two.mol]['name']} (mol {two.mol}))")
+
+                # h_bonders_in_one = [el[0] for el in self.fragments[one.mol]['elements'] if el[0] in h_bonders]
+                # h_bonders_in_two = [el[0] for el in self.fragments[two.mol]['elements'] if el[0] in h_bonders]
+                # if len(h_bonders_in_one) > 1 and len(h_bonders_in_two) > 1:
+                #     print(f"({one.symbol}, {self.fragments[one.mol]['name']} (mol {one.mol}))--- {dist:.3f}Å ---({two.symbol}, {self.fragments[two.mol]['name']} (mol {two.mol}))")
 
 
         def remove_duplicate_bonds(self):
@@ -503,7 +575,7 @@ If you have ions of one element, say Lithium, included with the two water molecu
         find_partners(self)
         hbonds = remove_duplicate_bonds(self)
         bonds_in_mol = []
-        print('Hydrogen bonds:')
+        # print('Hydrogen bonds:')
         for bond in hbonds:
             data = bond_components(self, bond)
             bonds_in_mol.append(data) # list, so can add file and path later
