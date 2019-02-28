@@ -1,27 +1,9 @@
 #!/usr/bin/env python3
 
+
 import sys
 import re
 import numpy as np
-import time
-
-
-def timeit(f):
-
-    def timed(*args, **kw):
-
-        ts = time.time()
-        result = f(*args, **kw)
-        te = time.time()
-
-        print('func:%r took: %2.4f sec' % \
-          (f.__name__, te-ts))
-        return result
-
-    return timed
-
-
-
 
 if len(sys.argv) != 3:
     sys.exit('Syntax: gamess_to_molden logfile newfile')
@@ -72,11 +54,11 @@ def find_init_coords(file):
                 
     return bohrs, angs
 
-@timeit
 def freq_data(file):
     """
     Parses GAMESS hessian calculation log file for the frequency data
     """
+
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     results = {'Modes': [], 'Frequencies': [], 'Reduced Mass': [], 'Intensities': []}
     for line in read_file(file):
@@ -84,18 +66,19 @@ def freq_data(file):
             mode, vib, symmetry, mass, intensity = line.split()
             mode = int(mode)
             vib, mass, intensity = map(float, (vib, mass, intensity))
+            results['Modes'].append(mode)
             results['Frequencies'].append(vib)
+            results['Reduced Mass'].append(mass)
             results['Intensities'].append(intensity)
     return results
 
-@timeit
 def find_normal_coords_approx(file):
     """
     Parses log for the changes in atom positions that occurs with each vibration.
     Regex for lines matches in multiple places, so just locating the vibrations within a
     section of the file- see `refine selection` for how to get the actual vibrations
     """
-
+    # Need to match multiple lines, so can't read line-by-line?
     normals = []
     num_modes = ''
     found = False
@@ -111,29 +94,36 @@ def find_normal_coords_approx(file):
             num_modes = line.split()[2]
     return num_modes, normals
 
-@timeit
 def refine_selection(lst):
     """
     Remove unnecessary data from a list of lines from log file
     """
 
-    frequencies = []
-    intensities  = []
+    # frequencies = []
+    # intensities  = []
     refined = []
     xvib_regex = '^\s*?[0-9]*\s*[A-z]{1,2}\s*[X]' 
 
+    # remove unnecessary lines
     found_vibs = False
     for line in lst:
+        # if re.search('\s*FREQUENCY:', line):
+            # frequencies += line.split()[1:]
+        # if re.search('\s*IR\sINTENSITY:', line):
+            # intensities += line.split()[2:]
         if re.search(xvib_regex, line):
             found_vibs = True
         if '\n' is line:
             found_vibs = False
         if found_vibs:
             refined.append(line.strip()) # rm \n
+    # return refined, frequencies, intensities
+    # works, but refactoring needed.
+    # for now, settle for opening file one more time
+
     return refined
     
 
-@timeit
 def find_normal_coords(num_atoms, file):
     """
     Parses log for the changes in atom positions that occurs with each vibration
@@ -194,7 +184,6 @@ def find_normal_coords(num_atoms, file):
    #          }...
 
 
-@timeit
 def tidy_normal_modes(data):
     """
     Rearrange the normal modes into a desirable format
@@ -213,7 +202,6 @@ def tidy_normal_modes(data):
    
     return tidy
 
-@timeit
 def pretty_print_vibs(vibrations):
     """
     Prints vibrations in a molden-compatible format
@@ -224,19 +212,16 @@ def pretty_print_vibs(vibrations):
         for atom in v:
             x, y, z = atom
             vibs.append(f"{x:>12.6f}{y:>13.6f}{z:>13.6f}")
-    return vibs
 
-@timeit
 def get_vibrations(num_atoms, log):
     """
     Control flow for finding vibrations.
     """
     normals = find_normal_coords(num_atoms, log)
-    tidy = tidy_normal_modes(normals)
-    vibs = pretty_print_vibs(tidy)
+    vibs = tidy_normal_modes(normals)
+    vibs = pretty_print_vibs(vibs)
     return vibs
 
-@timeit
 def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, freq_data = None, vibrations = None): 
     """
     Returns a dictionary whereby the keys are used by molden as a delimeter to define a new section.
@@ -248,15 +233,15 @@ def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, freq_d
     ret['FREQ'] = freq_data['Frequencies']
     ret['INT'] = freq_data['Intensities']
     ret['FR-COORD'] = init_coords_bohr
-    ret['FR-NORM-COORD'] = vibrations
+    ret['FR-NORM-COORD'] = vibs
     return ret
 
 
-@timeit
 def write_file(data, filename):
     """
     Writes a molden-readable file
     """
+
     lst = ["[Molden Format]\n"]
 
     for header, lines in data.items():
