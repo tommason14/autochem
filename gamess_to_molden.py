@@ -21,16 +21,14 @@ def timeit(f):
     return timed
 
 
-
-
-if len(sys.argv) != 3:
-    sys.exit('Syntax: gamess_to_molden logfile newfile')
-logfile, newfile = sys.argv[1:]
-
+if len(sys.argv) != 2:
+    sys.exit('Syntax: gamess_to_molden.py logfile')
+logfile = sys.argv[1]
+newfile = logfile.rsplit('.')[0] + '.molden'
 
 def read_file(file):
     """
-    Returns an iterator over a file object
+    Returns an iterator over a file object.
     """
     
     with open(file, "r") as f:
@@ -42,23 +40,27 @@ def read_file(file):
 
 def find_init_coords(file):
     """
-    Parses input file for initial coordinates
+    Parses input file for initial coordinates.
     """
 
     bohrs = []
     angs = []
 
-    inp_file = file[:-3] + 'inp'
+    inp_file = file.rsplit('.')[0] + '.inp'
 
     regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
 
     init_coords = []
-    for line in read_file(inp_file):
-       if re.search(regex, line): 
-            sym, atnum, x, y, z = line.split()
-            atnum = float(atnum)
-            x, y, z = map(float, (x, y, z))
-            init_coords.append([sym, atnum, x, y, z])
+    try:
+        for line in read_file(inp_file):
+           if re.search(regex, line): 
+                sym, atnum, x, y, z = line.split()
+                atnum = float(atnum)
+                x, y, z = map(float, (x, y, z))
+                init_coords.append([sym, atnum, x, y, z])
+    except FileNotFoundError:
+        print(f'Error: Needs an input file in the same directory, {inp_file}')
+        sys.exit()
 
     def angstrom_to_bohr(num):
         return num * 1.8897259886
@@ -72,10 +74,11 @@ def find_init_coords(file):
                 
     return bohrs, angs
 
-@timeit
 def freq_data(file):
     """
-    Parses GAMESS hessian calculation log file for the frequency data
+    Parses GAMESS hessian calculation log file for the frequency data.
+    Note: increased run time to more than 5 seconds! Now deprecated in favour of
+    additional output from `refine_selection`.
     """
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     results = {'Modes': [], 'Frequencies': [], 'Reduced Mass': [], 'Intensities': []}
@@ -88,12 +91,11 @@ def freq_data(file):
             results['Intensities'].append(intensity)
     return results
 
-@timeit
 def find_normal_coords_approx(file):
     """
     Parses log for the changes in atom positions that occurs with each vibration.
     Regex for lines matches in multiple places, so just locating the vibrations within a
-    section of the file- see `refine selection` for how to get the actual vibrations
+    section of the file- see `refine selection` for how to get the actual vibrations.
     """
 
     normals = []
@@ -111,10 +113,9 @@ def find_normal_coords_approx(file):
             num_modes = line.split()[2]
     return num_modes, normals
 
-@timeit
 def refine_selection(lst):
     """
-    Remove unnecessary data from a list of lines from log file
+    Remove unnecessary data from a list of lines from log file.
     """
 
     frequencies = []
@@ -124,19 +125,29 @@ def refine_selection(lst):
 
     found_vibs = False
     for line in lst:
+        if re.search('\s*FREQUENCY:', line):
+            frequencies += [freq for freq in line.split()[1:] if freq != 'I']
+        if re.search('\s*IR\sINTENSITY:', line):
+            intensities += line.split()[2:]
         if re.search(xvib_regex, line):
             found_vibs = True
         if '\n' is line:
             found_vibs = False
         if found_vibs:
             refined.append(line.strip()) # rm \n
-    return refined
+    return refined, frequencies, intensities
     
 
-@timeit
 def find_normal_coords(num_atoms, file):
     """
-    Parses log for the changes in atom positions that occurs with each vibration
+    Parses log for the changes in atom positions that occurs with each vibration.
+
+    Example output, where the columns represent changes in position for each mode,
+    and rows represent the X,Y and Z components for each atom in the system.
+
+    1   C            X -0.00738929  0.15398404 -0.02729367 -0.08048432  0.09934430
+                     Y  0.00055975  0.03053089  0.15133284  0.08248114  0.08159716
+                     Z  0.00514209 -0.10069700  0.00686349  0.06067365  0.02132913
     """
 
     modes, approx = find_normal_coords_approx(file)
@@ -146,7 +157,7 @@ def find_normal_coords(num_atoms, file):
     yvibs_per_line = []
     zvibs_per_line = []
 
-    refined = refine_selection(approx)
+    refined, wavenumbers, intensities = refine_selection(approx)
 
     for line in refined:
         if re.search(xvib_regex, line):
@@ -182,7 +193,7 @@ def find_normal_coords(num_atoms, file):
     vibs = add_deltas(vibs, yvibs_per_line, 'y')
     vibs = add_deltas(vibs, zvibs_per_line, 'z')
 
-    return vibs
+    return vibs, wavenumbers, intensities
 
    # {atom 1: {'x': [mode1, mode2, mode3...],
    #           'y': [mode1, mode2, mode3...],
@@ -194,10 +205,9 @@ def find_normal_coords(num_atoms, file):
    #          }...
 
 
-@timeit
 def tidy_normal_modes(data):
     """
-    Rearrange the normal modes into a desirable format
+    Rearrange the normal modes into a desirable format.
     """
    
     num_atoms = len(data)
@@ -213,10 +223,9 @@ def tidy_normal_modes(data):
    
     return tidy
 
-@timeit
 def pretty_print_vibs(vibrations):
     """
-    Prints vibrations in a molden-compatible format
+    Prints vibrations in a molden-compatible format.
     """
     vibs = []
     for vib, v in enumerate(vibrations):
@@ -226,36 +235,32 @@ def pretty_print_vibs(vibrations):
             vibs.append(f"{x:>12.6f}{y:>13.6f}{z:>13.6f}")
     return vibs
 
-@timeit
 def get_vibrations(num_atoms, log):
     """
     Control flow for finding vibrations.
     """
-    normals = find_normal_coords(num_atoms, log)
+    normals, wavenumbers, intensities = find_normal_coords(num_atoms, log)
     tidy = tidy_normal_modes(normals)
     vibs = pretty_print_vibs(tidy)
-    return vibs
+    return vibs, wavenumbers, intensities
 
-@timeit
-def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, freq_data = None, vibrations = None): 
+def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, wavenumbers = None, intensities = None, vibrations = None): 
     """
     Returns a dictionary whereby the keys are used by molden as a delimeter to define a new section.
-    Values are lists of lines    
+    Values are lists of lines to write to the file, with no newline characters.
     """
 
     ret = {}
     ret['Atoms'] = init_coords_angs
-    ret['FREQ'] = freq_data['Frequencies']
-    ret['INT'] = freq_data['Intensities']
+    ret['FREQ'] = wavenumbers
+    ret['INT'] = intensities
     ret['FR-COORD'] = init_coords_bohr
     ret['FR-NORM-COORD'] = vibrations
     return ret
 
-
-@timeit
 def write_file(data, filename):
     """
-    Writes a molden-readable file
+    Writes a molden-readable file.
     """
     lst = ["[Molden Format]\n"]
 
@@ -272,11 +277,11 @@ def main(log, new_file):
 
     bohrs, angs = find_init_coords(log)
     num_atoms = len(angs)
-    freq = freq_data(log)
-    vibs = get_vibrations(num_atoms, log)
+    vibs, waves, ints = get_vibrations(num_atoms, log)
     data = collect_into_dict(init_coords_bohr = bohrs, 
                              init_coords_angs = angs, 
-                             freq_data = freq, 
+                             wavenumbers = waves, 
+                             intensities = ints,
                              vibrations = vibs)
     write_file(data, new_file)
 
