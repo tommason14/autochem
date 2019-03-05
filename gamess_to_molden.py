@@ -41,6 +41,12 @@ def read_file(file):
 def find_init_coords(file):
     """
     Parses input file for initial coordinates.
+    TODO: check if FMO or not.
+    If FMO: find the first iteration, vib: 0, and use those
+    coordinates, after converting from bohr to angstrom
+    If not: GAMESS prints out the nuclear coordinates under
+    the heading 'CHARGE         X                   Y                   Z'
+    in Bohrs- user those instead.
     """
 
     bohrs = []
