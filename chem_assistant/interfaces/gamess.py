@@ -281,7 +281,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace('nodes=1', f'nodes={num_frags}')
-            jobfile = jobfile.replace('12 12', f'{12 * num_frags} 12') 
+            jobfile = jobfile.replace('24 24', f'{24 * num_frags} 24') 
             return jobfile
         return job
             
