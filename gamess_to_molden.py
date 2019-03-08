@@ -44,6 +44,10 @@ def find_init_coords(file):
     Output is different depending on whether FMO theory is used,
     and different methods for finding initial coordinates are required.
     """
+    # TODO: change the criterion for finding initial coords:
+    #     Also needs the word 'ATOM' in the line, and need
+    #     a container for coords of all iterations for
+    #     geom opts
     
     def get_atnum(symbol):
 
@@ -210,26 +214,28 @@ def find_init_coords(file):
         for index, atom in enumerate(atoms, 1):
             sym, atnum, x, y, z = atom
             angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
-            x, y, z = map(float, (x, y, z))
             x, y, z = map(lambda num : num * angs_to_bohr, (x, y, z))
             bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
 
     else:
         found = False
         # looking for this: 
-        # C           6.0    -2.9137945280       -0.5434462158        0.0751487230
+        #C           6.0    -2.9137945280       -0.5434462158        0.0751487230
         reg = '^\s*[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){4}$'
         atoms = []
         for line in read_file(file):
+            print(line)
             if 'CHARGE         X                   Y                   Z' in line:
                 found = True
-            if line is '\n':
+            if found and line is '\n':
                 break
             if found:
                 if re.search(reg, line):
-                    _, sym, x, y, z = line.split()
+                    sym, atnum, x, y, z = line.split()
+                    x, y, z = map(float, (x, y, z))
                     x, y, z = map(lambda num: num * bohr_to_angs, (x, y, z))
-                    atnum = get_atnum(sym)
+                    atnum = float(atnum)
+                    atnum = int(atnum)
                     atoms.append([sym, atnum, x, y, z])
 
         for index, atom in enumerate(atoms, 1):
@@ -353,8 +359,7 @@ def find_normal_coords(num_atoms, file):
             if atom_count == num_atoms:
                 atom_count = 0 
         return d
-
-
+    
     vibs = add_deltas(vibs, xvibs_per_line, 'x')
     vibs = add_deltas(vibs, yvibs_per_line, 'y')
     vibs = add_deltas(vibs, zvibs_per_line, 'z')
@@ -375,7 +380,6 @@ def tidy_normal_modes(data):
     """
     Rearrange the normal modes into a desirable format.
     """
-   
     num_atoms = len(data)
     num_modes = len(data[1]['x']) # look at any list, all the same length
     num_dimensions = 3
