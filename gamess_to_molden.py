@@ -3,23 +3,6 @@
 import sys
 import re
 import numpy as np
-import time
-
-
-def timeit(f):
-
-    def timed(*args, **kw):
-
-        ts = time.time()
-        result = f(*args, **kw)
-        te = time.time()
-
-        print('func:%r took: %2.4f sec' % \
-          (f.__name__, te-ts))
-        return result
-
-    return timed
-
 
 if len(sys.argv) != 2:
     sys.exit('Syntax: gamess_to_molden.py logfile')
@@ -38,17 +21,28 @@ def read_file(file):
         except UnicodeDecodeError:
             pass
 
+def calc_type(file):
+    """ Returns the type of GAMESS calculation submitted """
+    runtyp = None
+    for line in read_file(file):
+        if 'RUNTYP=OPTIMIZE' in line.upper():
+            runtyp = "opt"
+            break
+        elif 'RUNTYP=ENERGY' in line.upper():
+            runtyp = "spec"
+            break
+        if any(word in line.upper() for word in ('RUNTYP=HESSIAN', 'RUNTYPE=FMOHESS')):
+            runtyp = "hessian"
+            break
+    return runtyp 
+        
+
 def find_init_coords(file):
     """
     Parses log file for initial coordinates.
     Output is different depending on whether FMO theory is used,
     and different methods for finding initial coordinates are required.
     """
-    # TODO: change the criterion for finding initial coords:
-    #     Also needs the word 'ATOM' in the line, and need
-    #     a container for coords of all iterations for
-    #     geom opts
-    
     def get_atnum(symbol):
 
         ptable = {}
@@ -193,29 +187,55 @@ def find_init_coords(file):
     angs_to_bohr = 1.8897259886
 
     if fmo:
-        found = False
-        # looking for this: 
-        # 10  H                5.861571       6.324233       6.608315
-        reg = '^\s*[0-9]{1,4}\s*[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){3}$'
-        atoms = []
-        for line in read_file(file):
-            if re.search('\s*COORD\s*0\s*NUCLEAR\s*COORDINATES', line):
-                found = True
-            if found and 'TOTAL CPU TIME' in line:
-                break
-            if found:
-                if re.search(reg, line):
-                    _, sym, x, y, z = line.split()
-                    x, y, z = map(float, (x, y, z))
-                    x, y, z = map(lambda num: num * bohr_to_angs, (x, y, z))
-                    atnum = get_atnum(sym)
-                    atoms.append([sym, atnum, x, y, z])
+        calc = calc_type(file)
+        if calc == "hessian":
+            found = False
+            # looking for this: 
+            # 10  H                5.861571       6.324233       6.608315
+            reg = '^\s*[0-9]{1,4}\s*[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){3}$'
+            atoms = []
+            for line in read_file(file):
+                if re.search('\s*COORD\s*0\s*NUCLEAR\s*COORDINATES', line):
+                    found = True
+                if found and 'TOTAL CPU TIME' in line:
+                    break
+                if found:
+                    if re.search(reg, line):
+                        _, sym, x, y, z = line.split()
+                        x, y, z = map(float, (x, y, z))
+                        x, y, z = map(lambda num: num * bohr_to_angs, (x, y, z))
+                        atnum = get_atnum(sym)
+                        atoms.append([sym, atnum, x, y, z])
 
-        for index, atom in enumerate(atoms, 1):
-            sym, atnum, x, y, z = atom
-            angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
-            x, y, z = map(lambda num : num * angs_to_bohr, (x, y, z))
-            bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+            for index, atom in enumerate(atoms, 1):
+                sym, atnum, x, y, z = atom
+                angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+                x, y, z = map(lambda num : num * angs_to_bohr, (x, y, z))
+                bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+
+        else:
+            found = False
+            # looking for this: 
+            #C           6.0    -2.9137945280       -0.5434462158        0.0751487230
+            reg = '^\s*[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){4}$'
+            atoms = []
+            for line in read_file(file):
+                if 'ATOM   CHARGE       X              Y              Z' in line:
+                    found = True
+                if found and 'TOTAL CPU TIME' in line:
+                    break
+                if found:
+                    if re.search(reg, line):
+                        sym, atnum, x, y, z = line.split()
+                        x, y, z = map(float, (x, y, z))
+                        atnum = get_atnum(sym)
+                        atoms.append([sym, atnum, x, y, z])
+
+            for index, atom in enumerate(atoms, 1):
+                sym, atnum, x, y, z = atom
+                angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+                x, y, z = map(lambda num : num * angs_to_bohr, (x, y, z))
+                bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
 
     else:
         found = False
@@ -224,7 +244,6 @@ def find_init_coords(file):
         reg = '^\s*[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){4}$'
         atoms = []
         for line in read_file(file):
-            print(line)
             if 'CHARGE         X                   Y                   Z' in line:
                 found = True
             if found and line is '\n':
@@ -245,6 +264,61 @@ def find_init_coords(file):
             bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
 
     return bohrs, angs
+
+def find_geometries(file):
+    """
+    Parses GAMESS optimisations for geometries after every iteration. Returns a list of lists.
+    """
+    geoms = []
+    atom_regex = '^\s*[A-z]+(\s*-?[0-9]+.[0-9]+){4}'
+    found = False
+    iteration = []
+    scfs = []
+    max_forces = []
+    rms_forces = []
+    for line in read_file(file):
+        if 'EQUILIBRIUM GEOMETRY' in line:
+            break # prints out coords of last iteration, not needed twice
+        if 'YOU SHOULD RESTART' in line:
+            break # prints out coords of last iteration, not needed twice
+        if 'COORDINATES OF ALL ATOMS ARE' in line:
+            found = True
+            # reset atoms
+        if found:
+            if re.search(atom_regex, line):
+                sym, atnum, x, y, z = line.split()
+                x, y, z = map(float, (x, y, z))
+                iteration.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+        if 'STEP CPU TIME' in line: #collected all atoms for that iteration
+            found = False
+        if not found: # finished that iteration
+            if len(iteration) > 0:
+                iteration = [f"  {len(iteration)}", ""] + iteration # add length and blank line
+                for item in iteration:
+                    geoms.append(item)
+                iteration = []
+        if 'NSERCH:' in line:
+            line = line.split() 
+            for ind, val in enumerate(line):
+                if 'E=' in val:
+                    scfs.append(line[ind + 1])
+                elif 'MAX=' in val:
+                    max_forces.append(line[ind + 1])
+                elif 'R.M.S.=' in val:
+                    rms_forces.append(line[ind + 1])
+    
+    options = {'energy': scfs,
+               'max-force': max_forces,
+               'rms-force': rms_forces}
+    
+    conv = []
+    for k, v in options.items():
+        conv.append(k)
+        for val in v:
+            conv.append(f"   {val}")
+
+    return geoms, conv
+
 
 def freq_data(file):
     """
@@ -414,18 +488,26 @@ def get_vibrations(num_atoms, log):
     vibs = pretty_print_vibs(tidy)
     return vibs, wavenumbers, intensities
 
-def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, wavenumbers = None, intensities = None, vibrations = None): 
+def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, wavenumbers = None,
+intensities = None, vibrations = None, geometries = None, geom_convergence = None): 
     """
     Returns a dictionary whereby the keys are used by molden as a delimeter to define a new section.
     Values are lists of lines to write to the file, with no newline characters.
+    Only necessary parameters are returned
     """
+    options = {}
+    options['Atoms'] = init_coords_angs
+    options['GEOMETRIES'] = geometries
+    options['GEOCONV'] = geom_convergence
+    options['FREQ'] = wavenumbers
+    options['INT'] = intensities
+    options['FR-COORD'] = init_coords_bohr
+    options['FR-NORM-COORD'] = vibrations
 
     ret = {}
-    ret['Atoms'] = init_coords_angs
-    ret['FREQ'] = wavenumbers
-    ret['INT'] = intensities
-    ret['FR-COORD'] = init_coords_bohr
-    ret['FR-NORM-COORD'] = vibrations
+    for k, v in options.items():
+        if v is not None:
+            ret[k] = v
     return ret
 
 def write_file(data, filename):
@@ -443,8 +525,20 @@ def write_file(data, filename):
         for line in lst:
             f.write(line)
 
-def main(log, new_file):
+def optimisation_params(file):
+    """Finds parameters relevant to a GAMESS optimisation"""
+    bohrs, angs = find_init_coords(file)
+    num_atoms = len(angs)
+    geometries, geom_conv = find_geometries(file)
+    data = collect_into_dict(init_coords_bohr = bohrs, 
+                             init_coords_angs = angs, 
+                             geometries = geometries,
+                             geom_convergence = geom_conv)
+    return data
 
+
+def hessian_params(file):
+    """Finds parameters relevant to a GAMESS hessian calculation"""
     bohrs, angs = find_init_coords(log)
     num_atoms = len(angs)
     vibs, waves, ints = get_vibrations(num_atoms, log)
@@ -453,7 +547,18 @@ def main(log, new_file):
                              wavenumbers = waves, 
                              intensities = ints,
                              vibrations = vibs)
-    write_file(data, new_file)
+    return data
+
+def main(log, new_file):
+
+    calc = calc_type(log)
+    print(calc)
+    if calc == "opt":
+        data = optimisation_params(log)
+        write_file(data, new_file)
+    elif calc == "hessian":
+        data = hessian_params(log)
+        write_file(data, new_file)
 
  
 main(logfile, newfile)
