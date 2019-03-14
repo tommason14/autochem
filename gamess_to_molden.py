@@ -43,7 +43,7 @@ def find_init_coords(file):
     Output is different depending on whether FMO theory is used,
     and different methods for finding initial coordinates are required.
     """
-    get_atnum = {}
+    get_atnum = {} # dict lookup faster than func. call
     get_atnum['Xx'] =   0
     get_atnum[ 'H'] =   1
     get_atnum['He'] =   2

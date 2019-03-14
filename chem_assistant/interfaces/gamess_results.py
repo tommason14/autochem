@@ -47,11 +47,16 @@ store the iteration number.
     __str__ = __repr__
 
     def completed(self):
-        found = False
-        for line in self.read():
-            if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
-                found = True
-        return found
+        return True
+        # found = False
+        # for line in self.read():
+        #     if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
+        #         found = True
+        # return found
+        
+        ####NEEDS WORK####
+        # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
+        # ARE NOT RETURNED, EVEN IF THERE
 
     # call like this:
     # if not self.completed():
@@ -109,7 +114,7 @@ store the iteration number.
         found_equil = False
         found_some = False
         par_dir = []
-        print(self.log)
+        # print(self.log)
         for part in self.path.split('/'):
             if part not in ('opt', 'spec', 'hess'):
                 par_dir.append(part)
@@ -154,35 +159,35 @@ store the iteration number.
                 if not os.path.exists(rerun_dir): 
                 # if already exists, then simulation already re-run- skip this log, move to next
                     os.mkdir(rerun_dir)
-                    write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
-                    basename, ext = self.file.split('.')
-                    inp = basename + '.inp'
-                    job = basename + '.job'
-                    orig_inp = os.path.join(self.path, inp) # path of the log file
-                    orig_job = os.path.join(self.path, job)
-                    rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
-                    rerun_job = os.path.join(rerun_dir, 'rerun.job')
-                    print(orig_inp)                    
-                    print(orig_job) 
-                    print(rerun_inp)
-                    print(rerun_job)
-
-                    os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
-                    # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
-                    # parse original inp and add new coords
-                    rerun_inp_file = []
-                    with open(orig_inp, "r") as f:
-                        for line in f.readlines():
-                            if re.search(regex, line):
-                                break
-                            else:
-                                rerun_inp_file.append(line)
-                    for line in rerun: #add coords
-                        rerun_inp_file.append(line + '\n') 
-                    rerun_inp_file.append(' $END')
-                    with open(rerun_inp, "w") as f:
-                        for line in rerun_inp_file:
-                            f.write(line)
+                write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                    # basename, ext = self.file.split('.')
+                    # inp = basename + '.inp'
+                    # job = basename + '.job'
+                    # orig_inp = os.path.join(self.path, inp) # path of the log file
+                    # orig_job = os.path.join(self.path, job)
+                    # rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
+                    # rerun_job = os.path.join(rerun_dir, 'rerun.job')
+                    # print(orig_inp)                    
+                    # print(orig_job) 
+                    # print(rerun_inp)
+                    # print(rerun_job)
+                    #
+                    # os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
+                    # # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
+                    # # parse original inp and add new coords
+                    # rerun_inp_file = []
+                    # with open(orig_inp, "r") as f:
+                    #     for line in f.readlines():
+                    #         if re.search(regex, line):
+                    #             break
+                    #         else:
+                    #             rerun_inp_file.append(line)
+                    # for line in rerun: #add coords
+                    #     rerun_inp_file.append(line + '\n') 
+                    # rerun_inp_file.append(' $END')
+                    # with open(rerun_inp, "w") as f:
+                    #     for line in rerun_inp_file:
+                    #         f.write(line)
             else:
                 print('No iterations were cycled through!')   
     

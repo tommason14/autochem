@@ -186,16 +186,15 @@ def get_type(filepath):
     Read in file, determine calculation type
     """
     calc = ''
-    with open(filepath, "r") as f:
-        for line in f.readlines():
-            if 'GAMESS' in line:
-                calc = 'gamess'
-                break
-            elif 'PSI4' in line:
-                calc = 'psi'
-                break
-            elif 'Gaussian' in line:
-                calc = 'gaussian'
+    for line in read_file(filepath):
+        if 'GAMESS' in line:
+            calc = 'gamess'
+            break
+        elif 'PSI4' in line:
+            calc = 'psi'
+            break
+        elif 'Gaussian' in line:
+            calc = 'gaussian'
     return calc
 
 def parse_results(dir):
