@@ -257,7 +257,7 @@ def find_init_coords(file):
 
     return bohrs, angs
 
-def find_geometries(file):
+def find_geometries(file, num_atoms):
     """
     Parses GAMESS optimisations for geometries after every iteration. Returns a list of lists.
     """
@@ -285,7 +285,7 @@ def find_geometries(file):
             found = False
         if not found: # finished that iteration
             if len(iteration) > 0:
-                iteration = [f"  {len(iteration)}", ""] + iteration # add length and blank line
+                iteration = [f"  {len(iteration)}", ""] + iteration
                 for item in iteration:
                     geoms.append(item)
                 iteration = []
@@ -308,6 +308,18 @@ def find_geometries(file):
         conv.append(k)
         for val in v:
             conv.append(f"   {val}")
+       
+    
+    # trim output so the scf convergence doesn't show a spike
+    # to 0 (happends if len(scfs) is not equal to geoms
+    # - depends on output from GAMESS, sometimes prints
+    # extra coords
+
+    num_iterations = int(len(geoms) / (num_atoms + 2)) 
+    # + 2 because add num_atoms and blank line
+    # for every iteration
+    if num_iterations > len(scfs):
+        geoms = geoms[:len(scfs) * (num_atoms + 2)] # trim to fit
 
     return geoms, conv
 
@@ -521,7 +533,7 @@ def optimisation_params(file):
     """Finds parameters relevant to a GAMESS optimisation"""
     bohrs, angs = find_init_coords(file)
     num_atoms = len(angs)
-    geometries, geom_conv = find_geometries(file)
+    geometries, geom_conv = find_geometries(file, num_atoms)
     data = collect_into_dict(init_coords_bohr = bohrs, 
                              init_coords_angs = angs, 
                              geometries = geometries,
