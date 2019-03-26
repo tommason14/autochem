@@ -3,11 +3,11 @@
 
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
-
+import re
 
 __all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
-'assign_molecules_from_dict_keys']
+'assign_molecules_from_dict_keys', 'search_dict_recursively']
 
 def read_file(file):
     with open(file, "r") as f:
@@ -59,8 +59,9 @@ def get_files(directory, ext):
     fileLst = []
     for path, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith(ext) and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
-                fileLst.append(os.path.join(path, file))
+            for e in ext:
+                if re.search(e, file) and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
+                    fileLst.append(os.path.join(path, file))
     return fileLst
 
 def module_exists(module_name):
