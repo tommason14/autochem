@@ -16,7 +16,7 @@ def read_file(file):
     
     with open(file, "r") as f:
         try:
-            for line in f.readlines():
+            for line in f:
                 yield line
         except UnicodeDecodeError:
             pass
