@@ -285,11 +285,10 @@ def find_geometries(file, num_atoms):
             found = False
         if not found: # finished that iteration
             if len(iteration) > 0:
-                iteration = [f"  {len(iteration)}", ""] + iteration
+                iteration = [f"  {len(iteration)}", ""] + iteration # add length and blank line
                 for item in iteration:
                     geoms.append(item)
                 iteration = []
-        # HF/DFT
         if 'NSERCH:' in line:
             line = line.split() 
             for ind, val in enumerate(line):
@@ -299,51 +298,7 @@ def find_geometries(file, num_atoms):
                     max_forces.append(line[ind + 1])
                 elif 'R.M.S.=' in val:
                     rms_forces.append(line[ind + 1])
-
-        # CORRECT HERE
-        # # MP2
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'E(MP2)' in line:
-        #     scfs.append(line.split()[2])
-        #
-        # # FMO-SRS
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'E corr SCS' in line:
-        #     scfs.append(line.split[-1])
-        #
-        # # FMO-MP2
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'Ecorr' in line:
-        #     scfs.append(line.split[-1])
-        #
-        # # Solvated MP2- apparently just take E(MP2)?    
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-
-
+    
     options = {'energy': scfs,
                'max-force': max_forces,
                'rms-force': rms_forces}
@@ -368,37 +323,6 @@ def find_geometries(file, num_atoms):
 
     return geoms, conv
 
-def find_forces(file, num_atoms):
-    """
-    Parses GAMESS optimisations for forces of each atom at each timestep.
-    Example output:
-           ATOM     ZNUC       DE/DX         DE/DY         DE/DZ
-    --------------------------------------------------------------
-       1  O            8.0    -0.0020842     0.0020370     0.0021303
-       2  H            1.0     0.0056908     0.0012532     0.0013106
-       3  H            1.0    -0.0036066    -0.0032902    -0.0034410 
-    """
-    regex = "^\s+[0-9]+\s+[A-z]+(\s+-?[0-9]+\.[0-9]+){4}$"
-    total = []
-    iteration = []
-    found = False
-    point = 0
-    for line in read_file(file):
-        if 'DE/DX' in line:
-            found = True
-        if found:
-            if re.search(regex, line):
-                *_, dx, dy, dz = line.split()    
-                dx, dy, dz = map(float, (dx, dy, dz))        
-                iteration.append(f"{dx:>12.6f} {dy:>12.6f} {dz:>12.6f}")
-        if line is '\n':
-            found = False
-            if len(iteration) > 0:
-                point += 1
-                iteration = [f"point   {point}", f"   {num_atoms}"] + iteration
-                total += iteration
-                iteration = []
-    return total
 
 def freq_data(file):
     """
@@ -569,7 +493,7 @@ def get_vibrations(num_atoms, log):
     return vibs, wavenumbers, intensities
 
 def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, wavenumbers = None,
-intensities = None, vibrations = None, geometries = None, geom_convergence = None, forces = None): 
+intensities = None, vibrations = None, geometries = None, geom_convergence = None): 
     """
     Returns a dictionary whereby the keys are used by molden as a delimeter to define a new section.
     Values are lists of lines to write to the file, with no newline characters.
@@ -583,7 +507,6 @@ intensities = None, vibrations = None, geometries = None, geom_convergence = Non
     options['INT'] = intensities
     options['FR-COORD'] = init_coords_bohr
     options['FR-NORM-COORD'] = vibrations
-    options['FORCES'] = forces
 
     ret = {}
     for k, v in options.items():
@@ -610,13 +533,11 @@ def optimisation_params(file):
     """Finds parameters relevant to a GAMESS optimisation"""
     bohrs, angs = find_init_coords(file)
     num_atoms = len(angs)
-    forces = find_forces(file, num_atoms)
     geometries, geom_conv = find_geometries(file, num_atoms)
     data = collect_into_dict(init_coords_bohr = bohrs, 
                              init_coords_angs = angs, 
                              geometries = geometries,
-                             geom_convergence = geom_conv,
-                             forces = forces)
+                             geom_convergence = geom_conv)
     return data
 
 
