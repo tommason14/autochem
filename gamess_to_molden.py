@@ -289,7 +289,8 @@ def find_geometries(file, num_atoms):
                 for item in iteration:
                     geoms.append(item)
                 iteration = []
-        # HF/DFT
+
+        # pull energies
         if 'NSERCH:' in line:
             line = line.split() 
             for ind, val in enumerate(line):
@@ -299,50 +300,6 @@ def find_geometries(file, num_atoms):
                     max_forces.append(line[ind + 1])
                 elif 'R.M.S.=' in val:
                     rms_forces.append(line[ind + 1])
-
-        # CORRECT HERE
-        # # MP2
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'E(MP2)' in line:
-        #     scfs.append(line.split()[2])
-        #
-        # # FMO-SRS
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'E corr SCS' in line:
-        #     scfs.append(line.split[-1])
-        #
-        # # FMO-MP2
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-        # if 'Ecorr' in line:
-        #     scfs.append(line.split[-1])
-        #
-        # # Solvated MP2- apparently just take E(MP2)?    
-        # if 'NSERCH:' in line:
-        #     line = line.split() 
-        #     for ind, val in enumerate(line):
-        #         if 'MAX=' in val:
-        #             max_forces.append(line[ind + 1])
-        #         elif 'R.M.S.=' in val:
-        #             rms_forces.append(line[ind + 1])
-
 
     options = {'energy': scfs,
                'max-force': max_forces,
