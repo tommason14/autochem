@@ -16,7 +16,8 @@ class Supercomp:
         cases = {'565': 'rjn',
                  'scratch': 'mgs',
                  'nfs': 'gaia',
-                 'massive': 'mas'
+                 'massive': 'mas',
+                 'stampede': 'stm'
                  }
         for key in cases:
             if key in cwd:
