@@ -24,7 +24,7 @@ class Supercomp:
                 self.sc = cases[key]
                 break
             else:
-                self.sc = 'rjn' #default to raijin
+                self.sc = 'stm' #default to raijin
 
     def __repr__(self):
         return str(self.sc)
