@@ -92,5 +92,4 @@ class PsiResults(Results):
         
         MP2 = HF + c_os * opp + c_ss * same
         
-        return self.file, self.path, basis, HF, MP2
-
+        return self.file, self.path, basis, HF, same, opp

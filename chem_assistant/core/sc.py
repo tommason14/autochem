@@ -17,7 +17,7 @@ class Supercomp:
                  'scratch': 'mgs',
                  'nfs': 'gaia',
                  'massive': 'mas',
-                 'stampede': 'stm'
+                 '06233': 'stm'
                  }
         for key in cases:
             if key in cwd:
