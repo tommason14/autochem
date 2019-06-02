@@ -16,14 +16,15 @@ class Supercomp:
         cases = {'565': 'rjn',
                  'scratch': 'mgs',
                  'nfs': 'gaia',
-                 'massive': 'mas'
+                 'massive': 'mas',
+                 '06233': 'stm'
                  }
         for key in cases:
             if key in cwd:
                 self.sc = cases[key]
                 break
             else:
-                self.sc = 'rjn' #default to raijin
+                self.sc = 'stm' #default to raijin
 
     def __repr__(self):
         return str(self.sc)
