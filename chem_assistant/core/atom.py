@@ -23,10 +23,10 @@ class Atom:
     def __init__(self, symbol = None, atnum = 0, coords = None, mol = None, bonds = None):
         if symbol is not None:
             self.symbol = symbol
-            self.atnum = PT.get_atnum(self.symbol)
+            self.atnum = PT.get_atnum(self)
         else:
             self.atnum = atnum
-            self.symbol = PT.get_symbol(self.atnum)
+            self.symbol = PT.get_symbol(self)
 
         self.mol = mol
         self.bonds = bonds or []

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 __all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class', 'search_for_coords', 'get_h_bonds',
 'create_extra_jobs']
 
@@ -27,7 +24,7 @@ Create single points for completed geom_opts? [y/n]
 """
 from ..core.molecule import Molecule
 from ..core.thermo import thermo_data
-from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested)
+from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested, responsive_table)
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 from ..interfaces.gaussian_results import GaussianResults
@@ -71,7 +68,7 @@ def create_extra_jobs(dir):
 
     def add_to_meta(scomp, complexes):
         with open('meta.py', "r") as f:
-            lines = [line for line in f.readlines()]
+            lines = [line for line in f]
         lines.insert(-1, f"s.supercomp = '{scomp}'\n")
         if complexes:
             lines[-1] = lines[-1][:-1] + ', is_complex = True)'
@@ -80,7 +77,7 @@ def create_extra_jobs(dir):
                 writer.write(line)
 
     def copy_meta(file_to_copy, scomp):
-        """Give the path anf filename of meta.py file to copy over to any directory containing an `equil.xyz` file"""
+        """Give the path and filename of meta.py file to copy over to any directory containing an `equil.xyz` file"""
         complex = is_complex()
         parent = os.getcwd()
         for path, _, files in os.walk('.'):
@@ -204,14 +201,16 @@ def parse_results(dir):
     output = []
     for log in get_files(dir, ('.out', '.log')):
         calc = get_results_class(log)
+        filetype = get_type(log)
         try:
             if calc.completed(): #add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
-                    print(calc.log)
+                    print(f"Searching through {calc.log}")
                     data = calc.get_data()
-                    output.append(data)
-            else:
-                print(f'{calc.log}: Incomplete')
+                    output.append({'data': data, 'type': filetype})
+            # else:
+                # print(f'{calc.log}: Incomplete') # don't care about knowing which files are
+                # incomplete 
         except AttributeError: # if log/out files are not logs of calculations
             continue
     return output    
@@ -221,15 +220,37 @@ def results_table(dir):
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
     output = parse_results(dir)
-    print(f"{'File':^30s} | {'Path':^60s} | {'Basis':^8s} | {'HF/DFT':^15s} | {'MP2/SRS':^15s}")
-    print('-'*140)
-    for res in output:
-        # need to convert empty HF to numeric
-        f, p, b, hf, mp2 = res
-        if hf == '':
-            hf = 0
-        print(f"{f:^30s} | {p:^60s} | {b:^8s} | {hf:^15.6f} | {mp2:^15.6f}")
-    name = write_csv_from_nested(output, col_names = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS'), return_name = True)
+    table_data = {'File': [],
+                  'Path': [],
+                  'Basis': [],
+                  'HF/DFT': [],
+                  'MP2/SRS': [],
+                  'MP2_opp': [],
+                  'MP2_same':[]}
+    
+    def add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same):
+        table_data['File'].append(f)
+        table_data['Path'].append(p)
+        table_data['Basis'].append(b)
+        table_data['HF/DFT'].append(hf)
+        table_data['MP2/SRS'].append(mp2)
+        table_data['MP2_opp'].append(mp2_opp)
+        table_data['MP2_same'].append(mp2_same)
+        return table_data
+   
+    for result in output:
+        if result['type'] == 'psi':
+            f, p, b, hf, mp2_opp, mp2_same = result['data']
+            mp2 = 'NA'
+            table_data = add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
+        else:
+            f, p, b, hf, mp2 = result['data']
+            mp2_opp = 'NA'
+            mp2_same = 'NA'
+            table_data = add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
+
+    responsive_table(table_data, strings = [1,2,3]) 
+    name = write_csv_from_dict(table_data)
     return name # for use in other calculations (chem_assist -r uses this name)
 
 
@@ -285,24 +306,22 @@ def thermochemistry(dir):
 
 def get_h_bonds(dir):
     """
-    Searches the current and any subdirectories for xyz files, then attempts to split them into fragments, reporting any intermolecular bonding involving hydrogen-bonding atoms less than 2 Å apart. Prints to screen, with then option of saving to csv.
+    Searches the current directory for xyz files, then attempts to split them into fragments, reporting any intermolecular bonding involving hydrogen-bonding atoms less than 2 Å apart. Prints to screen, with then option of saving to csv.
 
     TODO: Include the atoms bonded to the atom undergoing hydrogen-bonding. Two-fold benefit; can then disregard interactions involving alkyl chains, and can include angle information- internal angles of hydrogen bonds (connected-donor---acceptor) must be <= 45°
     """
+    print('\n', ' ' * 15, 'HYDROGEN BOND DISTANCES\n')
     output = []
-    for file in get_files(dir, ("xyz")):
+    for file in get_files(dir, ['xyz']):
         path, f = os.path.split(file)
-        # if not any((re.search('cation-?_?[0-9]*', f), re.search('anion-?_?[0-9]*', f), re.search('neutral-?_?[0-9]*', f))) and not any((f.split('_')[0] in Molecule.Anions, f.split('_')[0] in Molecule.Cations, f.split('_')[0] in Molecule.Neutrals)) and 'frags' not in path:
-            # no frags in path of xyz- and no files named, cation_1.xyz, cation-1.xyz, anion, neutral
-            # check for names in Anions, Cations, Neutrals- only want files with multiple molecules
-            
+        print('-' * 60)    
         print(file + '\n')
         mol = Molecule(using = file)
-        mol.nfrags = int(input('Number of fragments: '))
         mol.separate()
         res = mol.find_h_bonds()
+        print()
         for i in res:
             i.insert(0, f)
             i.insert(1, path)
         output += res
-    write_csv_from_nested(output, col_names=('File', 'Path', 'Molecules', 'Length (Å)'))
+    write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)'))

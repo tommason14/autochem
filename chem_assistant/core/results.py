@@ -14,7 +14,7 @@ class Results:
     def read(self):
         """Memory-efficient reading of large log files, using a generator returning lines as required"""
         with open(self.log, "r") as f:
-            for line in f.readlines():
+            for line in f:
                 yield line
 
     def get_error(self):

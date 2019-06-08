@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+__all__ = ['make_files_from_meta']
 
 """
 File: make_files_meta.py 
@@ -8,8 +7,6 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Make inputs using a meta.py file in a directory with xyz files 
 """
-
-__all__ = ['make_files_from_meta']
 
 import os
 
