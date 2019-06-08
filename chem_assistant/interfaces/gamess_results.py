@@ -1,4 +1,4 @@
-from ..core.utils import write_xyz
+from ..core.utils import write_xyz, eof
 from ..core.results import Results
 
 import re
@@ -47,12 +47,11 @@ store the iteration number.
     __str__ = __repr__
 
     def completed(self):
-        return True
-        # found = False
-        # for line in self.read():
-        #     if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
-        #         found = True
-        # return found
+        found = False
+        for line in eof(self.log, 0.1):
+            if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
+                found = True
+        return found
         
         ####NEEDS WORK####
         # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
@@ -206,6 +205,7 @@ store the iteration number.
     #                              #
     ################################
 
+    
     def calc_type(self):
         fmo = False
         mp2 = False
@@ -228,17 +228,20 @@ store the iteration number.
         basis = ''
         HF = ''
         MP2 = ''
-        # with open(filepath, "r") as f:
-        #     for line in f.readlines():
+        # for line in self.read():
         for line in self.read():
-            if 'Euncorr HF' in line:
-                HF = float(line.split()[-1])
             if 'INPUT CARD> $BASIS' in line:
                 basis = line.split()[-2].split('=')[1]
+
+        for line in eof(self.log, 0.2): # last values only
+            if 'Euncorr HF' in line:
+                HF = float(line.split()[-1])
             if f'E corr {mp2_type}' in line:
                 MP2 = float(line.split()[-1])
+
         return basis, HF, MP2
 
+    
     def get_data(self):
         """Returns the last occurrence of FMO energies (FMO3 given if available, else FMO2), SRS and HF energies"""
         fmo, mp2, scs = self.calc_type()
@@ -251,10 +254,8 @@ store the iteration number.
             basis = ''
             HF = ''
             MP2 = ''
-            
-            # with open(filepath, "r") as f:
-            #     for line in f.readlines():
-            for line in self.read():
+
+            for line in eof(self.log, 0,2):
                 if 'INPUT CARD> $BASIS' in line:
                     basis = line.split()[-2].split('=')[1]
                 if 'TOTAL ENERGY =' in line:

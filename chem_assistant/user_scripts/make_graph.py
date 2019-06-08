@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 __all__ = ['plot_opt']
 
 from ..interfaces.gamess_results import GamessResults

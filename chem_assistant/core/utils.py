@@ -1,18 +1,30 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-from .atom import Atom
-from .periodic_table import PeriodicTable as PT
-import re
-
 __all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
 'assign_molecules_from_dict_keys', 'search_dict_recursively']
 
+from .atom import Atom
+from .periodic_table import PeriodicTable as PT
+import re
+import time
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        if 'log_time' in kw:
+            name = kw.get('log_name', method.__name__.upper())
+            kw['log_time'][name] = int((te - ts) * 1000)
+        else:
+            print('%r  %2.2f ms' % \
+                  (method.__name__, (te - ts) * 1000))
+        return result
+    return timed
+
 def read_file(file):
     with open(file, "r") as f:
         try:
-            for line in f.readlines():
+            for line in f:
                 yield line
         except UnicodeDecodeError:
             pass
@@ -82,7 +94,8 @@ def sort_elements(lst):
     els = []
     elements = set([atom.symbol for atom in lst])
     for i in elements:
-        els.append((i, float(PT.get_atnum(i))))
+        atom = Atom(i)
+        els.append((i, float(PT.get_atnum(atom))))
     sorted_els = sorted(els, key = lambda val: val[1])
     return sorted_els
 
@@ -181,7 +194,7 @@ def check_user_input(user_input, condition, if_error):
 
 def sort_data(data):
     """ 
-    Sorts the data into alphanumerical order
+    Sorts a dictionary into alphanumerical order based on key
     """
     collapsed = [[k, v] for k, v in data.items()]
     sorted_data = sorted(collapsed, key = lambda kv: kv[0])
@@ -216,3 +229,72 @@ def assign_molecules_from_dict_keys(data):
         data[key]['cation'] = cation
         data[key]['anion'] = anion
     return data
+
+
+def responsive_table(data, strings):
+    """
+    Returns a table that is reponsive in size to every column.
+    Requires a dictionary to be passed in, with the keys referring to
+    the headers of the table.
+    Also pass in the number of each column that should be a string, starting
+    from 1.
+
+    Usage:
+        >>> d = {'col1': [1,2,3,4],
+                 'col2': ['One', 'Two', 'Three', 'Four']}
+        >>> responsive_table(d, strings = [2])
+    """
+    num_cols = len(data.keys())
+    content = zip(*[data[key] for key in data.keys()]) # dict values into list of lists
+    # unknown number of arguments
+    max_sizes = {}
+    for k, v in data.items():
+        max_sizes[k] = len(max([str(val) for val in v], key = len))
+   
+    # create the thing to pass into .format()- can't have brackets like zip gives
+    formatting = [] 
+    index = 0
+    all_sizes = []
+    for val in zip(data.keys(), max_sizes.values()):
+        entry, size = val
+        if size < 10 or index + 1 not in strings:
+            size = 10
+        formatting.append(entry)
+        formatting.append(size)
+        all_sizes.append(size)
+        index += 1
+    line_length = sum(all_sizes) + num_cols * 3 - 1 # spaces in header
+    print('+' + '-' * line_length + '+')
+    output_string = '|' + " {:^{}} |" * len(data.keys())
+    print(output_string.format(*formatting))
+    print('+' + '-' * line_length + '+')
+    for line in content:
+        formatting = []   
+        for val in zip(line, all_sizes):
+            entry, size = val
+            if not isinstance(entry, str):
+                size = '10.5f'
+            formatting.append(entry)
+            formatting.append(size)
+        print(output_string.format(*formatting))
+    print('+' + '-' * line_length + '+')
+
+
+def eof(file, percFile):
+    # OPEN IN BYTES
+    with open(file, "rb") as f:
+        f.seek(0, 2)                      # Seek @ EOF
+        fsize = f.tell()                  # Get size
+        Dsize = int(percFile * fsize)
+        f.seek (max (fsize-Dsize, 0), 0)  # Set pos @ last n chars lines
+        lines = f.readlines()             # Read to end
+
+    # RETURN DECODED LINES
+    for i in range(len(lines)):
+        try:
+            lines[i] = lines[i].decode("utf-8")
+        except:
+            lines[i] = "CORRUPTLINE"
+            print("eof function passed a corrupt line in file ", File)
+        # FOR LETTER IN SYMBOL
+    return lines
