@@ -1,6 +1,6 @@
 __all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
-'assign_molecules_from_dict_keys', 'search_dict_recursively']
+'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof']
 
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
@@ -255,10 +255,11 @@ def responsive_table(data, strings):
     formatting = [] 
     index = 0
     all_sizes = []
+    colsize = 13
     for val in zip(data.keys(), max_sizes.values()):
         entry, size = val
-        if size < 10 or index + 1 not in strings:
-            size = 10
+        if size < colsize or index + 1 not in strings:
+            size = colsize
         formatting.append(entry)
         formatting.append(size)
         all_sizes.append(size)
@@ -273,7 +274,7 @@ def responsive_table(data, strings):
         for val in zip(line, all_sizes):
             entry, size = val
             if not isinstance(entry, str):
-                size = '10.5f'
+                size = f'{colsize}.5f'
             formatting.append(entry)
             formatting.append(size)
         print(output_string.format(*formatting))

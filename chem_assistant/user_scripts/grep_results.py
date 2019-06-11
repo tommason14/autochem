@@ -205,6 +205,7 @@ def parse_results(dir):
         try:
             if calc.completed(): #add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
+                    print(f"Searching through {calc.log}")
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
             # else:
