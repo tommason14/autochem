@@ -643,7 +643,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
             # all combinations of cations/anions/radicals/neutrals
             combinations = list(itertools.combinations_with_replacement(db.keys(), 2))              
-
             self.hbond_data_to_export = []            
 
             for bond in h_bonded:
@@ -652,6 +651,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 two_name = self.fragments[two.mol]['name']
                 # to form a h-bond, must contain two of the h-bonding atoms in that molecule (O-H bonds, N-H bonds)
  
+                # prints twice...
                 for comb in combinations:
                     group1, group2 = comb
 
@@ -663,7 +663,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                                            self.fragments[two.mol]['name'], 
                                            two.symbol, 
                                            dist])
-
             
 
         def remove_duplicate_bonds(self):
