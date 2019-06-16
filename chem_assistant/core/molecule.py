@@ -88,8 +88,7 @@ class Molecule:
             self.coords = atoms
         
         for index, atom in enumerate(self.coords):
-            atom.index = index + 1 #so first atom has index 1
-            atom.pos_in_list = index + 1
+            atom.index = index + 1
 
         self.nfrags = nfrags
 
@@ -593,120 +592,157 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             mol.sort(key = lambda atom: atom.index)
 
     def find_h_bonds(self):
+        """
+        Gives hydrogen bonding data back to the user. Checks for suitable
+        connected atoms and bond lengths of less than 2 Å, and bond angles of
+        45° either side of linear.
+        """
 
-        def find_partners(self):
+        def find_bonds(self):
+
+
+            def valid_atoms(atom1, atom2):
+                """
+                Checks if a bond is formed between a pair of atoms of the
+                correct type. This is achieved by checking the atoms
+                that the bonds are connected to, not involved in the bond.
+                For example, if an alkyl chain is close to an anion, this
+                function ignores any of those interactions.
+                """
+                # remove alkyl proton interactions
+                # need the atom.symbol == line, 
+                # otherwise c-o --- h-o hydrogen
+                # bonds will fail (as c is not in 
+                # h-bonders)
+                h_bonders = ['O', 'F', 'H', 'N']
+
+                for atom in (atom1, atom2):
+                    if atom.symbol not in h_bonders:
+                        return False
+                    if atom.symbol == 'H':
+                        for a in atom.connected_atoms:
+                            if a.symbol not in h_bonders:
+                                return False
+                return True
+
+            def within_hbond_distance(atom1, atom2):
+                """
+                Checks that atoms are within hydrogen-bonding distances, set to
+                2 Å.
+                """
+                H_BOND_DIST = 2.0
+
+                return atom1.distance_to(atom2) < H_BOND_DIST
+
+            def bond_angle(atom1, atom2):
+                """
+                Returns the angle between two atoms.
+
+                 A
+                 \ 
+                   B --- C
+
+                Checks angle ∠ABC, when A is atom1, B is atom2 and C is the
+                connecting atom to atom2. There will probably be only one
+                connecting atom, but if there is more, only considering the
+                first in the list.
+                """
+                # connected atoms is a set- can't find first atom by index...
+                connected_to_atom2 = None
+                for index, atom in enumerate(atom2.connected_atoms):
+                    if index == 0:
+                        connected_to_atom2 = atom
+
+                return atom2.angle_between(atom1.coords,connected_to_atom2.coords)
+                
+
+            def within_angle_tolerance(atom1, atom2):
+                """
+                Checks that a hydrogen bond is formed at a suitable angle, 45°
+                either side of linear.
+                """
+                return 225 > bond_angle(atom1, atom2) > 145
+
+
+            def valid_bond(atom1, atom2):
+                """
+                Checks that two atoms forms a valid hydrogen bond.
+                """
+                if within_hbond_distance(atom1, atom2) and \
+                within_angle_tolerance(atom1, atom2) and \
+                valid_atoms(atom1, atom2):
+                    return True
+                return False
 
             self.assign_neighbours()
             frag_list = [frag['atoms'] for frag in self.fragments.values()]
 
-            h_bonders = ['O', 'F', 'H', 'N']
-            H_BOND_DIST = 2.0
-            
-            # in one case a methyl hydrogen was 1.998Å away from O;
-            # need to correct for that! Look at connecting atoms
             counted = []
             h_bonded = []
             for i, mol in enumerate(frag_list):
                 for j, mol2 in enumerate(frag_list):
                     if i != j:
-                        for atom1 in mol: # for every atom in first frag
-                            for atom2 in mol2: # for every atom in second frag
-                                if atom1.distance_to(atom2) < H_BOND_DIST:
-                                    pairs = [(atom1.pos_in_list, atom1.mol), (atom2.pos_in_list, atom2.mol)]
-                                    pairs.sort() #sort by pos_in_list first- doesn't matter how it sorts, only that it is applied to every atom in list
+                        for atom1 in mol: 
+                            for atom2 in mol2: 
+                                if valid_bond(atom1, atom2):
+                                    pair = [atom1.index, atom2.index]
+                                    pair.sort() 
+                                    if pair not in counted:
+                                        dist = atom1.distance_to(atom2)
+                                        angle = bond_angle(atom1, atom2)
+                                        h_bonded.append([atom1, atom2, dist, angle])
+                                        counted.append(pair) 
 
+            return h_bonded
 
-                                    # remove alkyl proton interactions
-
-                                    if atom1.symbol == 'H' and 'C' in [atom.symbol for atom in atom1.connected_atoms]:
-                                        pass
-                                    if atom2.symbol == 'H' and 'C' in [atom.symbol for atom in atom2.connected_atoms]:
-                                        pass
-
-                                    if atom1.symbol and atom2.symbol in h_bonders and pairs not in counted:
-                                        
-                                        h_bonded.append([atom1, atom2, atom1.distance_to(atom2)])
-                                        counted.append(pairs) 
-
-                                        
-
-
-                            # assigning twice- could be cut down
-                            # could say for atom2 in mol2 if mol2 != mol- and
-                            # change the iteration above?
-
+        def find_molecule_type(molecule):
+            """
+            Finds the type of molecule in terms of charge and multiplicity.
+            Returns 'Cat', 'An', 'Neu' or 'Rad'. Note that radicals are doublets
+            of zero charge.
+            """
             db = {}
             db['Cat'] = Molecule.Cations
             db['An']  = Molecule.Anions
             db['Neu'] = Molecule.Neutrals
             db['Rad'] = Molecule.Radicals
 
-            # all combinations of cations/anions/radicals/neutrals
-            combinations = list(itertools.combinations_with_replacement(db.keys(), 2))              
-            self.hbond_data_to_export = []            
+            for moltype, molecules in db.items():
+                if molecule in molecules:
+                    return moltype
 
-            for bond in h_bonded:
-                one, two, dist = bond
-                one_name = self.fragments[one.mol]['name']
-                two_name = self.fragments[two.mol]['name']
-                # to form a h-bond, must contain two of the h-bonding atoms in that molecule (O-H bonds, N-H bonds)
- 
-                # prints twice...
-                for comb in combinations:
-                    group1, group2 = comb
 
-                    if any(name in db[group1] for name in (one_name, two_name)) and any(name in db[group2] for name in (one_name, two_name)):
-                        print(f'{group1}-{group2}')
-                        print(f"({one.symbol}, {self.fragments[one.mol]['name']} (mol {one.mol}))--- {dist:.3f} Å ---({two.symbol}, {self.fragments[two.mol]['name']} (mol {two.mol}))")
-                        self.hbond_data_to_export.append([self.fragments[one.mol]['name'], 
-                                           one.symbol, 
-                                           self.fragments[two.mol]['name'], 
-                                           two.symbol, 
-                                           dist])
+        def hydrogen_bond_data(self, h_bonds):
+            """
+            Prints data to the screen, and returns a list of hydrogen bond
+            attributes of the form:
+            molecule1, atom1, molecule2, atom2, distance.
+            """
+            hbond_data = []            
             
 
-        def remove_duplicate_bonds(self):
-            h_bonded = [] #entire system
-            for atom in self.coords:
-                if len(atom.h_bonded_to) > 0:
-                    per_atom = [] # each atom- may have more than one h-bonding partner
-                    for atom2 in atom.h_bonded_to:
-                        per_atom.append((atom.index, atom2.index, atom.distance_to(atom2)))    
-                    h_bonded.append(per_atom)
-        
-            # now should flatten list- easier to remove duplicates that way
-            flattened = []
-            for lst in h_bonded:
-                for l in lst:
-                    flattened.append(l)
+            for bond in h_bonds:
+                one, two, dist, angle = bond
+                mol_one_name = self.fragments[one.mol]['name']
+                mol_two_name = self.fragments[two.mol]['name']
+            
+                group1 = find_molecule_type(mol_one_name)
+                group2 = find_molecule_type(mol_two_name)
 
-            # remove duplicate h-bonds
-            # make copy first:
-            h_bonded_flat = flattened
-            for i, bond in enumerate(h_bonded_flat):
-                for j, bonds in enumerate(h_bonded_flat):
-                    if i != j:
-                        if sorted(bond[:2]) == sorted(bonds[:2]): # if same atoms are involved
-                            del h_bonded_flat[j] # remove second instance
-            return h_bonded_flat
-                        
-        def bond_components(self, tup):
-            one, two, length = tup
-            atom = self.coords[one - 1]
-            atom2 = self.coords[two - 1]    
+                # print(f'{group1}-{group2}')
+                # print(f"({one.symbol}, {mol_one_name} (mol {one.mol}))--- {dist:.3f} Å, {angle:.0f}° ---({two.symbol}, {mol_two_name} (mol {two.mol}))")
+                hbond_data.append([
+                    mol_one_name, 
+                    one.symbol, 
+                    mol_two_name, 
+                    two.symbol, 
+                    dist,
+                    angle
+                ])
 
-            mol1 = self.fragments[atom.mol]['name']
-            mol2 = self.fragments[atom2.mol]['name']
-        
-            print(f"({atom.symbol}, {mol1} (mol {atom.mol}))--- {length:.3f}Å ---({atom2.symbol}, {mol2} (mol {atom2.mol}))")
+            return hbond_data
 
-            # Choline-Acetate rather than Acetate-Choline
-            if mol1.lower() in Molecule.Anions:
-                connection = f"{mol2}-{mol1}"
-            else:
-                connection = f"{mol1}-{mol2}"
-            length = round(length, 3)
-            return [connection, length]
+        hbonds = find_bonds(self)
+        self.hbond_data = hydrogen_bond_data(self, hbonds)
 
-        find_partners(self)
-        return self.hbond_data_to_export
+        return self.hbond_data

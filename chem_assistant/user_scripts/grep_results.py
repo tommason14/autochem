@@ -306,22 +306,33 @@ def thermochemistry(dir):
 
 def get_h_bonds(dir):
     """
-    Searches the current directory for xyz files, then attempts to split them into fragments, reporting any intermolecular bonding involving hydrogen-bonding atoms less than 2 Å apart. Prints to screen, with then option of saving to csv.
-
-    TODO: Include the atoms bonded to the atom undergoing hydrogen-bonding. Two-fold benefit; can then disregard interactions involving alkyl chains, and can include angle information- internal angles of hydrogen bonds (connected-donor---acceptor) must be <= 45°
+    Searches the current directory for xyz files, then attempts to split them
+    into fragments, reporting any intermolecular bonding involving
+    hydrogen-bonding atoms less than 2 Å apart, of the correct type and within
+    45° of linear. Prints to screen, with the option of saving to csv. If user says yes, writes to hbonds.csv
     """
-    print('\n', ' ' * 15, 'HYDROGEN BOND DISTANCES\n')
+    print('\n', ' ' * 15, 'HYDROGEN BOND DATA\n')
+    # print('HYDROGEN BOND DATA\n')
     output = []
     for file in get_files(dir, ['xyz']):
         path, f = os.path.split(file)
-        print('-' * 60)    
-        print(file + '\n')
+        # print('-' * 60)   
+        # print(file + '\n')
+        print('Checking', file[2:])
         mol = Molecule(using = file)
         mol.separate()
         res = mol.find_h_bonds()
-        print()
+        # print()
         for i in res:
             i.insert(0, f)
             i.insert(1, path)
         output += res
-    write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)'))
+    print() 
+    if len(output) > 0:
+        data = {}
+        keys = ('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)')
+        for index, value in enumerate(keys):
+            data[value] = [val[index] for val in output]
+        responsive_table(data, strings = [1,2,3,4,5,6], min_width=6)
+        print()
+        write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename = 'hbonds.csv')
