@@ -225,57 +225,78 @@ store the iteration number.
         return fmo, mp2, scs
 
     def mp2_data(self, mp2_type):
-        basis = ''
+        """
+        Returns Hartree Fock and MP2 data. Returns the last instance of both.
+        """
         HF = ''
         MP2 = ''
-        # for line in self.read():
-        for line in self.read():
-            if 'INPUT CARD> $BASIS' in line:
-                basis = line.split()[-2].split('=')[1]
-
         for line in eof(self.log, 0.2): # last values only
             if 'Euncorr HF' in line:
                 HF = float(line.split()[-1])
             if f'E corr {mp2_type}' in line:
                 MP2 = float(line.split()[-1])
 
-        return basis, HF, MP2
-
+        return HF, MP2
     
-    def get_data(self):
-        """Returns the last occurrence of FMO energies (FMO3 given if available, else FMO2), SRS and HF energies"""
-        fmo, mp2, scs = self.calc_type()
-        if fmo and scs:
-            basis, HF, MP2 = self.mp2_data('SCS')
-        elif fmo and mp2 and not scs:
-            basis, HF, MP2 = self.mp2_data('MP2')
-        elif not fmo:
-            val = ''
-            basis = ''
-            HF = ''
-            MP2 = ''
+    def raw_basis(self):
+        """
+        Returns basis set as defined in the input file.
+        """
+        for line in self.read():
+            if 'INPUT CARD> $BASIS' in line:
+                self.basis = line.split()[-2].split('=')[1]
+                break
 
-            for line in eof(self.log, 0,2):
-                if 'INPUT CARD> $BASIS' in line:
-                    basis = line.split()[-2].split('=')[1]
-                if 'TOTAL ENERGY =' in line:
-                    val = float(line.split()[-1])
-            # What is total energy? SRS/MP2 or HF/DFT or something else?
-            if scs or mp2:
-                MP2 = val
-            else:
-                HF = val
-
-        # more readable basis set
+    def redefine_basis(self):
+        """
+        Changes basis set to give a more readable representation.
+        """
         change_basis = {'CCD'  : 'cc-pVDZ',
                         'CCT'  : 'cc-pVTZ',
                         'CCQ'  : 'cc-pVQZ',
                         'aCCD' : 'aug-cc-pVDZ',
                         'aCCT' : 'aug-cc-pVTZ',
                         'aCCQ' : 'aug-cc-pVQZ'}
-        basis = change_basis.get(basis, basis) # default is the current value
+        self.basis = change_basis.get(self.basis, self.basis) # if self.basis not in dict, return self.basis
+    
+    def basis(self):
+        """
+        Uses both raw_basis() and redefine_basis() to return the basis set
+        in a readable form.
+        """
+        self.raw_basis()
+        self.redefine_basis()
+    
+    
+    def get_data(self):
+        """
+        Returns the last occurrence of FMO energies 
+        (FMO3 given if available, else FMO2), SRS and HF
+        energies. Works because FMO3 values are printed 
+        after FMO2, and the function returns the last 
+        value printed.
+        """
+        self.basis()
+        fmo, mp2, scs = self.calc_type()
+        if fmo and scs:
+            HF, MP2 = self.mp2_data('SCS')
+        elif fmo and mp2 and not scs:
+            HF, MP2 = self.mp2_data('MP2')
+        elif not fmo:
+            val = ''
+            HF = ''
+            MP2 = ''
 
-        return self.file, self.path, basis, HF, MP2        
+            if 'TOTAL ENERGY =' in line:
+                val = float(line.split()[-1])
+            # What is total energy? SRS/MP2 or HF/DFT or something else?
+            if scs or mp2:
+                MP2 = val
+            else:
+                HF = val
+
+
+        return self.file, self.path, self.basis, HF, MP2        
 
 
             
