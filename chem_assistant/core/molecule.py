@@ -642,7 +642,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             db['Rad'] = Molecule.Radicals
 
             # all combinations of cations/anions/radicals/neutrals
-            combinations = list(itertools.combinations(db.keys(), 2))              
+            combinations = list(itertools.combinations_with_replacement(db.keys(), 2))              
 
             self.hbond_data_to_export = []            
 
