@@ -31,8 +31,11 @@ def calc_type(file):
         elif 'RUNTYP=ENERGY' in line.upper():
             runtyp = "spec"
             break
-        if any(word in line.upper() for word in ('RUNTYP=HESSIAN', 'RUNTYPE=FMOHESS')):
+        elif 'RUNTYP=HESSIAN' in line.upper():
             runtyp = "hessian"
+            break
+        elif 'FMOHESS' in line.upper():
+            runtyp = "fmohess"
             break
     return runtyp 
         
@@ -180,6 +183,7 @@ def find_init_coords(file):
 
     if fmo:
         calc = calc_type(file)
+
         if calc == "hessian":
             found = False
             # looking for this: 
@@ -199,6 +203,30 @@ def find_init_coords(file):
                         atnum = get_atnum[sym]
                         atoms.append([sym, atnum, x, y, z])
 
+            for index, atom in enumerate(atoms, 1):
+                sym, atnum, x, y, z = atom
+                angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+                x, y, z = map(lambda num : num * angs_to_bohr, (x, y, z))
+                bohrs.append(f"{sym:^3}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
+            
+        elif calc == 'fmohess':
+            
+            inpfile = file[:-3] + 'inp'
+            reg = '^\s[A-z]{1,2}(\s*-?[0-9]*.[0-9]*){4}$'
+            found = False
+            atoms = []
+            for line in read_file(inpfile):
+                if 'FMOXYZ' in line:
+                    found = True
+                if '$END' in line:
+                    found = False
+                if found:
+                    if re.search(reg, line):
+                        sym, _, x, y, z = line.split()
+                        x, y, z = map(float, (x, y, z))
+                        atnum = get_atnum(sym)
+                        atoms.append([sym, atnum, x, y, z])
+                    
             for index, atom in enumerate(atoms, 1):
                 sym, atnum, x, y, z = atom
                 angs.append(f"{sym:^3}{index:>4}{atnum:>4}{x:>12.6f}{y:>12.6f}{z:>12.6f}")
@@ -285,12 +313,10 @@ def find_geometries(file, num_atoms):
             found = False
         if not found: # finished that iteration
             if len(iteration) > 0:
-                iteration = [f"  {len(iteration)}", ""] + iteration
+                iteration = [f"  {len(iteration)}", ""] + iteration # add length and blank line
                 for item in iteration:
                     geoms.append(item)
                 iteration = []
-
-        # pull energies
         if 'NSERCH:' in line:
             line = line.split() 
             for ind, val in enumerate(line):
@@ -300,7 +326,7 @@ def find_geometries(file, num_atoms):
                     max_forces.append(line[ind + 1])
                 elif 'R.M.S.=' in val:
                     rms_forces.append(line[ind + 1])
-
+    
     options = {'energy': scfs,
                'max-force': max_forces,
                'rms-force': rms_forces}
@@ -325,37 +351,6 @@ def find_geometries(file, num_atoms):
 
     return geoms, conv
 
-def find_forces(file, num_atoms):
-    """
-    Parses GAMESS optimisations for forces of each atom at each timestep.
-    Example output:
-           ATOM     ZNUC       DE/DX         DE/DY         DE/DZ
-    --------------------------------------------------------------
-       1  O            8.0    -0.0020842     0.0020370     0.0021303
-       2  H            1.0     0.0056908     0.0012532     0.0013106
-       3  H            1.0    -0.0036066    -0.0032902    -0.0034410 
-    """
-    regex = "^\s+[0-9]+\s+[A-z]+(\s+-?[0-9]+\.[0-9]+){4}$"
-    total = []
-    iteration = []
-    found = False
-    point = 0
-    for line in read_file(file):
-        if 'DE/DX' in line:
-            found = True
-        if found:
-            if re.search(regex, line):
-                *_, dx, dy, dz = line.split()    
-                dx, dy, dz = map(float, (dx, dy, dz))        
-                iteration.append(f"{dx:>12.6f} {dy:>12.6f} {dz:>12.6f}")
-        if line is '\n':
-            found = False
-            if len(iteration) > 0:
-                point += 1
-                iteration = [f"point   {point}", f"   {num_atoms}"] + iteration
-                total += iteration
-                iteration = []
-    return total
 
 def freq_data(file):
     """
@@ -449,7 +444,7 @@ def find_normal_coords(num_atoms, file):
             yvibs_per_line.append(line.split()[1:])
         if line.startswith('Z'):
             zvibs_per_line.append(line.split()[1:])
-
+    
     for a in range(1, num_atoms + 1):
         vibs[a] = {'x': [], 'y' : [], 'z': []}
  
@@ -526,7 +521,7 @@ def get_vibrations(num_atoms, log):
     return vibs, wavenumbers, intensities
 
 def collect_into_dict(*,init_coords_bohr = None, init_coords_angs = None, wavenumbers = None,
-intensities = None, vibrations = None, geometries = None, geom_convergence = None, forces = None): 
+intensities = None, vibrations = None, geometries = None, geom_convergence = None): 
     """
     Returns a dictionary whereby the keys are used by molden as a delimeter to define a new section.
     Values are lists of lines to write to the file, with no newline characters.
@@ -540,7 +535,6 @@ intensities = None, vibrations = None, geometries = None, geom_convergence = Non
     options['INT'] = intensities
     options['FR-COORD'] = init_coords_bohr
     options['FR-NORM-COORD'] = vibrations
-    options['FORCES'] = forces
 
     ret = {}
     for k, v in options.items():
@@ -567,19 +561,20 @@ def optimisation_params(file):
     """Finds parameters relevant to a GAMESS optimisation"""
     bohrs, angs = find_init_coords(file)
     num_atoms = len(angs)
-    forces = find_forces(file, num_atoms)
     geometries, geom_conv = find_geometries(file, num_atoms)
     data = collect_into_dict(init_coords_bohr = bohrs, 
                              init_coords_angs = angs, 
                              geometries = geometries,
-                             geom_convergence = geom_conv,
-                             forces = forces)
+                             geom_convergence = geom_conv)
     return data
 
 
 def hessian_params(file):
     """Finds parameters relevant to a GAMESS hessian calculation"""
     bohrs, angs = find_init_coords(file)
+    print(bohrs)
+    print('angs')
+    print(angs)
     num_atoms = len(angs)
     vibs, waves, ints = get_vibrations(num_atoms, file)
     data = collect_into_dict(init_coords_bohr = bohrs, 
@@ -596,6 +591,9 @@ def main(log, new_file):
         data = optimisation_params(log)
         write_file(data, new_file)
     elif calc == "hessian":
+        data = hessian_params(log)
+        write_file(data, new_file)
+    elif calc == "fmohess":
         data = hessian_params(log)
         write_file(data, new_file)
 

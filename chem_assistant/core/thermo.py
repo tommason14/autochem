@@ -25,16 +25,22 @@ def freq_data(file, write_freqs_to_file = False):
     """Parses GAMESS hessian calculation log file for the frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     results = {'Modes': [], 'Frequencies [cm-1]': [], 'Reduced Mass [amu]': [], 'Intensities [Debye^2/(amu Å^2)]': []} # keys used as headers for csv
+    found_region = False
     with open(file, "r") as f:
-        for line in f.readlines():
-            if re.search(regex, line):
-                mode, vib, symmetry, mass, intensity = line.split()
-                mode = int(mode)
-                vib, mass, intensity = map(float, (vib, mass, intensity))
-                results['Modes'].append(mode)
-                results['Frequencies [cm-1]'].append(vib)
-                results['Reduced Mass [amu]'].append(mass)
-                results['Intensities [Debye^2/(amu Å^2)]'].append(intensity)
+        for line in f:
+            if 'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.' in line:
+                found_region = True
+            if line is '\n':
+                found_region = False
+            if found_region:
+                if re.search(regex, line):
+                    mode, vib, symmetry, mass, intensity = line.split()
+                    mode = int(mode)
+                    vib, mass, intensity = map(float, (vib, mass, intensity))
+                    results['Modes'].append(mode)
+                    results['Frequencies [cm-1]'].append(vib)
+                    results['Reduced Mass [amu]'].append(mass)
+                    results['Intensities [Debye^2/(amu Å^2)]'].append(intensity)
 
     for key, value in results.items():
         results[key] = value[6:] #3N-6, with the 6 at the start = trans or rot modes.
@@ -109,10 +115,10 @@ hessian matrix"""
     # Slow imports, so only import if needed
 
     res = freq_data(file)
-    sns.set_style('darkgrid')
-    sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
-    plt.xlabel('Wavenumber (cm$^{-1}$)')
-    plt.ylabel('Intensity')
-    plt.show()
-    write_csv_from_dict(res)
+    # sns.set_style('darkgrid')
+    # sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
+    # plt.xlabel('Wavenumber (cm$^{-1}$)')
+    # plt.ylabel('Intensity')
+    # plt.show()
+    # write_csv_from_dict(res)
     
