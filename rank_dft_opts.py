@@ -10,7 +10,8 @@ def group_files(csv, header = True):
 
     def split_path(path):
         """
-        Returns two strings- one upto the files directory, the other further into it.
+        Returns two strings- one upto the files directory, the other    
+        further into it.
         Example: opts/amps/monomer/files/a1/ -->
         opts/amps/monomer/, a1
 

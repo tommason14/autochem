@@ -1,6 +1,6 @@
 __all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
-'assign_molecules_from_dict_keys', 'search_dict_recursively']
+'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof']
 
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
@@ -38,9 +38,10 @@ def get_type(file):
         # extend to lammps
 
 def write_xyz(atoms, filename = None):
-    """Writes an xyz file using a list of |Atom| instances, or just a list of regular coordinates,
-with or without atomic numbers.
-"""
+    """
+    Writes an xyz file using a list of |Atom| instances, or just a list of regular coordinates,
+    with or without atomic numbers.
+    """
     if filename is None:
         raise ValueError('write_xyz: Must give a path to the output file')
     else:
@@ -60,7 +61,8 @@ with or without atomic numbers.
 
 
 def get_files(directory, ext):
-    """Accepts a tuple of file extensions, searches in all subdirectories of the directory given for relevant files. Returns a list of files with their relative path to the directory passed in.
+    """
+    Accepts a tuple of file extensions, searches in all subdirectories of the directory given for relevant files. Returns a list of files with their relative path to the directory passed in.
 
     Usage:
         >>> for filepath in get_files('.', ("log", "out")):
@@ -123,7 +125,7 @@ def write_csv_from_dict(data, return_name = False):
         else:   
             print("Please select 'Y' or 'N'")
 
-def write_csv_from_nested(data,*,col_names = None, return_name = False):
+def write_csv_from_nested(data,*,col_names = None, return_name = False, filename = None):
     """
     Write to csv from nested data structure; list of tuples, list of lists. 
     
@@ -141,7 +143,8 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
+                if filename is None:
+                    filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
                 with open(filename, "w", encoding = 'utf-8-sig') as f:
                     writer = csv.writer(f)
                     writer.writerow(col_names)       
@@ -231,7 +234,7 @@ def assign_molecules_from_dict_keys(data):
     return data
 
 
-def responsive_table(data, strings):
+def responsive_table(data, strings, min_width):
     """
     Returns a table that is reponsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
@@ -243,6 +246,8 @@ def responsive_table(data, strings):
         >>> d = {'col1': [1,2,3,4],
                  'col2': ['One', 'Two', 'Three', 'Four']}
         >>> responsive_table(d, strings = [2])
+
+    Can also give a minimum width, defaults to 13 spaces
     """
     num_cols = len(data.keys())
     content = zip(*[data[key] for key in data.keys()]) # dict values into list of lists
@@ -255,12 +260,16 @@ def responsive_table(data, strings):
     formatting = [] 
     index = 0
     all_sizes = []
+    if min_width is None:
+        min_width = 13
     for val in zip(data.keys(), max_sizes.values()):
         entry, size = val
-        if size < 10 or index + 1 not in strings:
-            size = 10
-        formatting.append(entry)
-        formatting.append(size)
+        if size < min_width or index + 1 not in strings:
+            size = min_width
+        # also check dict key length
+        if len(entry) > size:
+            size = len(entry)
+        formatting += [entry, size]
         all_sizes.append(size)
         index += 1
     line_length = sum(all_sizes) + num_cols * 3 - 1 # spaces in header
@@ -273,7 +282,7 @@ def responsive_table(data, strings):
         for val in zip(line, all_sizes):
             entry, size = val
             if not isinstance(entry, str):
-                size = '10.5f'
+                size = f'{size}.5f'
             formatting.append(entry)
             formatting.append(size)
         print(output_string.format(*formatting))
