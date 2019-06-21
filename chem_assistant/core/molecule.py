@@ -85,8 +85,18 @@ class Molecule:
             #list of Atom objects, more useful than list of coordinates
         self.bonds = []
         if atoms is not None and using is None:
-            self.coords = atoms
-        
+
+            # list of atoms might not be atom objects
+            if not isinstance(atoms[0], Atom):
+                new = []
+                for atom in atoms:
+                        sym, *coords = atom
+                        a = Atom(symbol = sym, coords = coords)
+                        new.append(a)
+                self.coords = new
+            else: 
+                self.coords = atoms
+    
         for index, atom in enumerate(self.coords):
             atom.index = index + 1
 
@@ -422,8 +432,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     dist = atom_i.distance_to(atom_j)
                     vdw_dist = PT.get_vdw(atom_i) + PT.get_vdw(atom_j)
                     if dist < vdw_dist:
-                        atom_i.connected_atoms.add(atom_j)
-                        atom_j.connected_atoms.add(atom_i)
+                        if atom_j not in atom_i.connected_atoms:
+                            atom_i.connected_atoms.append(atom_j)
+                        if atom_i not in atom_j.connected_atoms:
+                            atom_j.connected_atoms.append(atom_i)
                         # also finds hydrogen bonds to atoms in other molecules
 
         
@@ -746,3 +758,21 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         self.hbond_data = hydrogen_bond_data(self, hbonds)
 
         return self.hbond_data
+
+    def frag_name(self, atom):
+        """
+        Accepts an atom from the molecule, returning the name of the fragment containing that atom.
+        """
+
+        if not hasattr(self, 'fragments'):
+            self.separate()
+
+        for frag in self.fragments.values():
+            for a in frag['atoms']:
+                if a.index == atom.index:
+                    return frag['name']
+        
+
+
+
+

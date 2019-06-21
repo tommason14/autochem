@@ -23,22 +23,15 @@ def read_file(file):
 
 def calc_type(file):
     """ Returns the type of GAMESS calculation submitted """
-    runtyp = None
+    runtypes = {}
+    runtypes['RUNTYP=OPTIMIZE'] = 'opt'
+    runtypes['RUNTYP=ENERGY']   = 'spec'
+    runtypes['RUNTYP=HESSIAN']  = 'hessian'
+    runtypes['RUNTYP=FMOHESS']  = 'fmohess'
     for line in read_file(file):
-        if 'RUNTYP=OPTIMIZE' in line.upper():
-            runtyp = "opt"
-            break
-        elif 'RUNTYP=ENERGY' in line.upper():
-            runtyp = "spec"
-            break
-        elif 'RUNTYP=HESSIAN' in line.upper():
-            runtyp = "hessian"
-            break
-        elif 'FMOHESS' in line.upper():
-            runtyp = "fmohess"
-            break
-    return runtyp 
-        
+        for key, value in runtypes.items():
+            if key in line.upper():
+                return value 
 
 def find_init_coords(file):
     """
@@ -46,126 +39,6 @@ def find_init_coords(file):
     Output is different depending on whether FMO theory is used,
     and different methods for finding initial coordinates are required.
     """
-    get_atnum = {} # dict lookup faster than func. call
-    get_atnum['Xx'] =   0
-    get_atnum[ 'H'] =   1
-    get_atnum['He'] =   2
-    get_atnum['Li'] =   3
-    get_atnum['Be'] =   4
-    get_atnum[ 'B'] =   5
-    get_atnum[ 'C'] =   6
-    get_atnum[ 'N'] =   7
-    get_atnum[ 'O'] =   8
-    get_atnum[ 'F'] =   9
-    get_atnum['Ne'] =  10
-    get_atnum['Na'] =  11
-    get_atnum['Mg'] =  12
-    get_atnum['Al'] =  13
-    get_atnum['Si'] =  14
-    get_atnum[ 'P'] =  15
-    get_atnum[ 'S'] =  16
-    get_atnum['Cl'] =  17
-    get_atnum['Ar'] =  18
-    get_atnum[ 'K'] =  19
-    get_atnum['Ca'] =  20
-    get_atnum['Sc'] =  21
-    get_atnum['Ti'] =  22
-    get_atnum[ 'V'] =  23
-    get_atnum['Cr'] =  24
-    get_atnum['Mn'] =  25
-    get_atnum['Fe'] =  26
-    get_atnum['Co'] =  27
-    get_atnum['Ni'] =  28
-    get_atnum['Cu'] =  29
-    get_atnum['Zn'] =  30
-    get_atnum['Ga'] =  31
-    get_atnum['Ge'] =  32
-    get_atnum['As'] =  33
-    get_atnum['Se'] =  34
-    get_atnum['Br'] =  35
-    get_atnum['Kr'] =  36
-    get_atnum['Rb'] =  37
-    get_atnum['Sr'] =  38
-    get_atnum[ 'Y'] =  39
-    get_atnum['Zr'] =  40
-    get_atnum['Nb'] =  41
-    get_atnum['Mo'] =  42
-    get_atnum['Tc'] =  43
-    get_atnum['Ru'] =  44
-    get_atnum['Rh'] =  45
-    get_atnum['Pd'] =  46
-    get_atnum['Ag'] =  47
-    get_atnum['Cd'] =  48
-    get_atnum['In'] =  49
-    get_atnum['Sn'] =  50
-    get_atnum['Sb'] =  51
-    get_atnum['Te'] =  52
-    get_atnum[ 'I'] =  53
-    get_atnum['Xe'] =  54
-    get_atnum['Cs'] =  55
-    get_atnum['Ba'] =  56
-    get_atnum['La'] =  57
-    get_atnum['Ce'] =  58
-    get_atnum['Pr'] =  59
-    get_atnum['Nd'] =  60
-    get_atnum['Pm'] =  61
-    get_atnum['Sm'] =  62
-    get_atnum['Eu'] =  63
-    get_atnum['Gd'] =  64
-    get_atnum['Tb'] =  65
-    get_atnum['Dy'] =  66
-    get_atnum['Ho'] =  67
-    get_atnum['Er'] =  68
-    get_atnum['Tm'] =  69
-    get_atnum['Yb'] =  70
-    get_atnum['Lu'] =  71
-    get_atnum['Hf'] =  72
-    get_atnum['Ta'] =  73
-    get_atnum[ 'W'] =  74
-    get_atnum['Re'] =  75
-    get_atnum['Os'] =  76
-    get_atnum['Ir'] =  77
-    get_atnum['Pt'] =  78
-    get_atnum['Au'] =  79
-    get_atnum['Hg'] =  80
-    get_atnum['Tl'] =  81
-    get_atnum['Pb'] =  82
-    get_atnum['Bi'] =  83
-    get_atnum['Po'] =  84
-    get_atnum['At'] =  85
-    get_atnum['Rn'] =  86
-    get_atnum['Fr'] =  87
-    get_atnum['Ra'] =  88
-    get_atnum['Ac'] =  89
-    get_atnum['Th'] =  90
-    get_atnum['Pa'] =  91
-    get_atnum[ 'U'] =  92
-    get_atnum['Np'] =  93
-    get_atnum['Pu'] =  94
-    get_atnum['Am'] =  95
-    get_atnum['Cm'] =  96
-    get_atnum['Bk'] =  97
-    get_atnum['Cf'] =  98
-    get_atnum['Es'] =  99
-    get_atnum['Fm'] = 100
-    get_atnum['Md'] = 101
-    get_atnum['No'] = 102
-    get_atnum['Lr'] = 103
-    get_atnum['Rf'] = 104
-    get_atnum['Db'] = 105
-    get_atnum['Sg'] = 106
-    get_atnum['Bh'] = 107
-    get_atnum['Hs'] = 108
-    get_atnum['Mt'] = 109
-    get_atnum['Ds'] = 110
-    get_atnum['Rg'] = 111
-    get_atnum['Cn'] = 112
-    get_atnum['Nh'] = 113
-    get_atnum['Fl'] = 114
-    get_atnum['Mc'] = 115
-    get_atnum['Lv'] = 116
-    get_atnum['Ts'] = 117
-    get_atnum['Og'] = 118
     
     bohrs = []
     angs = []
@@ -181,6 +54,142 @@ def find_init_coords(file):
     bohr_to_angs = 0.52917724899
     angs_to_bohr = 1.8897259886
 
+    def find_atoms(line, as_bohrs = False, calc_type = None):
+        """
+        Returns a list of atom properties:
+            atomic symbol, atomic number (as integer), x, y and z coordinates
+        Requires a line as input
+        """
+        get_atnum = {}
+        get_atnum['Xx'] =   0
+        get_atnum[ 'H'] =   1
+        get_atnum['He'] =   2
+        get_atnum['Li'] =   3
+        get_atnum['Be'] =   4
+        get_atnum[ 'B'] =   5
+        get_atnum[ 'C'] =   6
+        get_atnum[ 'N'] =   7
+        get_atnum[ 'O'] =   8
+        get_atnum[ 'F'] =   9
+        get_atnum['Ne'] =  10
+        get_atnum['Na'] =  11
+        get_atnum['Mg'] =  12
+        get_atnum['Al'] =  13
+        get_atnum['Si'] =  14
+        get_atnum[ 'P'] =  15
+        get_atnum[ 'S'] =  16
+        get_atnum['Cl'] =  17
+        get_atnum['Ar'] =  18
+        get_atnum[ 'K'] =  19
+        get_atnum['Ca'] =  20
+        get_atnum['Sc'] =  21
+        get_atnum['Ti'] =  22
+        get_atnum[ 'V'] =  23
+        get_atnum['Cr'] =  24
+        get_atnum['Mn'] =  25
+        get_atnum['Fe'] =  26
+        get_atnum['Co'] =  27
+        get_atnum['Ni'] =  28
+        get_atnum['Cu'] =  29
+        get_atnum['Zn'] =  30
+        get_atnum['Ga'] =  31
+        get_atnum['Ge'] =  32
+        get_atnum['As'] =  33
+        get_atnum['Se'] =  34
+        get_atnum['Br'] =  35
+        get_atnum['Kr'] =  36
+        get_atnum['Rb'] =  37
+        get_atnum['Sr'] =  38
+        get_atnum[ 'Y'] =  39
+        get_atnum['Zr'] =  40
+        get_atnum['Nb'] =  41
+        get_atnum['Mo'] =  42
+        get_atnum['Tc'] =  43
+        get_atnum['Ru'] =  44
+        get_atnum['Rh'] =  45
+        get_atnum['Pd'] =  46
+        get_atnum['Ag'] =  47
+        get_atnum['Cd'] =  48
+        get_atnum['In'] =  49
+        get_atnum['Sn'] =  50
+        get_atnum['Sb'] =  51
+        get_atnum['Te'] =  52
+        get_atnum[ 'I'] =  53
+        get_atnum['Xe'] =  54
+        get_atnum['Cs'] =  55
+        get_atnum['Ba'] =  56
+        get_atnum['La'] =  57
+        get_atnum['Ce'] =  58
+        get_atnum['Pr'] =  59
+        get_atnum['Nd'] =  60
+        get_atnum['Pm'] =  61
+        get_atnum['Sm'] =  62
+        get_atnum['Eu'] =  63
+        get_atnum['Gd'] =  64
+        get_atnum['Tb'] =  65
+        get_atnum['Dy'] =  66
+        get_atnum['Ho'] =  67
+        get_atnum['Er'] =  68
+        get_atnum['Tm'] =  69
+        get_atnum['Yb'] =  70
+        get_atnum['Lu'] =  71
+        get_atnum['Hf'] =  72
+        get_atnum['Ta'] =  73
+        get_atnum[ 'W'] =  74
+        get_atnum['Re'] =  75
+        get_atnum['Os'] =  76
+        get_atnum['Ir'] =  77
+        get_atnum['Pt'] =  78
+        get_atnum['Au'] =  79
+        get_atnum['Hg'] =  80
+        get_atnum['Tl'] =  81
+        get_atnum['Pb'] =  82
+        get_atnum['Bi'] =  83
+        get_atnum['Po'] =  84
+        get_atnum['At'] =  85
+        get_atnum['Rn'] =  86
+        get_atnum['Fr'] =  87
+        get_atnum['Ra'] =  88
+        get_atnum['Ac'] =  89
+        get_atnum['Th'] =  90
+        get_atnum['Pa'] =  91
+        get_atnum[ 'U'] =  92
+        get_atnum['Np'] =  93
+        get_atnum['Pu'] =  94
+        get_atnum['Am'] =  95
+        get_atnum['Cm'] =  96
+        get_atnum['Bk'] =  97
+        get_atnum['Cf'] =  98
+        get_atnum['Es'] =  99
+        get_atnum['Fm'] = 100
+        get_atnum['Md'] = 101
+        get_atnum['No'] = 102
+        get_atnum['Lr'] = 103
+        get_atnum['Rf'] = 104
+        get_atnum['Db'] = 105
+        get_atnum['Sg'] = 106
+        get_atnum['Bh'] = 107
+        get_atnum['Hs'] = 108
+        get_atnum['Mt'] = 109
+        get_atnum['Ds'] = 110
+        get_atnum['Rg'] = 111
+        get_atnum['Cn'] = 112
+        get_atnum['Nh'] = 113
+        get_atnum['Fl'] = 114
+        get_atnum['Mc'] = 115
+        get_atnum['Lv'] = 116
+        get_atnum['Ts'] = 117
+        get_atnum['Og'] = 118
+
+        if calc_type == 'hessian':
+            pass
+        
+        elif calc_type == 'fmohess':
+            pass
+
+        elif calc_type == 'opt':
+            pass
+            
     if fmo:
         calc = calc_type(file)
 
@@ -224,7 +233,7 @@ def find_init_coords(file):
                     if re.search(reg, line):
                         sym, _, x, y, z = line.split()
                         x, y, z = map(float, (x, y, z))
-                        atnum = get_atnum(sym)
+                        atnum = get_atnum[sym]
                         atoms.append([sym, atnum, x, y, z])
                     
             for index, atom in enumerate(atoms, 1):
@@ -572,9 +581,6 @@ def optimisation_params(file):
 def hessian_params(file):
     """Finds parameters relevant to a GAMESS hessian calculation"""
     bohrs, angs = find_init_coords(file)
-    print(bohrs)
-    print('angs')
-    print(angs)
     num_atoms = len(angs)
     vibs, waves, ints = get_vibrations(num_atoms, file)
     data = collect_into_dict(init_coords_bohr = bohrs, 
