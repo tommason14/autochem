@@ -26,22 +26,27 @@ import math
 import itertools
 import sys
 import argparse
+import subprocess
 
-parser = argparse.ArgumentParser(description='Make a guess at vibrations present in molden output files')
-# required = parser.add_argument_group('required arguments')
+parser = argparse.ArgumentParser(description='Make a guess at vibrations present in molden output files. Must use gamess_to_molden.py on a GAMESS hessian log file to generate a molden file, and then pass that file into this script using the -f flag.')
+parser.add_argument('--invert', help='Print the table in reverse order', action='store_true')
+parser.add_argument('-e', '--each', help='Number of vibrations of each kind of molecule that is desired, in alphabetical order of the molecule names', action='store', type = int)
 parser.add_argument('-f', '--file', help='Molden file to use', action='store', required = True)
+parser.add_argument('-g', '--group-by-molecule', help='groups data by molecule', action='store_true')
 parser.add_argument('-i', '--sort-by-intensity', help='Sorts output by intensity of vibrations', action='store_true')
 parser.add_argument('-l', '--low', help='Lowest frequency to look for. Pass in an integer', action='store', type = int)
 parser.add_argument('-m', '--high', help='Highest frequency to look for (m for max). Pass in an integer', action='store', type = int)
-parser.add_argument('-w', '--weak', help='Lowest intensity transition to look for (w for weak). Pass in an integer', action='store', type = int)
-parser.add_argument('-s', '--strong', help='Highest intensity transition to look for (s for strong). Pass in an integer', action='store', type = int)
 parser.add_argument('-n', '--number', help='Print the first n vibrations', action='store', type = int)
-parser.add_argument('-t', '--tail', help='Print the last t vibrations', action='store', type = int)
+parser.add_argument('-r', '--rank', help='Print the n most likely vibrations, based on the amount of movement and connections of each atom. Defaults to 1', action='store', type = int, default = 1)
+parser.add_argument('-s', '--strong', help='Highest intensity transition to look for (s for strong). Pass in an integer', action='store', type = int)
+parser.add_argument('-t', '--tail', help='Print the last n vibrations', action='store', type = int)
+parser.add_argument('-w', '--weak', help='Lowest intensity transition to look for (w for weak). Pass in an integer', action='store', type = int)
 args = parser.parse_args()
+
 
 def responsive_table(data, strings, min_width):
     """
-    Returns a table that is reponsive in size to every column.
+    Returns a table that is responsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
     the headers of the table.
     Also pass in the number of each column that should be a string, starting
@@ -796,6 +801,13 @@ def check_inputs(args):
     
     if args.number == args.tail != None: # if defined
         sys.exit("Error: Number of lines from top (n) and number of lines from bottom (t) can't be the same! Change values")
+        
+    groups = subprocess.check_output('grep "\[" ' + args.file, shell = True)
+    if b'FREQ' not in groups:
+        sys.exit("""\
+Incorrect file format. 
+Run gamess_to_molden.py first on a GAMESS 
+hessian calculation, and use that file here""")
 
 def get_geometry(log):
     """
@@ -941,13 +953,13 @@ def print_vib(atom_of_max_disp, connected, molecule, sure = True):
 
 def all_same(lst):
     """ 
-    Returns true if all elements in the list are the same 
+    Returns True if all elements in the list are the same 
     """
     return len(set(lst)) == 1
 
 def one_outcome(lst):
     """
-    Returns true if list only has one item, or if all items are the same
+    Returns True if list only has one item, or if all items are the same
     """
     return len(lst) == 1 or all_same(lst)
 
@@ -992,14 +1004,15 @@ def dict_to_nested_list(data):
     
     [[1,5], [2,6], [3,7], [4,8]]
     """
-    numrows = max(len(v) for v in data.values())
-    rows = []
-    for num in range(numrows):
-        row = []
-        for k, v in data.items():
-            row.append(v[num])
-        rows.append(row)
-    return rows
+    return list(zip(*[data[key] for key in data.keys()]))
+    # numrows = max(len(v) for v in data.values())
+    # rows = []
+    # for num in range(numrows):
+    #     row = []
+    #     for k, v in data.items():
+    #         row.append(v[num])
+    #     rows.append(row)
+    # return rows
 
 def nested_list_to_dict(lst, keys):
     """
@@ -1060,6 +1073,46 @@ def tail(data, n):
     data = nested_list_to_dict(rows, keys)
     return data
 
+def group_molecules(data):
+    """
+    Returns a dictionary with the values reordered so that all examples of each
+    molecule appear next to each other in the table
+    """
+    keys = data.keys()
+    rows = dict_to_nested_list(data)
+    rows = sorted(rows, key = lambda row: row[3])
+    data = nested_list_to_dict(rows, keys)
+    return data
+
+def number_of_each_molecule(data, n):
+    """
+    Returns n vibrations for each different kind of molecule in the system,
+    alphabetically sorted by the name of each molecule.
+    """
+    keys = data.keys()
+    rows = dict_to_nested_list(data)
+    molecules = set([row[3] for row in rows])
+    vibs_per_mol = {mol: [row for row in rows if mol in row] for mol in molecules}
+    vibs_per_mol = {mol: data[:n] for mol, data in vibs_per_mol.items()}
+    all_rows = [data_of_each_vib for value in vibs_per_mol.values() for data_of_each_vib in value]
+    all_rows = sorted(all_rows, key = lambda v: v[3])
+    data = {}
+    for position, key in enumerate(keys):
+        data[key] = [value[position] for value in all_rows]
+    return data
+
+def invert_table(data):
+    """
+    Print table in reverse order by reordering the values of the dictionary
+    passed in 
+    """
+    keys = data.keys()
+    rows = dict_to_nested_list(data)
+    rows = rows[::-1]
+    data = nested_list_to_dict(rows, keys)
+    return data
+
+
 def apply_limitations(data, args):
 
     if args.sort_by_intensity:
@@ -1092,7 +1145,8 @@ def apply_limitations(data, args):
         data = limit_by_key(data, args.weak, args.strong, column = 1)
 
     ### LIMIT ROWS OF OUTPUT
-    ### ORDER IMPORTANT IF CUTTING FROM TOP AND BOTTOM
+    ### ORDER IMPORTANT IF CUTTING FROM TOP AND BOTTOM, NEED TO END UP WITH 
+    ### SOME ROWS TO PRINT OUT
 
     if args.number and args.tail:
         if args.number > args.tail:
@@ -1108,7 +1162,38 @@ def apply_limitations(data, args):
     if args.tail:
         data = tail(data, args.tail)
 
+    if args.group_by_molecule:
+        data = group_molecules(data)
+
+    if args.each:
+        data = number_of_each_molecule(data, args.each)
+
+    if args.invert:
+        data = invert_table(data)
+
     return data
+
+def make_len_freqs_and_ints_equal(frequencies, intensities, freq_ints):
+    """
+    Need to account for the fact that multiple atoms vibrate at the
+    same frequency, and need to add the corresponding intensities otherwise the
+    lists will be different lengths and responsive_table will fail
+    """
+    intensities = []
+    for f in frequencies:
+          intensities.append(freq_ints[f])
+    return intensities
+
+def spectral_data(args):
+    """
+    Return frequencies, intensites and a dictionary of the frequency keys and
+    intensity values for use later when additional intensities are required
+    """
+
+    freqs = read_freqs(args.file)
+    ints = read_intensities(args.file)
+    freq_ints = {freq:intensity for freq, intensity in zip(freqs, ints)}
+    return freqs, ints, freq_ints
 
 def process_vibrations(mol, args):
     """
@@ -1120,69 +1205,63 @@ def process_vibrations(mol, args):
     displacement.
     """
 
-    frequencies = [] 
-    intensities = []
-    bonds = []
-    fragments = []
+    frequencies, bonds, fragments, ranks = ([] for _ in range(4))
 
-    freqs = read_freqs(args.file)
-    intensity = read_intensities(args.file)
-
-    # more than one vib per frequency, so same frequency appears more than once,
-    # need to add same number of intensities
-    freq_ints = {}
-    for ind, f in enumerate(freqs):
-        freq_ints[f] = intensity[ind] 
+    freqs, ints, freq_int_dict = spectral_data(args)
 
     for vib, displacements in enumerate(read_vibrations(args.file)):
 
         freqs_per_vib = []
         bonds_per_vib = []
         frags_per_vib = []
-        # print(f'Frequency: {freqs[vib]}')
+        ranks_per_vib = []
 
         all_displacements = {}
         for atom, atom_disp in enumerate(displacements):
             ave_disp = average_displacement(atom_disp)
             all_displacements[atom] = ave_disp
+ 
+        ranked_disp = sorted(all_displacements.values(), reverse = True)
+        ranked_disp = ranked_disp[:args.rank]
 
-        max_disp = max(all_displacements.values())
 
-        atom_num_of_max_disp = 0
-        for k,v in all_displacements.items():
-            if v == max_disp:
-                atom_num_of_max_disp = k 
+        indices_of_most_likely_atoms = {}
+        for index, displacement in all_displacements.items():
+            for rank, disp_after_ranking in enumerate(ranked_disp, 1):
+                if displacement == disp_after_ranking:
+                    indices_of_most_likely_atoms[rank] = index
 
         # more than one bond can vibrate per vibration, could just pass in
         # more than one atom of max disp
         # also still need ranking 
-        atom_of_max_disp = mol.coords[atom_num_of_max_disp] 
-        bonds_max_disp, fragments_max_disp = print_vib_info(atom_of_max_disp, mol)
+        most_likely_atoms = {}
+        for ranking, index in indices_of_most_likely_atoms.items():
+            most_likely_atoms[ranking] = mol.coords[index] 
+        
+        for atom in most_likely_atoms.values():
+            bonds_max_disp, fragments_max_disp = print_vib_info(atom, mol)
 
+            bonds_per_vib += bonds_max_disp
+            frags_per_vib += fragments_max_disp
 
-        bonds_per_vib += bonds_max_disp
-        frags_per_vib += fragments_max_disp
-
-        for _ in bonds_per_vib:
-            freqs_per_vib.append(freqs[vib])
+            for _ in bonds_per_vib: 
+                freqs_per_vib.append(freqs[vib])
+                ranks_per_vib.append(ranking)
 
         frequencies += freqs_per_vib
         bonds += bonds_per_vib
         fragments += frags_per_vib
+        ranks += ranks_per_vib
 
-    # match number of intensities to number of frequencies
-    # more frequencies than in log file, if more than one bond is 
-    # vibrating
-    intensities = []
-    for f in frequencies:
-        intensities.append(freq_ints[f])
-    ### print_table
-    
+
+    intensities = make_len_freqs_and_ints_equal(frequencies, ints, freq_int_dict)
     data = {}
     data['Frequencies (cm⁻¹)'] = frequencies
     data['Intensities (au)'] = intensities
     data['Vibrating bond'] = bonds
     data['Molecule'] = fragments
+    if args.rank != 1:
+        data['Rank'] = ranks
 
     data = apply_limitations(data, args)
     responsive_table(data, strings = [2,3], min_width = 10)
