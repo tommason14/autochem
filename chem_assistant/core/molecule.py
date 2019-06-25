@@ -200,7 +200,7 @@ class Molecule:
                     f.write(f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n")
 
 
-    def split(self):
+    def split_old(self):
         """Assigns each atom in ``self.coords`` to a different fragment- very useful for FMO calculations.
         Note: Only works if all intramolecular bonds are shorter than all
         intermolecular bonds. A long bond in the middle of a molecule or a 
@@ -479,7 +479,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         Also often couldn't determine fragments due to long intramolecular bonds. Now deprecated in
         favour of checking van der waals distances
         """
-        self.split()
+        self.split_old()
         self.check_db()
         self.renumber_molecules()
         self.print_frags() 
@@ -496,7 +496,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         with van der waals radii. Note this function only works with intermolecular fragments 
         and cannot split molecules on bonds.
         """
-        self.split_vdw()
+        self.split()
         self.check_db()
         self.sort_fragments_by_index()
         self.renumber_molecules()
@@ -518,7 +518,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     matrix[i, j] = atom_i.distance_to(atom_j)
         return matrix
 
-    def split_vdw(self):
+    def split(self):
 
         mol_count = 0
         self.mol_dict = {}
