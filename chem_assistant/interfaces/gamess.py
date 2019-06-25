@@ -307,6 +307,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif self.sc == 'mon':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif self.sc == 'mas':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif self.sc == 'stm':
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')
 
     def make_run_dir(self):

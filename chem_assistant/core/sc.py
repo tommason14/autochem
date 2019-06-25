@@ -14,7 +14,7 @@ class Supercomp:
     def __init__(self):
         cwd = os.getcwd()
         cases = {'565': 'rjn',
-                 'scratch': 'mgs',
+                 'pawsey': 'mgs',
                  'nfs': 'gaia',
                  'massive': 'mas',
                  '06233': 'stm'

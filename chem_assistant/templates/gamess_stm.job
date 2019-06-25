@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J name
+#SBATCH -o name.log
+#SBATCH -e name.e%j
+#SBATCH -p skx-normal
+#SBATCH -N 3
+#SBATCH -n 66
+#SBATCH -c 1
+#SBATCH -t 24:00:00
+
+module load intel/18.0.2
+module load hdf5/1.10.4
+module load my_gamess/srs-avx-512
+
+rungms.tom name.inp 00 $SLURM_NTASKS
