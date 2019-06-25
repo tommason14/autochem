@@ -111,10 +111,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
     def determine_fragments(self):
         if self.fmo:
-            if self.merged.nfrags != {}: #automatically creates an empty dict if called
-                self.mol.nfrags = self.merged.nfrags
-            else:
-                self.mol.nfrags = int(input('Number of fragments: '))
+            # don't need this anymore, with the vdw splitting...
+            # if self.merged.nfrags != {}: #automatically creates an empty dict if called
+            #     self.mol.nfrags = self.merged.nfrags
+            # else:
+            #     self.mol.nfrags = int(input('Number of fragments: '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -242,7 +243,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             inp += " $END\n"
             inp += " $FMOXYZ\n"
         for atom in self.mol.coords:
-            inp += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
+            inp += f" {atom.symbol:5s} {PT.get_atnum(atom):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
         inp += ' $END'
         return inp
 
