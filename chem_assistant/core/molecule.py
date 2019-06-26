@@ -75,6 +75,7 @@ class Molecule:
     Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H']
     Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H']
     Neutrals['dopamine-c-c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H','H','H']
+    Neutrals['benzene'] = ['C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'] 
     
     Radicals = {}
 
