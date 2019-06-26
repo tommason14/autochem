@@ -564,6 +564,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             self.mol_dict[mol_count] = [atom_j]
                             mol_count += 1
 
+        ## v.v. slow for larger systems!!!
+
         # check if any index appears twice
         # if yes, delete it
         # if any other atoms are present, 

@@ -215,7 +215,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def fmo_formatting(self):
         self.fmo_meta() # gives self.mol.indat, self.mol.charg
-        if self.input.contrl.runtyp in ('optimize', 'hessian'):
+        if self.input.contrl.runtyp.lower() in ('optimize', 'hessian', 'fmohess'):
             nbody = 2
             rcorsd = 100
         else:
@@ -254,7 +254,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if self.filename is not None:
             self.base_name = self.filename
         else:
-            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess'}
+            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess', 'fmohess': 'hess'}
             self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
 
     def write_file(self, data, filetype):
