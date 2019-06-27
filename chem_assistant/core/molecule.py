@@ -10,6 +10,7 @@ import re
 import numpy as np
 import math
 import itertools
+import sys
 
 __all__ = ['Molecule']
 
@@ -86,7 +87,8 @@ class Molecule:
             #list of Atom objects, more useful than list of coordinates
         self.bonds = []
         if atoms is not None and using is None:
-
+            if len(atoms) == 0:
+                sys.exit('Error: atoms argument passed into Molecule is empty')
             # list of atoms might not be atom objects
             if not isinstance(atoms[0], Atom):
                 new = []
@@ -529,7 +531,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 if i != j:
                     vdw_dist = PT.get_vdw(atom_i) + PT.get_vdw(atom_j)
                     if dists[i,j] < vdw_dist:                    
-                        # bonded
+                        # more recent addn
+                        # if atom_i not in atom_j.connected_atoms:
+                        #     atom_j.connected_atoms.append(atom_i)
+                        # if atom_j not in atom_i.connected_atoms:
+                        #     atom_i.connected_atoms.append(atom_j)
+                        # # bonded
                         # if atom_i already in dict, add j to same molecule
                         # or create new molecule
                         i_added = False
@@ -572,7 +579,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         # then add them to first molecule with index in
         # and remove from original place
         # should result in some empty lists, so delete them
-
+        
+        # PREVENT THIS BY ADDING ATOMS TO ATOM.CONNECTED_ATOMS
+        # IF BONDED, AND THEN CHECK AGAIN HERE? OR AT BOTTOM OF FIRST 
+        # LOOP??
         for k, v in self.mol_dict.items():
             indices_of_first_mol = set([atom.index for atom in v])
             for atom in v:
@@ -588,6 +598,18 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                                     removed = v2.pop(ind)
                                     v.append(removed)
         
+        # use connected atoms, if atoms not in same mol, add them and remove from rest
+        # for k, mol in self.mol_dict.items():
+        #     for atom in mol:
+        #         for con in atom.connected_atoms:
+        #             if con not in mol:
+        #                 v.append(con)
+        #             # remove from rest
+        #             for k2, v2 in self.mol_dict.items():
+        #                 if k != k2:
+        #                     if con in v2:
+        #                         v2.remove(con)    
+
         # for some reason- still the odd atom left over...
         # check again for distances
         for index, mol1 in self.mol_dict.items():
@@ -605,7 +627,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
-
+        
     def find_h_bonds(self):
         """
         Gives hydrogen bonding data back to the user. Checks for suitable

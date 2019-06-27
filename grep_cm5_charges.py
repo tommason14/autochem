@@ -5,7 +5,7 @@ import os
 
 cm5_results = []
 
-files = get_files('.', 'cm5.out')
+files = get_files('.', ['.log', '.out'])
 regex = "\s*[0-9]{1,3}\s*[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){6}"
 inp_regex = '^[A-Z][a-z]?(\s*-?[0-9]*.[0-9]*){3}'
 
