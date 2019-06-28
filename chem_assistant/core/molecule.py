@@ -400,8 +400,6 @@ class Molecule:
             self.print_frags()
 
         print()
-        print(f"Should have found {self.nfrags} fragments, but found {len(self.fragments)}...")
-        print()
         print("""\
 Fragments are too close together- there are bonds within fragments
 that are longer than the shortest distance between fragments.
@@ -473,6 +471,15 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 "elements": sort_elements(coord_list),
                 "frag_type": "ionic"
             }
+
+    def all_atoms_assigned(self):
+        """
+        Checks self.coords to see if all atoms have a molecule assigned
+        """
+        for atom in self.coords:
+            if atom.mol is None:
+                return False
+        return True
    
     def separate_old(self):
         """
@@ -501,8 +508,15 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         """
         self.split()
         self.check_db()
-        self.sort_fragments_by_index()
         self.renumber_molecules()
+        self.sort_fragments_by_index()
+        if not self.all_atoms_assigned():
+            print(f"{len(self.fragments)} fragments found, some atoms unaccounted for...")
+            all_assigned = False
+            while not all_assigned:
+                self.reassign_frags_manually()
+                if self.all_atoms_assigned():
+                    all_assigned = True
         # self.print_frags() 
         self.add_ionic_network()
 
