@@ -4,7 +4,8 @@ import json
 __all__ = ['Settings', 'read_template', 'dict_to_settings']
 
 class Settings(dict):
-    """Provides a means of updating settings for input and job files. Inherits from a python dictionary, and allows for nesting of dictionaries as values."""
+    """Provides a means of updating settings for input and job files. Inherits from a python dictionary, and allows for nesting of dictionaries as values.
+    See PLAMS documentation for info."""
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         for k, v in self.items():
