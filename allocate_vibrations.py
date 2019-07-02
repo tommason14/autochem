@@ -772,7 +772,7 @@ class Molecule:
 
         # remove empty lists, sort atoms by index
         self.mol_dict = {k:v for k,v in self.mol_dict.items() if len(v)>0}
-        
+        print(self.mol_dict) 
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
 
@@ -784,11 +784,28 @@ class Molecule:
 
         if not hasattr(self, 'fragments'):
             self.separate()
+        print(atom)
 
         for frag in self.fragments.values():
+            # print(frag['name'])
             for a in frag['atoms']:
                 if a.index == atom.index:
-                    return frag['name']
+                    if frag['name'] is not None:
+                        return frag['name']
+                    else:
+                        print(frag['atoms'])
+                        # if molecules not known
+                        formula  = {}
+                        for at in frag['atoms']:
+                            if at.symbol not in formula:
+                                formula[at.symbol] = 1
+                            else:
+                                formula[at.symbol] += 1
+                        string = ""
+                        for sym, number in sorted(formula.items()):
+                            string += f"{sym}{number}"
+                        return string
+                    
 
 #### CODE STARTS HERE
 

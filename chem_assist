@@ -51,15 +51,15 @@ if args.meta:
 
 if args.thermochem:
     name = thermochemistry('.')
-    done = False
-    while not done:
-        ints = input('Calculate free energies? [Y/N] ')
-        if ints.lower() in ('y', 'n'):
-            done = True
-            if ints.lower() == 'y':
-                calculate_free_energy_interactions(name)
-        else:   
-            print("Please select 'y' or 'n'")
+    # done = False
+    # while not done:
+    #     ints = input('Calculate free energies? [Y/N] ')
+    #     if ints.lower() in ('y', 'n'):
+    #         done = True
+    #         if ints.lower() == 'y':
+    #             calculate_free_energy_interactions(name)
+    #     else:   
+    #         print("Please select 'y' or 'n'")
     
 if args.free_energies:
     calculate_free_energy_interactions(args.free_energies)

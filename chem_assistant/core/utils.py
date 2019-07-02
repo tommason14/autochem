@@ -101,7 +101,7 @@ def sort_elements(lst):
     sorted_els = sorted(els, key = lambda val: val[1])
     return sorted_els
 
-def write_csv_from_dict(data, return_name = False):
+def write_csv_from_dict(data, return_name = False, filename = None):
     """Write to file from dictionary"""
 
     import csv
@@ -114,7 +114,8 @@ def write_csv_from_dict(data, return_name = False):
         if to_file.lower() in ('y', 'n'):
             done = True
             if to_file.lower() == 'y':
-                filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
+                if filename is None:
+                    filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
                 with open(filename, "w", encoding = 'utf-8-sig') as f:
                     writer = csv.writer(f)
                     writer.writerow(data.keys())
