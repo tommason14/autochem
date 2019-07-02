@@ -1,19 +1,38 @@
-__all__ = ['results_table', 'parse_results', 'thermochemistry', 'get_results_class', 'search_for_coords', 'get_h_bonds',
-'create_extra_jobs']
+__all__ = ['create_extra_jobs',
+           'get_h_bonds',
+           'get_results_class',
+           'parse_results',
+           'results_table',
+           'search_for_coords',
+           'thermochemistry']
+
+from ..core.molecule import Molecule
+from ..core.thermo import thermo_data
+from ..core.utils import (read_file,
+                          get_files,
+                          write_csv_from_dict,
+                          write_csv_from_nested,
+                          responsive_table)
+from ..interfaces.gamess_results import GamessResults
+from ..interfaces.psi_results import PsiResults
+from ..interfaces.gaussian_results import GaussianResults
+from .make_files_meta import make_files_from_meta
+import os
 
 """
-File: grep_results.py 
+File: grep_results.py
 Author: Tom Mason
 Email: tommason14@gmail.com
 Github: https:github.com/tommason14
-Description: Searches all sub dirs for results 
+Description: Searches all sub dirs for results
 """
 """
 - Create opt dir or spec or hess-  when creating the jobs (make another dir)
 TODO:
-- If geom_opt has completed, extract equilibrium coords: save in parent folder as equil.xyz & if no
-  spec directory available, create it. If no equil.xyz in spec dir, then copy equil.xyz over to spec dir, and make files
-accordingly.
+- If geom_opt has completed, extract equilibrium coords:
+  save in parent folder as equil.xyz & if no spec directory available,
+  create it. If no equil.xyz in spec dir, then copy equil.xyz over to
+  spec dir, and make files accordingly.
 
 Get results.
 ...
@@ -22,42 +41,41 @@ Get results.
 ...
 Create single points for completed geom_opts? [y/n]
 """
-from ..core.molecule import Molecule
-from ..core.thermo import thermo_data
-from ..core.utils import (read_file, get_files, write_csv_from_dict, write_csv_from_nested, responsive_table)
-from ..interfaces.gamess_results import GamessResults
-from ..interfaces.psi_results import PsiResults
-from ..interfaces.gaussian_results import GaussianResults
-from .make_files_meta import make_files_from_meta
-import os
-import subprocess
-import re
-import csv
+
 
 def search_for_coords(dir):
     """
-    Recursively searched log/out files of optimisations for a successful equilibration- then writes to `equil.xyz`. If unsuccesful, writes to `rerun/rerun.xyz`, whilst also creating the corresponding input and job file.
+    Recursively searched log/out files of optimisations for a successful
+    equilibration- then writes to `equil.xyz`. If unsuccesful, writes to
+    `rerun/rerun.xyz`, whilst also creating the corresponding input and
+    job file.
     """
-    
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
         if r is not None:
             if r.completed():
                 if r.is_optimisation():
-                    print(f'{r.log}:\nFinding equilibrium coordinates...', end = " ")
+                    print(f'{r.log}:\nFinding equilibrium coordinates...',
+                          end=" ")
                     r.get_equil_coords()
                     print()
             else:
                 print(f"{log}: Not completed\n")
 
+
 def create_extra_jobs(dir):
-    """Using `equil.xyz` files found from a previous search, create additional files"""
+    """
+    Using `equil.xyz` files found from a previous search, create
+    additional files
+    """
 
     def is_complex():
         complex = False
         while not complex:
             try:
-                user_choice = input("Are these systems made of more than one molecule? [Y/N] ")
+                user_choice = input(
+                    ("Are these systems made of ",
+                     "more than one molecule? [Y/N] "))
             except ValueError:
                 print("Please enter 'Y' or 'N'")
             if user_choice.upper() not in ('Y', 'N'):
@@ -77,7 +95,10 @@ def create_extra_jobs(dir):
                 writer.write(line)
 
     def copy_meta(file_to_copy, scomp):
-        """Give the path and filename of meta.py file to copy over to any directory containing an `equil.xyz` file"""
+        """
+        Give the path and filename of meta.py file to copy over to any
+        directory containing an `equil.xyz` file
+        """
         complex = is_complex()
         parent = os.getcwd()
         for path, _, files in os.walk('.'):
@@ -88,13 +109,12 @@ def create_extra_jobs(dir):
                     add_to_meta(scomp, complex)
                     os.chdir(parent)
 
-
     def get_supercomp():
         sc = False
         while not sc:
             try:
-                sc_choice = int(input(\
-"""Which supercomputer do you want to use?
+                sc_choice = int(input(
+                    """Which supercomputer do you want to use?
 
 1. Raijin
 2. Magnus
@@ -103,7 +123,7 @@ def create_extra_jobs(dir):
 Choice: """))
             except ValueError:
                 print('Please enter a number between 1 and 3')
-            if sc_choice not in range(1,4):
+            if sc_choice not in range(1, 4):
                 print('Please enter a number between 1 and 3')
             else:
                 sc = True
@@ -113,7 +133,9 @@ Choice: """))
         return scomp
 
     # os.path.dirname(__file__) = user_scripts
-    template_dir = os.path.join(os.path.dirname(__file__), os.pardir, 'templates/meta_files')
+    template_dir = os.path.join(os.path.dirname(__file__),
+                                os.pardir,
+                                'templates/meta_files')
     predefined = {
         1: os.path.join(template_dir, 'gamess/spec/meta.py'),
         2: os.path.join(template_dir, 'gamess/freq/meta.py'),
@@ -122,8 +144,8 @@ Choice: """))
     good = False
     while not good:
         try:
-            user_choice = int(input(\
-"""Use a predefined file or one of your own:
+            user_choice = int(input(
+                """Use a predefined file or one of your own:
 
 1. Predefined
 2. Own meta.py
@@ -139,8 +161,8 @@ Choice: """))
         done = False
         while not done:
             try:
-                choice = int(input(\
-"""Which type of file do you want to make?
+                choice = int(input(
+                    """Which type of file do you want to make?
 
 1. Gamess single point energy
 2. Gamess hessian
@@ -149,7 +171,7 @@ Choice: """))
 Choice: """))
             except ValueError:
                 print('Please enter a number between 1 and 3')
-            if choice not in range(1,4):
+            if choice not in range(1, 4):
                 print('Please enter a number between 1 and 3')
             else:
                 done = True
@@ -159,15 +181,18 @@ Choice: """))
         scomp = get_supercomp()
         copy_meta(meta_file, scomp)
     else:
-        user_path = input('Give path to your own meta.py (relative from the directory you are running this script from)')  
+        user_path = input(("Give path to your own meta.py ",
+                           "(relative from the directory you are running ",
+                           "this script from)"))
         user_given = os.path.join(os.getcwd(), user_path)
         scomp = get_supercomp()
         copy_meta(user_path, scomp)
         # load script from os.path.join(os.getcwd(), p)
         # if no meta.py there, ask again
-    
+
     # run meta.py recursively
-    make_files_from_meta('.') 
+    make_files_from_meta('.')
+
 
 def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
@@ -194,6 +219,7 @@ def get_type(filepath):
             calc = 'gaussian'
     return calc
 
+
 def parse_results(dir):
     """
     Used internally to parse log files for energies
@@ -203,17 +229,18 @@ def parse_results(dir):
         calc = get_results_class(log)
         filetype = get_type(log)
         try:
-            if calc.completed(): #add provision for energies of opts only if equilibrium found
+            if calc.completed():  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
                     print(f"Searching through {calc.log}")
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
             # else:
                 # print(f'{calc.log}: Incomplete') # don't care about knowing which files are
-                # incomplete 
-        except AttributeError: # if log/out files are not logs of calculations
+                # incomplete
+        except AttributeError:  # if log/out files are not logs of calculations
             continue
-    return output    
+    return output
+
 
 def results_table(dir):
     """
@@ -226,8 +253,8 @@ def results_table(dir):
                   'HF/DFT': [],
                   'MP2/SRS': [],
                   'MP2_opp': [],
-                  'MP2_same':[]}
-    
+                  'MP2_same': []}
+
     def add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same):
         table_data['File'].append(f)
         table_data['Path'].append(p)
@@ -237,21 +264,24 @@ def results_table(dir):
         table_data['MP2_opp'].append(mp2_opp)
         table_data['MP2_same'].append(mp2_same)
         return table_data
-   
+
     for result in output:
         if result['type'] == 'psi':
             f, p, b, hf, mp2_opp, mp2_same = result['data']
             mp2 = 'NA'
-            table_data = add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
+            table_data = add_to_table(
+                table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
         else:
             f, p, b, hf, mp2 = result['data']
             mp2_opp = 'NA'
             mp2_same = 'NA'
-            table_data = add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
+            table_data = add_to_table(
+                table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
 
-    responsive_table(table_data, strings = [1,2,3]) 
+    responsive_table(table_data, strings=[1, 2, 3])
     name = write_csv_from_dict(table_data)
-    return name # for use in other calculations (chem_assist -r uses this name)
+    # for use in other calculations (chem_assist -r uses this name)
+    return name
 
 
 def thermochemistry(dir):
@@ -260,17 +290,17 @@ def thermochemistry(dir):
     subdirectories. Saves to csv file.
     """
     collected = \
-    {
-        'File': [],
-        'ZPVE': [],
-        'TC': [],
-        'S elec': [],
-        'S tran': [],
-        'S rot': [],
-        'S vib': [],
-        'S tot': [],
-        'TC - TS': []
-    }
+        {
+            'File': [],
+            'ZPVE': [],
+            'TC': [],
+            'S elec': [],
+            'S tran': [],
+            'S rot': [],
+            'S vib': [],
+            'S tot': [],
+            'TC - TS': []
+        }
 
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
@@ -278,7 +308,7 @@ def thermochemistry(dir):
             if r.completed():
                 if r.is_hessian():
                     print(f'Thermo data for {r.log}')
-                    res = thermo_data(r.log) # run fortran script
+                    res = thermo_data(r.log)  # run fortran script
                     res['File'] = r.log
                     for k, v in res.items():
                         collected[k].append(v)
@@ -288,21 +318,23 @@ def thermochemistry(dir):
             print(f'{log}- UnicodeDecodeError')
             continue
 
-    # add units to dict keys   
+    # add units to dict keys
 
     kj = ('ZPVE', 'TC', 'TC - TS')
     jmol = ('S elec', 'S tran', 'S rot', 'S vib', 'S tot')
     kv = list(collected.items())
-    collected.clear() 
+    collected.clear()
     for k, v in kv:
         if k in kj:
             collected[k + ' [kJ/mol]'] = v
         elif k in jmol:
             collected[k + ' [J/(mol K)]'] = v
         else:
-            collected[k] = v 
-    name = write_csv_from_dict(collected, return_name = True, filename = 'thermo.csv')
+            collected[k] = v
+    name = write_csv_from_dict(
+        collected, return_name=True, filename='thermo.csv')
     return name
+
 
 def get_h_bonds(dir):
     """
@@ -316,10 +348,10 @@ def get_h_bonds(dir):
     output = []
     for file in get_files(dir, ['xyz']):
         path, f = os.path.split(file)
-        # print('-' * 60)   
+        # print('-' * 60)
         # print(file + '\n')
         print('Checking', file[2:])
-        mol = Molecule(using = file)
+        mol = Molecule(using=file)
         mol.separate()
         res = mol.find_h_bonds()
         # print()
@@ -327,12 +359,14 @@ def get_h_bonds(dir):
             i.insert(0, f)
             i.insert(1, path)
         output += res
-    print() 
+    print()
     if len(output) > 0:
         data = {}
-        keys = ('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)')
+        keys = ('File', 'Path', 'Molecule1', 'Atom1',
+                'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)')
         for index, value in enumerate(keys):
             data[value] = [val[index] for val in output]
-        responsive_table(data, strings = [1,2,3,4,5,6], min_width=6)
+        responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=6)
         print()
-        write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename = 'hbonds.csv')
+        write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1',
+                                                 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename='hbonds.csv')
