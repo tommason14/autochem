@@ -70,13 +70,15 @@ def get_files(directory, ext):
     """
     import os
 
-    fileLst = []
+    file_list = []
     for path, dirs, files in os.walk(directory):
         for file in files:
             for e in ext:
-                if re.search(e, file) and file != 'freq.out': # freq.out used for thermo calculations with the fortran code
-                    fileLst.append(os.path.join(path, file))
-    return fileLst
+                if re.search(e, file) and file != 'freq.out': 
+                    # freq.out used for thermo calculations 
+                    # with the fortran code
+                    file_list.append(os.path.join(path, file))
+    return file_list
 
 def module_exists(module_name):
     try:
@@ -105,8 +107,6 @@ def write_csv_from_dict(data, return_name = False, filename = None):
     """Write to file from dictionary"""
 
     import csv
-
-    # convert to try/except
 
     done = False
     while not done:
@@ -137,7 +137,7 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False, filename
 
     if type(col_names) not in (list, tuple):
         raise AttributeError('Must pass in column names as a list or tuple of values')
-    # convert to try/except
+
     done = False
     while not done:
         to_file = input('Print to csv? [Y/N] ')

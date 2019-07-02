@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from .periodic_table import PeriodicTable as PT
 from .atom import Atom
-from .bond import Bond
 from .utils import sort_elements
 
 import re
@@ -15,7 +11,11 @@ import sys
 __all__ = ['Molecule']
 
 class Molecule:
-    """Class implementing the concept of a molecular system. Crucial is the separation of molecules in a given system, with output for Fragment Molecular Orbital calculations"""
+    """
+    Implementing the concept of a molecular system. Crucial is the
+    separation of molecules in a given system, with output for Fragment
+    Molecular Orbital calculations
+    """
 
     Anions = {"bromide" : ["Br"]}
     Anions["chloride"] = ["Cl"]
@@ -85,18 +85,16 @@ class Molecule:
         if using is not None:
             self.coords = self.read_xyz(using)
             #list of Atom objects, more useful than list of coordinates
-        self.bonds = []
         if atoms is not None and using is None:
             if len(atoms) == 0:
                 sys.exit('Error: atoms argument passed into Molecule is empty')
             # list of atoms might not be atom objects
             if not isinstance(atoms[0], Atom):
-                new = []
+                self.coords = []
                 for atom in atoms:
-                        sym, *coords = atom
-                        a = Atom(symbol = sym, coords = coords)
-                        new.append(a)
-                self.coords = new
+                    sym, *coords = atom
+                    a = Atom(symbol = sym, coords = coords)
+                    self.coords.append(a)
             else: 
                 self.coords = atoms
     
@@ -108,7 +106,6 @@ class Molecule:
         if hasattr(self, 'coords'):
         # self.complex used in input files
         # assuming a neutral closed shell system
-            
             self.complex = {
                 "type": "complex",
                 "name": "complex",
@@ -125,7 +122,9 @@ class Molecule:
         return self._repr()
     
     def _repr(self): 
-        """Repr for system after fragmentation"""
+        """
+        Repr for system after fragmentation
+        """
         frags = {}
         for frag in self.fragments.values():
             if frag['name'] not in frags:
@@ -141,12 +140,15 @@ class Molecule:
         return iter(self.coords)
 
     def formula(self, as_dict = False, as_latex = False, as_html = False):
-        """Returns the molecular format in a variety of formats using keyword arguments:
+        """
+        Returns the molecular format in a variety of formats using keyword 
+        arguments:
         * *as_dict* -- returns a python dictionary
         * *as_latex* -- returns a latex expression using \textsubscript{} notation (equivalent to $_{value}$, but the math expression renders in a different font)
         * *as_html* -- returns a html expression using <sub> tags
 
-        If no keyword arguments are passed, a regular string is returned with no formatting i.e. C8H18
+        If no keyword arguments are passed, a regular string is returned with 
+        no formatting i.e. C8H18
         """
 
         formula  = {}
@@ -174,7 +176,9 @@ class Molecule:
             return string
 
     def mass(self):
-        """Returns molecular mass in g mol⁻¹"""
+        """
+        Returns molecular mass in g mol⁻¹
+        """
         formula = self.formula(as_dict=True)
         mass = 0
         for element, number in formula.items():
@@ -182,7 +186,10 @@ class Molecule:
         return f"{mass:.2f} g mol⁻¹"
 
     def read_xyz(self, using):
-        """Reads coordinates of an xyz file and return a list of |Atom| objects, one for each atom"""
+        """
+        Reads coordinates of an xyz file and return a list of |Atom| objects,
+        one for each atom
+        """
         coords = []
         with open(using, "r") as f:
             for coord in f.readlines()[2:]:
@@ -193,7 +200,9 @@ class Molecule:
         return coords
 
     def write_xyz(self, atoms, filename = None):
-        """Writes an xyz file using a list of |Atom| instances"""
+        """
+        Writes an xyz file using a list of |Atom| instances
+        """
         if filename is None:
             raise ValueError('write_xyz: Must give a path to the output file')
         else:
@@ -204,7 +213,9 @@ class Molecule:
 
 
     def split_old(self):
-        """Assigns each atom in ``self.coords`` to a different fragment- very useful for FMO calculations.
+        """
+        Assigns each atom in ``self.coords`` to a different fragment- very 
+        useful for FMO calculations.
         Note: Only works if all intramolecular bonds are shorter than all
         intermolecular bonds. A long bond in the middle of a molecule or a 
         short hydrogen bond will cause this to fail!
@@ -212,10 +223,13 @@ class Molecule:
 
         self.mol_dict = {}
         for atom in self.coords:
-            self.mol_dict[atom.index] = Molecule(atoms = [atom]) # 1-atom molecules
+            self.mol_dict[atom.index] = Molecule(atoms = [atom]) 
+            # 1-atom molecules
 
         def min_dist(mol_i, mol_j):
-            """Finds the minimum distance between atoms in two different molecules"""
+            """
+            Finds the minimum distance between atoms in two different molecules
+            """
             distances = []
             for atom_i in mol_i:
                 for atom_j in mol_j:
@@ -223,7 +237,10 @@ class Molecule:
             return min(distances)
 
         def distances():
-            """Returns a list of lists of [i, j, min_dist(i, j)] for each combination of atoms in the system"""
+            """
+            Returns a list of lists of [i, j, min_dist(i, j)] for each
+            combination of atoms in the system
+            """
             dist_list = []
             # here, decide if bonded!
             # for every combination of atoms in the list, find their distance
@@ -244,8 +261,7 @@ class Molecule:
                         print('Must give an integer number of fragments!')
             while len(set(self.mol_dict.keys())) > self.nfrags:
                 dist = distances()
-                dist.sort(key = lambda item: item[2]) # sort on distance of [i, j, dist]
-                # take the second atom, append it to the list of atoms in the value of the first                                                                                                             
+                dist.sort(key = lambda item: item[2]) # sort on distance                                 
                 mol1, mol2 = dist[0][:2] # dist = [[i,j,dist], [i,j,dist], [i,j,dist]...]
                 # adding all atoms in 'mol2' to the list of atoms of the first molecule
                 for index, atom in enumerate(self.mol_dict[mol2]):
@@ -262,9 +278,11 @@ class Molecule:
 
 
     def check_db(self):
-        """Checks fragments for a match in the database"""
+        """
+        Checks fragments for a match in the database
+        """
 
-        symbols = {} # not tied to an instance, only required when checking the database
+        symbols = {} 
         for frag, atoms in self.mol_dict.items():
             symbols[frag] = [atom.symbol for atom in atoms]
  
@@ -290,12 +308,11 @@ class Molecule:
 
             for name, atom_list in db.items():
                 for sym, molecule in symbols_dict.items():
-                    if sorted(molecule) == sorted(atom_list): #sorts in place, but no overwriting of variable
-                        
+                    if sorted(molecule) == sorted(atom_list): 
                         data = {
                                 "type": mol_type,
                                 "name" : name,
-                                "atoms": self.mol_dict[sym], #not symbols, but the atom objects
+                                "atoms": self.mol_dict[sym],
                                 "charge": charge,
                                 "multiplicity": mult,
                                 "elements": sort_elements(self.mol_dict[sym]),
@@ -319,7 +336,8 @@ class Molecule:
     def renumber_molecules(self):
         """
         Molecule numbers (Mol: _) are sometimes not in a numerical order. 
-        This function takes the molecules and gives them a number from 1 to the number of fragments
+        This function takes the molecules and gives them a number from 1 to the 
+        number of fragments
         """ 
 
         current = set([atom.mol for atom in self.coords])
@@ -349,18 +367,20 @@ class Molecule:
         print()
 
     def reassign_frags_manually(self):
-        """Called if fragments are not assigned correctly- user then input the fragments manually"""
+        """
+        Called if fragments are not assigned correctly- user then inputs 
+        the fragments manually
+        """
 
         def get_manual_assignments():
             manual = input("Fragments: ")
             manual_split = manual.split(',')
-
             manual_assignment = [i.strip() for i in manual_split]
             frag_indices = []
 
             start = 0
             end = 0
-            # # pair up, but how if only one element?
+            # pair up, but how if only one element?
             for frag in manual_assignment:
                 if '[' in frag:
                     start = int(frag[1:])
@@ -414,17 +434,11 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         print()
         frag_indices = get_manual_assignments()
         update_mol_dictionary(frag_indices)
-    
-    def all_atoms_assigned(self):
-        s = 0
-        for frag in self.fragments.values():
-            for atom in frag['atoms']:
-                s += 1
-        return s == len(self.coords)
 
     def assign_neighbours(self):
         """
-        Checks each atom, either per fragment or in whole list, for bonded atoms by considering separation and van der waals radii
+        Checks each atom, either per fragment or in whole list, for bonded 
+        atoms by considering separation and van der waals radii
         """
 
         for i, atom_i in enumerate(self.coords):
@@ -437,12 +451,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             atom_i.connected_atoms.append(atom_j)
                         if atom_i not in atom_j.connected_atoms:
                             atom_j.connected_atoms.append(atom_i)
-                        # also finds hydrogen bonds to atoms in other molecules
 
         
     def add_ionic_network(self):
-        """Adds one item to self.fragments- removing all neutral species, along with the one-atom
-        ions"""
+        """
+        Adds one item to self.fragments- removing all neutral species, 
+        along with the one-atom ions
+        """
         coord_list = [coord for coord in self.coords] 
         for k, frag in self.fragments.items():
             # remove neutrals
@@ -459,13 +474,11 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     for i, atom in enumerate(coord_list):
                         if coord.index == atom.index:
                             del coord_list[i]
-        if len(coord_list) == len(self.coords):
-            pass
-        else:
+        if len(coord_list) != len(self.coords):
             self.ionic = {
                 "type": 'ionic',
                 "name" : 'ionic',
-                "atoms": coord_list, #not symbols, but the atom objects
+                "atoms": coord_list,
                 "charge": 0,
                 "multiplicity": 1,
                 "elements": sort_elements(coord_list),
@@ -481,31 +494,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 return False
         return True
    
-    def separate_old(self):
-        """
-        Separates coordinates into specific fragments using the intermolecular distances. Note
-        this function only works with intermolecular fragments and cannot split molecules on bonds.
-        
-        Also often couldn't determine fragments due to long intramolecular bonds. Now deprecated in
-        favour of checking van der waals distances
-        """
-        self.split_old()
-        self.check_db()
-        self.renumber_molecules()
-        self.print_frags() 
-        all_assigned = False
-        while not all_assigned:
-            self.reassign_frags_manually()
-            if self.all_atoms_assigned():
-                all_assigned = True
-        self.add_ionic_network()
-
     def separate(self):
         """
-        Separates coordinates into specific fragments using the intermolecular distances along
-        with van der waals radii. Note this function only works with intermolecular fragments 
-        and cannot split molecules on bonds.
+        Separates coordinates into specific fragments using the intermolecular 
+        distances along with van der waals radii. Note this function only works 
+        with intermolecular fragments and cannot split molecules on bonds.
         """
+
         self.split()
         self.check_db()
         self.renumber_molecules()
@@ -517,7 +512,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 self.reassign_frags_manually()
                 if self.all_atoms_assigned():
                     all_assigned = True
-        # self.print_frags() 
         self.add_ionic_network()
 
 
@@ -536,108 +530,48 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         return matrix
 
     def split(self):
-
+        """
+        Split a system into fragments using van der waals radii. Modifies
+        attributes of atoms in self.coords directly in loop, instead of creating
+        a dictionary and appending to the dictionary as we go. This
+        significantly speeds up the fragmentation.
+        """
         mol_count = 0
-        self.mol_dict = {}
         dists = self.distance_matrix()
         for i, atom_i in enumerate(self.coords):
+            connected = False
             for j, atom_j in enumerate(self.coords):
                 if i != j:
                     vdw_dist = PT.get_vdw(atom_i) + PT.get_vdw(atom_j)
-                    if dists[i,j] < vdw_dist:                    
-                        # more recent addn
-                        # if atom_i not in atom_j.connected_atoms:
-                        #     atom_j.connected_atoms.append(atom_i)
-                        # if atom_j not in atom_i.connected_atoms:
-                        #     atom_i.connected_atoms.append(atom_j)
-                        # # bonded
-                        # if atom_i already in dict, add j to same molecule
-                        # or create new molecule
-                        i_added = False
-                        j_added = False
-
-                        # does not prevent duplicates!
-                        for k, v in self.mol_dict.items():
-                            if atom_i in v and atom_j not in v:
-                                v.append(atom_j)
-                                j_added = True
-                            if atom_j in v and atom_i not in v:
-                                v.append(atom_i)
-                                i_added = True
-
-                        if not i_added and not j_added:
-                            self.mol_dict[mol_count] = [atom_i, atom_j]
+                    if dists[i,j] < vdw_dist:
+                        # connected
+                        connected = True
+                        if atom_i not in atom_j.connected_atoms:
+                            atom_j.connected_atoms.append(atom_i)
+                        if atom_j not in atom_i.connected_atoms:
+                            atom_i.connected_atoms.append(atom_j)
+                        if atom_i.mol is None and atom_j.mol is None:
+                            atom_i.mol = mol_count
+                            atom_j.mol = mol_count
                             mol_count += 1
-                    else:
-                        # if non-bonded, check if already in dict
-                        atom_i_in_dict = False
-                        atom_j_in_dict = False
+                        elif atom_i.mol is None and atom_j.mol is not None:
+                            atom_i.mol = atom_j.mol
+                        elif atom_j.mol is None and atom_i.mol is not None:
+                            atom_j.mol = atom_i.mol
+                        # if different assignments, remove original assignment
+                        # combine the two fragments together, as they are connected
+                        elif atom_i.mol is not None and atom_j.mol is not None:
+                            if atom_i.mol != atom_j.mol:
+                                orig = atom_j.mol
+                                for atom in self.coords:
+                                    if atom.mol is orig:
+                                        atom.mol = atom_i.mol
+            if not connected:
+                atom_i.mol = mol_count
+                mol_count += 1
 
-                        for k, v in self.mol_dict.items():
-                            if atom_i in v:
-                                atom_i_in_dict = True
-                            if atom_j in v:
-                                atom_j_in_dict = True
-                        if not atom_i_in_dict:
-                            self.mol_dict[mol_count] = [atom_i]
-                            mol_count += 1
-                        if not atom_j_in_dict:
-                            self.mol_dict[mol_count] = [atom_j]
-                            mol_count += 1
-
-        ## v.v. slow for larger systems!!!
-
-        # check if any index appears twice
-        # if yes, delete it
-        # if any other atoms are present, 
-        # then add them to first molecule with index in
-        # and remove from original place
-        # should result in some empty lists, so delete them
-        
-        # PREVENT THIS BY ADDING ATOMS TO ATOM.CONNECTED_ATOMS
-        # IF BONDED, AND THEN CHECK AGAIN HERE? OR AT BOTTOM OF FIRST 
-        # LOOP??
-        for k, v in self.mol_dict.items():
-            indices_of_first_mol = set([atom.index for atom in v])
-            for atom in v:
-                # check all other 'molecules'
-                for k2, v2 in self.mol_dict.items():
-                    if k != k2:                        
-                        for ind, atom2 in enumerate(v2):
-                            if atom.index == atom2.index:
-                                # if duplicate
-                                del v2[ind]
-                                # check all other atoms in second molecule
-                                if atom2.index not in indices_of_first_mol:
-                                    removed = v2.pop(ind)
-                                    v.append(removed)
-        
-        # use connected atoms, if atoms not in same mol, add them and remove from rest
-        # for k, mol in self.mol_dict.items():
-        #     for atom in mol:
-        #         for con in atom.connected_atoms:
-        #             if con not in mol:
-        #                 v.append(con)
-        #             # remove from rest
-        #             for k2, v2 in self.mol_dict.items():
-        #                 if k != k2:
-        #                     if con in v2:
-        #                         v2.remove(con)    
-
-        # for some reason- still the odd atom left over...
-        # check again for distances
-        for index, mol1 in self.mol_dict.items():
-            for index2, mol2 in self.mol_dict.items():
-                if index != index2:
-                    for atom1 in mol1:
-                        for atom2 in mol2:
-                            vdw_dist = PT.get_vdw(atom1) + PT.get_vdw(atom2)
-                            if dists[atom1.index - 1, atom2.index - 1] < vdw_dist:
-                                mol1.append(atom2)
-                                mol2.remove(atom2)
-
-        # remove empty lists, sort atoms by index
-        self.mol_dict = {k:v for k,v in self.mol_dict.items() if len(v)>0}
+        nums = set([atom.mol for atom in self.coords])
+        self.mol_dict = {val: [atom for atom in self.coords if atom.mol == val] for val in nums}
         
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
@@ -698,12 +632,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 connecting atom, but if there is more, only considering the
                 first in the list.
                 """
-                # connected atoms is a set- can't find first atom by index...
-                connected_to_atom2 = None
-                for index, atom in enumerate(atom2.connected_atoms):
-                    if index == 0:
-                        connected_to_atom2 = atom
-
+                connected_to_atom2 = atom2.connected_atoms[0]
                 return atom2.angle_between(atom1.coords,connected_to_atom2.coords)
                 
 
@@ -780,8 +709,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 group1 = find_molecule_type(mol_one_name)
                 group2 = find_molecule_type(mol_two_name)
 
-                # print(f'{group1}-{group2}')
-                # print(f"({one.symbol}, {mol_one_name} (mol {one.mol}))--- {dist:.3f} Å, {angle:.0f}° ---({two.symbol}, {mol_two_name} (mol {two.mol}))")
                 hbond_data.append([
                     mol_one_name, 
                     one.symbol, 
@@ -805,7 +732,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         if not hasattr(self, 'fragments'):
             self.separate()
-
         for frag in self.fragments.values():
             for a in frag['atoms']:
                 if a.index == atom.index:
