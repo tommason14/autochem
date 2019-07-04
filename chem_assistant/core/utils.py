@@ -1,4 +1,4 @@
-__all__ = ['read_file', 'get_type', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
+__all__ = ['read_file', 'get_type', 'read_xyz', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
 'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof']
 
@@ -36,6 +36,17 @@ def get_type(file):
         elif 'GAMESS' in line:
             return 'gamess'
         # extend to lammps
+
+def read_xyz(using):
+    """Reads coordinates of an xyz file and return a list of |Atom| objects, one for each atom"""
+    coords = []
+    with open(using, "r") as f:
+        for coord in f.readlines()[2:]:
+            line = coord.split()
+            for val in PT.ptable.values():
+                if line[0] == val[0]:
+                    coords.append(Atom(line[0], coords = tuple(float(i) for i in line[1:4])))
+    return coords
 
 def write_xyz(atoms, filename = None):
     """
