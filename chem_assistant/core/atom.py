@@ -1,5 +1,6 @@
 from .periodic_table import PeriodicTable as PT
 import math
+import numpy as np
 
 __all__ = ['Atom']
 
@@ -22,10 +23,10 @@ class Atom:
     def __init__(self, symbol = None, atnum = 0, coords = None, mol = None, bonds = None):
         if symbol is not None:
             self.symbol = symbol
-            self.atnum = PT.get_atnum(self.symbol)
+            self.atnum = PT.get_atnum(self)
         else:
             self.atnum = atnum
-            self.symbol = PT.get_symbol(self.atnum)
+            self.symbol = PT.get_symbol(self)
 
         self.mol = mol
         self.bonds = bonds or []
@@ -77,15 +78,15 @@ class Atom:
             dist += (i - j)**2
         return dist ** 0.5
 
-    def vector_to(self, vector):
+    def vector_to(self, point):
         """Returns a vector from the atom to a given point, in angstroms"""
         return tuple((i - j) for i,j in zip(point, self))
 
-    def angle(self, pos1, pos2):
-        """Returns an angle between positions 1 and 2, with this atom lying at the centre"""
+    def angle_between(self, pos1, pos2):
+        """Returns an angle between positions 1 and 2 in degrees, with this atom lying at the centre"""
         # dot product, angle = cos^-1([vec(a).vec(b)] / [dist(a) * dist(b)])
         num = np.dot(self.vector_to(pos1), self.vector_to(pos2))
         denom = self.distance_to(pos1) * self.distance_to(pos2)
-        return math.acos(num/denom)
+        return math.acos(num/denom) * (180 / math.pi)
 
     __str__ = __repr__

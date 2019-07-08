@@ -17,7 +17,7 @@ class PsiResults(Results):
     def completed(self):
         complete = False
         for line in self.read():
-            if 'PSI4 exiting successfully' in line:
+            if 'Psi4 exiting successfully' in line:
                 complete = True
         return complete
 
@@ -90,7 +90,6 @@ class PsiResults(Results):
         c_os = SRS['c_os'][basis.lower()]
         c_ss = SRS['c_ss'][basis.lower()]
         
-        MP2 = HF + c_os * opp + c_ss * same
+        # MP2 = HF + c_os * opp + c_ss * same
         
-        return self.file, self.path, basis, HF, MP2
-
+        return self.file, self.path, basis, HF, opp, same

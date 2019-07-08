@@ -41,7 +41,9 @@ molecular dynamics. This class also creates job files in the same directory as t
                           'magnus': 'mgs',
                           'mon': 'mon',
                           'monarch': 'mon',
-                          'gaia': 'gaia'}
+                          'gaia': 'gaia',
+                          'stm': 'stm',
+                          'stampede': 'stm'}
             try:
                 self.sc = supercomps[user_sc]
             except:
@@ -84,6 +86,8 @@ molecular dynamics. This class also creates job files in the same directory as t
         elif str(self.sc) == 'rjn':
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif self.sc == 'mon':
+        elif str(self.sc) == 'mon':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif str(self.sc) == 'stm':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')

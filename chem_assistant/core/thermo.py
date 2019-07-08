@@ -24,17 +24,28 @@ def thermo_initial_geom(file):
 def freq_data(file, write_freqs_to_file = False):
     """Parses GAMESS hessian calculation log file for the frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-    results = {'Modes': [], 'Frequencies [cm-1]': [], 'Reduced Mass [amu]': [], 'Intensities [Debye^2/(amu Å^2)]': []} # keys used as headers for csv
+    found_region = False
+    modes = []
+    freqs = []
+    ints  = []
     with open(file, "r") as f:
-        for line in f.readlines():
-            if re.search(regex, line):
-                mode, vib, symmetry, mass, intensity = line.split()
-                mode = int(mode)
-                vib, mass, intensity = map(float, (vib, mass, intensity))
-                results['Modes'].append(mode)
-                results['Frequencies [cm-1]'].append(vib)
-                results['Reduced Mass [amu]'].append(mass)
-                results['Intensities [Debye^2/(amu Å^2)]'].append(intensity)
+        for line in f:
+            if 'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.' in line:
+                found_region = True
+            if line is '\n':
+                found_region = False
+            if found_region:
+                if re.search(regex, line):
+                    mode, vib, *_,  intensity = line.split()
+                    mode = int(mode)
+                    vib, intensity = map(float, (vib, intensity))
+                    modes.append(mode)
+                    freqs.append(vib)
+                    ints.append(intensity)
+
+    results = {'Modes'                          : modes, 
+               'Frequencies [cm-1]'             : freqs, 
+               'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
     for key, value in results.items():
         results[key] = value[6:] #3N-6, with the 6 at the start = trans or rot modes.
@@ -46,16 +57,12 @@ def freq_data(file, write_freqs_to_file = False):
     return results
     
 def run(file):
-    print('Running')
-    p = subprocess.Popen(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'thermo-gamess.exe'), shell=True, stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE, universal_newlines=True) 
-    # os.path.dirname(os.path.realpath(__file__)) = dir of this file, irrespective of where the
-    # python script is executed
+    thermo_exe = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'thermo-gamess.exe')
+    p = subprocess.Popen(thermo_exe, shell=True, 
+    stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True) 
     newline = os.linesep
     commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
-    # print("\033[30;46mThermodynamics for", file +"\033[0m")
-    # os.system("cat fort.10")
 
 def read_fort():
     with open('fort.10', 'r') as f:
@@ -106,13 +113,13 @@ hessian matrix"""
     warnings.filterwarnings("ignore")
     import matplotlib.pyplot as plt
     import seaborn as sns
-    # Slow imports, so only import if needed
 
     res = freq_data(file)
+    # now add gaussians... interesting project
     sns.set_style('darkgrid')
     sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
     plt.xlabel('Wavenumber (cm$^{-1}$)')
     plt.ylabel('Intensity')
     plt.show()
-    write_csv_from_dict(res)
+    write_csv_from_dict(res, filename = 'freq.data')
     

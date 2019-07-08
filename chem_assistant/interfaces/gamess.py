@@ -111,10 +111,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
     def determine_fragments(self):
         if self.fmo:
-            if self.merged.nfrags != {}: #automatically creates an empty dict if called
-                self.mol.nfrags = self.merged.nfrags
-            else:
-                self.mol.nfrags = int(input('Number of fragments: '))
+            # don't need this anymore, with the vdw splitting...
+            # if self.merged.nfrags != {}: #automatically creates an empty dict if called
+            #     self.mol.nfrags = self.merged.nfrags
+            # else:
+            #     self.mol.nfrags = int(input('Number of fragments: '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -214,7 +215,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def fmo_formatting(self):
         self.fmo_meta() # gives self.mol.indat, self.mol.charg
-        if self.input.contrl.runtyp in ('optimize', 'hessian'):
+        if self.input.contrl.runtyp.lower() in ('optimize', 'hessian', 'fmohess'):
             nbody = 2
             rcorsd = 100
         else:
@@ -242,7 +243,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             inp += " $END\n"
             inp += " $FMOXYZ\n"
         for atom in self.mol.coords:
-            inp += f" {atom.symbol:5s} {PT.get_atnum(atom.symbol):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
+            inp += f" {atom.symbol:5s} {PT.get_atnum(atom):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
         inp += ' $END'
         return inp
 
@@ -253,7 +254,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if self.filename is not None:
             self.base_name = self.filename
         else:
-            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess'}
+            options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess', 'fmohess': 'hess'}
             self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
 
     def write_file(self, data, filetype):
@@ -281,7 +282,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace('nodes=1', f'nodes={num_frags}')
-            jobfile = jobfile.replace('12 12', f'{12 * num_frags} 12') 
+            jobfile = jobfile.replace('24 24', f'{24 * num_frags} 24') 
             return jobfile
         return job
             
@@ -306,6 +307,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif self.sc == 'mon':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif self.sc == 'mas':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif self.sc == 'stm':
+            jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')
 
     def make_run_dir(self):

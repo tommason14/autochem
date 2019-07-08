@@ -1,4 +1,4 @@
-from ..core.utils import write_xyz
+from ..core.utils import write_xyz, eof
 from ..core.results import Results
 
 import re
@@ -48,10 +48,14 @@ store the iteration number.
 
     def completed(self):
         found = False
-        for line in self.read():
+        for line in eof(self.log, 0.1):
             if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
                 found = True
         return found
+        
+        ####NEEDS WORK####
+        # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
+        # ARE NOT RETURNED, EVEN IF THERE
 
     # call like this:
     # if not self.completed():
@@ -109,7 +113,7 @@ store the iteration number.
         found_equil = False
         found_some = False
         par_dir = []
-        print(self.log)
+        # print(self.log)
         for part in self.path.split('/'):
             if part not in ('opt', 'spec', 'hess'):
                 par_dir.append(part)
@@ -154,35 +158,35 @@ store the iteration number.
                 if not os.path.exists(rerun_dir): 
                 # if already exists, then simulation already re-run- skip this log, move to next
                     os.mkdir(rerun_dir)
-                    write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
-                    basename, ext = self.file.split('.')
-                    inp = basename + '.inp'
-                    job = basename + '.job'
-                    orig_inp = os.path.join(self.path, inp) # path of the log file
-                    orig_job = os.path.join(self.path, job)
-                    rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
-                    rerun_job = os.path.join(rerun_dir, 'rerun.job')
-                    print(orig_inp)                    
-                    print(orig_job) 
-                    print(rerun_inp)
-                    print(rerun_job)
-
-                    os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
-                    # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
-                    # parse original inp and add new coords
-                    rerun_inp_file = []
-                    with open(orig_inp, "r") as f:
-                        for line in f.readlines():
-                            if re.search(regex, line):
-                                break
-                            else:
-                                rerun_inp_file.append(line)
-                    for line in rerun: #add coords
-                        rerun_inp_file.append(line + '\n') 
-                    rerun_inp_file.append(' $END')
-                    with open(rerun_inp, "w") as f:
-                        for line in rerun_inp_file:
-                            f.write(line)
+                write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                    # basename, ext = self.file.split('.')
+                    # inp = basename + '.inp'
+                    # job = basename + '.job'
+                    # orig_inp = os.path.join(self.path, inp) # path of the log file
+                    # orig_job = os.path.join(self.path, job)
+                    # rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
+                    # rerun_job = os.path.join(rerun_dir, 'rerun.job')
+                    # print(orig_inp)                    
+                    # print(orig_job) 
+                    # print(rerun_inp)
+                    # print(rerun_job)
+                    #
+                    # os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
+                    # # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
+                    # # parse original inp and add new coords
+                    # rerun_inp_file = []
+                    # with open(orig_inp, "r") as f:
+                    #     for line in f.readlines():
+                    #         if re.search(regex, line):
+                    #             break
+                    #         else:
+                    #             rerun_inp_file.append(line)
+                    # for line in rerun: #add coords
+                    #     rerun_inp_file.append(line + '\n') 
+                    # rerun_inp_file.append(' $END')
+                    # with open(rerun_inp, "w") as f:
+                    #     for line in rerun_inp_file:
+                    #         f.write(line)
             else:
                 print('No iterations were cycled through!')   
     
@@ -201,6 +205,7 @@ store the iteration number.
     #                              #
     ################################
 
+    
     def calc_type(self):
         fmo = False
         mp2 = False
@@ -220,56 +225,78 @@ store the iteration number.
         return fmo, mp2, scs
 
     def mp2_data(self, mp2_type):
-        basis = ''
+        """
+        Returns Hartree Fock and MP2 data. Returns the last instance of both.
+        """
         HF = ''
         MP2 = ''
-        # with open(filepath, "r") as f:
-        #     for line in f.readlines():
-        for line in self.read():
+        for line in eof(self.log, 0.2): # last values only
             if 'Euncorr HF' in line:
                 HF = float(line.split()[-1])
-            if 'INPUT CARD> $BASIS' in line:
-                basis = line.split()[-2].split('=')[1]
             if f'E corr {mp2_type}' in line:
                 MP2 = float(line.split()[-1])
-        return basis, HF, MP2
 
-    def get_data(self):
-        """Returns the last occurrence of FMO energies (FMO3 given if available, else FMO2), SRS and HF energies"""
-        fmo, mp2, scs = self.calc_type()
-        if fmo and scs:
-            basis, HF, MP2 = self.mp2_data('SCS')
-        elif fmo and mp2 and not scs:
-            basis, HF, MP2 = self.mp2_data('MP2')
-        elif not fmo:
-            val = ''
-            basis = ''
-            HF = ''
-            MP2 = ''
-            
-            # with open(filepath, "r") as f:
-            #     for line in f.readlines():
-            for line in self.read():
-                if 'INPUT CARD> $BASIS' in line:
-                    basis = line.split()[-2].split('=')[1]
-                if 'TOTAL ENERGY =' in line:
-                    val = float(line.split()[-1])
-            # What is total energy? SRS/MP2 or HF/DFT or something else?
-            if scs or mp2:
-                MP2 = val
-            else:
-                HF = val
+        return HF, MP2
+    
+    def raw_basis(self):
+        """
+        Returns basis set as defined in the input file.
+        """
+        for line in self.read():
+            if 'INPUT CARD> $BASIS' in line:
+                self.basis = line.split()[-2].split('=')[1]
+                break
 
-        # more readable basis set
+    def redefine_basis(self):
+        """
+        Changes basis set to give a more readable representation.
+        """
         change_basis = {'CCD'  : 'cc-pVDZ',
                         'CCT'  : 'cc-pVTZ',
                         'CCQ'  : 'cc-pVQZ',
                         'aCCD' : 'aug-cc-pVDZ',
                         'aCCT' : 'aug-cc-pVTZ',
                         'aCCQ' : 'aug-cc-pVQZ'}
-        basis = change_basis.get(basis, basis) # default is the current value
+        self.basis = change_basis.get(self.basis, self.basis) # if self.basis not in dict, return self.basis
+    
+    def basis(self):
+        """
+        Uses both raw_basis() and redefine_basis() to return the basis set
+        in a readable form.
+        """
+        self.raw_basis()
+        self.redefine_basis()
+    
+    
+    def get_data(self):
+        """
+        Returns the last occurrence of FMO energies 
+        (FMO3 given if available, else FMO2), SRS and HF
+        energies. Works because FMO3 values are printed 
+        after FMO2, and the function returns the last 
+        value printed.
+        """
+        self.basis()
+        fmo, mp2, scs = self.calc_type()
+        if fmo and scs:
+            HF, MP2 = self.mp2_data('SCS')
+        elif fmo and mp2 and not scs:
+            HF, MP2 = self.mp2_data('MP2')
+        elif not fmo:
+            val = ''
+            HF = ''
+            MP2 = ''
 
-        return self.file, self.path, basis, HF, MP2        
+            if 'TOTAL ENERGY =' in line:
+                val = float(line.split()[-1])
+            # What is total energy? SRS/MP2 or HF/DFT or something else?
+            if scs or mp2:
+                MP2 = val
+            else:
+                HF = val
+
+
+        return self.file, self.path, self.basis, HF, MP2        
 
 
             

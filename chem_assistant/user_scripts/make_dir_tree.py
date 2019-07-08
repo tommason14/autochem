@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+__all__ = ['xyz_to_tree']
 
 """
 File: xyz_to_tree.py 
@@ -20,8 +19,6 @@ from ..interfaces.psi import PsiJob
 
 import os
 from shutil import copyfile
-
-__all__ = ['xyz_to_tree']
 
 def check_dir():
     """If in files directory, do nothing. If a subdir is called files, then move into that"""

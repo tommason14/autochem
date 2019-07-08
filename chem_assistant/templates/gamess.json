@@ -5,6 +5,7 @@
       "memddi": 0
     },
     "contrl": {
+      "mplevl": 2,
       "scftyp": "rhf",
       "runtyp": "optimize",
       "maxit": 200,

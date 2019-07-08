@@ -6,9 +6,9 @@
 #SBATCH --error=%j.err
 #SBATCH --output=name.log
 
-ulimit -s unlimited
-ulimit -l unlimited
+# ulimit -s unlimited
+# ulimit -l unlimited
 
-module use /group/pawsey0197/software/cle60up05/modulefiles
-module load gamess/2018
-rungms name.inp 00 12 12
+export OMP_NUM_THREADS=1
+
+/group/pawsey0197/software/cle60up05/apps/gamess_cray_build/rungms name.inp 00 24 24
