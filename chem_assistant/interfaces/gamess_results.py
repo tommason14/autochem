@@ -267,7 +267,22 @@ store the iteration number.
         self.raw_basis()
         self.redefine_basis()
     
-    
+    def non_fmo_mp2_data(self):
+        """
+        Returns value of E(0) as HF, E(MP2) as MP2
+        """
+        HF = ''
+        MP2 = ''
+        for line in eof(self.log, 0.2):
+            if 'E(0)' in line:
+                line = line.split()
+                HF = line[-1]
+            if 'E(MP2)' in line:
+                line = line.split()
+                MP2 = line[-1]
+        HF, MP2 = map(float, (HF, MP2))
+        return HF, MP2
+
     def get_data(self):
         """
         Returns the last occurrence of FMO energies 
@@ -283,18 +298,12 @@ store the iteration number.
         elif fmo and mp2 and not scs:
             HF, MP2 = self.mp2_data('MP2')
         elif not fmo:
-            val = ''
-            HF = ''
-            MP2 = ''
-
-            if 'TOTAL ENERGY =' in line:
-                val = float(line.split()[-1])
-            # What is total energy? SRS/MP2 or HF/DFT or something else?
-            if scs or mp2:
-                MP2 = val
-            else:
-                HF = val
-
+            HF, MP2 = self.non_fmo_mp2_data()
+        ## DFT
+        if fmo and not mp2 and not scs:
+            pass
+        if all(val is False for val in (fmo, mp2, scs)):
+            pass
 
         return self.file, self.path, self.basis, HF, MP2        
 

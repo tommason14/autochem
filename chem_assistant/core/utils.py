@@ -246,7 +246,7 @@ def assign_molecules_from_dict_keys(data):
     return data
 
 
-def responsive_table(data, strings, min_width):
+def responsive_table(data, strings, min_width = 13):
     """
     Returns a table that is reponsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
