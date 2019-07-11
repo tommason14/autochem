@@ -72,7 +72,7 @@ def calculate_energies(d):
 
         # find type of system
         name = '/'.join(file.split('/')[:-1])
-        if 'frags' in name:
+        if 'frags' in name or 'cation' in name or 'anion' in name:
             job.append('frag')
             for mol in Molecule.Neutrals:
                 if mol in name:
@@ -94,7 +94,7 @@ def calculate_energies(d):
                 _, _, hf, mp2, _ = job
                 hf, mp2 = map(float, (hf, mp2))
 
-        if 'frag' in job and 'ionic' not in job:
+        if 'frag' in job or 'cation' in job or 'anion' in job and 'ionic' not in job:
             if 'neutral' in job:
                 _, _, hf, mp2, _, _ = job
                 hf, mp2 = map(float, (hf, mp2))

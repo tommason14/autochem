@@ -66,26 +66,7 @@ if args.free_energies:
     
 
 if args.results:
-    name = results_table('.')
-    # done = False
-    # while not done:
-    #     ints = input('Calculate interaction energies? [Y/N] ')
-    #     if ints.lower() in ('y', 'n'):
-    #         done = True
-    #         if ints.lower() == 'y':
-    #             calculate_interaction_energies(name)
-    #     else:   
-    #         print("Please select 'y' or 'n'")
-
-    # done = False
-    # while not done:
-    #     ints = input('Calculate interaction energies? [Y/N] ')
-    #     if ints.lower() in ('y', 'n'):
-    #         done = True
-    #         if ints.lower() == 'y':
-    #             calculate_interaction_energies(name)
-    #     else:   
-    #         print("Please select 'y' or 'n'")
+    results_table('.')
 
 if args.settings:
     settings = imported_settings()

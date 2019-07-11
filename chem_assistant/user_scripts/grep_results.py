@@ -284,7 +284,7 @@ def results_table(dir):
     table_data = remove_column_if_all_na(table_data)
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
-    name = write_csv_from_dict(table_data)
+    name = write_csv_from_dict(table_data, filename = 'energies.csv')
     # for use in other calculations (chem_assist -r uses this name)
     return name
 
