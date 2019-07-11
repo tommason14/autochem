@@ -41,6 +41,9 @@ molecular dynamics. This class also creates job files in the same directory as t
                           'magnus': 'mgs',
                           'mon': 'mon',
                           'monarch': 'mon',
+                          'mas': 'mas',
+                          'massive': 'mas',
+                          'm3': 'mas',
                           'gaia': 'gaia',
                           'stm': 'stm',
                           'stampede': 'stm'}
@@ -86,6 +89,8 @@ molecular dynamics. This class also creates job files in the same directory as t
         elif str(self.sc) == 'rjn':
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
+        elif str(self.sc) == 'mas':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         elif str(self.sc) == 'mon':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         elif str(self.sc) == 'stm':

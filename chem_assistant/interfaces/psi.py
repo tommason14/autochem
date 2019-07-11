@@ -253,6 +253,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             # should alter the job time as they never need 4 hours- 
             # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
             jobfile = jobfile.replace('name', f'{self.base_name}') 
+        elif str(self.sc) == 'mas':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         elif str(self.sc) == 'mon':
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif str(self.sc) == 'stm':
