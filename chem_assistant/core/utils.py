@@ -114,7 +114,7 @@ def sort_elements(lst):
     sorted_els = sorted(els, key = lambda val: val[1])
     return sorted_els
 
-def write_csv_from_dict(data, return_name = False, filename = None):
+def write_csv_from_dict(data, filename = None):
     """Write to file from dictionary"""
 
     import csv
@@ -132,8 +132,6 @@ def write_csv_from_dict(data, return_name = False, filename = None):
                     writer.writerow(data.keys())
                     content = zip(*[data[key] for key in data.keys()])
                     writer.writerows(content) 
-                if return_name:
-                    return filename
         else:   
             print("Please select 'Y' or 'N'")
 
@@ -246,7 +244,7 @@ def assign_molecules_from_dict_keys(data):
     return data
 
 
-def responsive_table(data, strings, min_width):
+def responsive_table(data, strings, min_width = 13):
     """
     Returns a table that is reponsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
@@ -272,8 +270,6 @@ def responsive_table(data, strings, min_width):
     formatting = [] 
     index = 0
     all_sizes = []
-    if min_width is None:
-        min_width = 13
     for val in zip(data.keys(), max_sizes.values()):
         entry, size = val
         if size < min_width or index + 1 not in strings:

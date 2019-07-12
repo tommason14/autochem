@@ -212,7 +212,7 @@ def get_type(filepath):
         if 'GAMESS' in line:
             calc = 'gamess'
             break
-        elif 'PSI4' in line:
+        elif 'Psi4' in line:
             calc = 'psi'
             break
         elif 'Gaussian' in line:
@@ -264,6 +264,9 @@ def results_table(dir):
         table_data['MP2_opp'].append(mp2_opp)
         table_data['MP2_same'].append(mp2_same)
         return table_data
+    
+    def remove_column_if_all_na(data):
+        return {k: v for k, v in data.items() if not all(val is 'NA' for val in v)}
 
     for result in output:
         if result['type'] == 'psi':
@@ -278,8 +281,10 @@ def results_table(dir):
             table_data = add_to_table(
                 table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
 
-    responsive_table(table_data, strings=[1, 2, 3])
-    name = write_csv_from_dict(table_data)
+    table_data = remove_column_if_all_na(table_data)
+
+    responsive_table(table_data, strings=[1, 2, 3], min_width=12)
+    name = write_csv_from_dict(table_data, filename = 'energies.csv')
     # for use in other calculations (chem_assist -r uses this name)
     return name
 
@@ -344,17 +349,13 @@ def get_h_bonds(dir):
     45° of linear. Prints to screen, with the option of saving to csv. If user says yes, writes to hbonds.csv
     """
     print('\n', ' ' * 15, 'HYDROGEN BOND DATA\n')
-    # print('HYDROGEN BOND DATA\n')
     output = []
     for file in get_files(dir, ['xyz']):
         path, f = os.path.split(file)
-        # print('-' * 60)
-        # print(file + '\n')
         print('Checking', file[2:])
         mol = Molecule(using=file)
         mol.separate()
         res = mol.find_h_bonds()
-        # print()
         for i in res:
             i.insert(0, f)
             i.insert(1, path)

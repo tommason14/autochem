@@ -20,13 +20,13 @@ from ..interfaces.psi import PsiJob
 import os
 from shutil import copyfile
 
-def check_dir():
-    """If in files directory, do nothing. If a subdir is called files, then move into that"""
-    if os.getcwd().split('/')[-1] == 'files':
-        return os.getcwd()
-    elif os.path.isdir('files'):
-        os.chdir(os.path.join(os.getcwd(), 'files'))
-        return os.getcwd()
+# def check_dir():
+#     """If in files directory, do nothing. If a subdir is called files, then move into that"""
+#     if os.getcwd().split('/')[-1] == 'files':
+#         return os.getcwd()
+#     elif os.path.isdir('files'):
+#         os.chdir(os.path.join(os.getcwd(), 'files'))
+#         return os.getcwd()
 
 def get_xyz():
     return [file for file in os.listdir('.') if file.endswith('.xyz')]
@@ -109,12 +109,12 @@ def job_type(package, xyz, s):
     elif package == "gamess_fmo_no_frags":
         return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s, is_complex = True)
 
-def make_parent_dir():
-    calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
-    if not os.path.exists(calc_dir):
-        os.mkdir(calc_dir)
-    os.chdir(calc_dir)
-    return os.getcwd()
+# def make_parent_dir():
+#     calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
+#     if not os.path.exists(calc_dir):
+#         os.mkdir(calc_dir)
+#     os.chdir(calc_dir)
+#     return os.getcwd()
 
 def make_dir_list(file):
     filename = file[:-4] # rm .xyz 
@@ -193,7 +193,7 @@ def make_tree_and_copy(xyz_dir, files):
         ├── ch_ac_water.xyz
         └── water.xyz"""
 
-    calc_dir = make_parent_dir()
+    # calc_dir = make_parent_dir()
     cwd = os.getcwd()
     for file in files:
         new_dirs = make_dir_list(file)
@@ -202,7 +202,7 @@ def make_tree_and_copy(xyz_dir, files):
             if idx + 1  == len(new_dirs): #when at maximum depth
                 copy_xyz(xyz_dir, file)
         os.chdir(cwd)
-    return calc_dir
+    # return calc_dir
     
 def make_job_files(base_dir, chem_package, settings):
     parent = os.getcwd()
@@ -287,9 +287,10 @@ directory containing an xyz file will be acted upon. To run smoothly, remove or 
 ``calcs`` directory.
 """
     package = ask_package()
-    xyz_directory = check_dir()
+    # xyz_directory = check_dir()
+    xyz_directory = os.getcwd()
     files = get_xyz()
-    calc_dir = make_tree_and_copy(xyz_directory, files)
-    make_job_files(calc_dir, package, settings)
+    make_tree_and_copy(xyz_directory, files)
+    make_job_files(xyz_directory, package, settings) # xyz directory is base dir
     #make_job_subdirs(calc_dir)
     os.chdir(xyz_directory)
