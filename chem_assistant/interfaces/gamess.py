@@ -104,8 +104,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
          
         self.create_inp()
         self.create_job()
-        self.make_run_dir()
-        self.place_files_in_dir()
+        # too many subdirs
+        # self.make_run_dir()
+        # self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments() # negate self.is_complex
         
