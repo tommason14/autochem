@@ -32,6 +32,7 @@ class Molecule:
     Anions["acetate"] = ['C','H', 'H', 'H', 'C', 'O', 'O']
     Anions['saccharinate'] = ['C', 'C', 'C', 'C', 'C', 'C', 'H',
                      'H', 'H', 'H', 'C', 'O', 'N', 'S', 'O', 'O']
+    Anions['triflate'] = ['C', 'F', 'F', 'F', 'S', 'O',  'O', 'O']
 
     Cations = {"c1mim": ['C', 'N', 'C', 'N',
                         'C', 'C', 'C', 'H',
