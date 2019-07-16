@@ -360,7 +360,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()
         #make subdir if not already there
-        subdirectory = join(getcwd(), self.base_name, 'frags')
+        # subdirectory = join(getcwd(), self.base_name, 'frags')
+        subdirectory = join(getcwd(), 'frags')
         if not exists(subdirectory):
             mkdir(subdirectory)
 
