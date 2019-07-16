@@ -212,7 +212,7 @@ def get_type(filepath):
         if 'GAMESS' in line:
             calc = 'gamess'
             break
-        elif 'PSI4' in line:
+        elif 'Psi4' in line:
             calc = 'psi'
             break
         elif 'Gaussian' in line:
