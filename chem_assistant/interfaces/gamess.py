@@ -104,19 +104,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
          
         self.create_inp()
         self.create_job()
-        # too many subdirs
-        # self.make_run_dir()
-        # self.place_files_in_dir()
         if frags_in_subdir:
-            self.create_inputs_for_fragments() # negate self.is_complex
+            self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
         
     def determine_fragments(self):
         if self.fmo:
-            # don't need this anymore, with the vdw splitting...
-            # if self.merged.nfrags != {}: #automatically creates an empty dict if called
-            #     self.mol.nfrags = self.merged.nfrags
-            # else:
-            #     self.mol.nfrags = int(input('Number of fragments: '))
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data #add fmo info to settings
@@ -125,9 +117,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def order_header(self):
         if self.fmo:
-            desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO', 'MP2']
+            desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO'] # mp2/dft after
         else:
-            desired = ['SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS', 'MP2'] # no gddi or fmo sections
+            desired = ['SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS'] # no gddi or fmo sections
 
 
         self.header = []
@@ -163,6 +155,26 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
+        
+        def format_line_if_too_long(line):
+            if len(line) > 55:
+                line = line.split()
+                # find suitable character length to split on
+                line_length = 0
+                chars = []
+                for val in line:
+                    line_length += len(val)
+                    chars.append(line_length)
+                for index, length in enumerate(chars):
+                    if length > 55:
+                        line.insert(index, '\n ')
+                        break # only insert one newline, and indent
+                # space before, newline at end
+                line.insert(0, '')
+                line.insert(-1, '$END\n')
+                line = ' '.join(line)
+            return line
+
         def parse(key, value):
             ret = ''
             if isinstance(value, Settings):
@@ -172,7 +184,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret += ' $END\n'
             else:
                 ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
+            ret = format_line_if_too_long(ret)
             return ret
+    
+        self.input = self.input.remove_none_values()
 
         inp = [parse(item, self.input[item])
             for item in self.input]
@@ -330,12 +345,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if 'equil.xyz' in listdir('.'):
                     system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
             system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
-        # else:
-        #     if not exists(self.base_name):
-        #         mkdir(self.base_name)
-        #     system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
 
-    def create_inputs_for_fragments(self):
+    def create_inputs_for_fragments(self, complex_is_fmo = False):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
             .
             ├── frags
@@ -361,7 +372,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()
         #make subdir if not already there
-        # subdirectory = join(getcwd(), self.base_name, 'frags')
         subdirectory = join(getcwd(), 'frags')
         if not exists(subdirectory):
             mkdir(subdirectory)
@@ -406,6 +416,5 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             frag_settings.input.contrl.icharg = self.mol.ionic['charge']
             if self.mol.ionic['multiplicity'] != 1:
                 frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
-            print('Creating input for the ionic network...')
-            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = True, run_dir = True) 
+            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
             chdir(parent_dir)
