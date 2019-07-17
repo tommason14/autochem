@@ -48,3 +48,13 @@ class GaussJob(Job):
     This command produces two files, benzene.inp and benzene.job.
     
     """
+    # sett.proc
+    # sett.mem
+    # sett....
+    # sett.input.opt.scf = 'tight'
+    # sett.input.freq
+    # sett.input.td.nstates = 10
+    # sett.input.td.root = 7
+    # sett.input.grid = 'ultrafine'
+    # sett.input.method = 'wB97xD'
+    # sett.input.basis = 'aug-ccpvdz' # -> wB97xD/aug-ccpVDZ 
