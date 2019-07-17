@@ -167,12 +167,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     chars.append(line_length)
                 for index, length in enumerate(chars):
                     if length > 55:
-                        line.insert(index, '\n ')
+                        line.insert(index - 1, '\n ')
                         break # only insert one newline, and indent
                 # space before, newline at end
                 line.insert(0, '')
-                line.insert(-1, '$END\n')
-                line = ' '.join(line)
+                line = ' '.join(line) + '\n'
             return line
 
         def parse(key, value):
