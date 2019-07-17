@@ -36,16 +36,15 @@ class GaussJob(Job):
             - for water inclusion, N2 inclusion, alkali metal inclusion
         - a `frags` subdirectory for every fragment of the complex
     
-    The names of files created default to the type of calculation: optimisation (opt), single point
-energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
-(hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
+    The names of files created default to the type of calculation: 
+    optimisation (opt), single point energy (spec) or hessian matrix 
+    calculation for thermochemical data and vibrational frequencies (hess). 
+    If a different name is desired, pass a string with the ``filename`` 
+    parameter, with no extension. The name will be used for both input and job
+    files.
+    
         >>> job = GamessJob(using = 'file.xyz', fmo = True, filename = 'benzene')
     
     This command produces two files, benzene.inp and benzene.job.
     
-    Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
-        .
-        └── opt
-            ├── opt.inp
-            └── opt.job
     """
