@@ -52,7 +52,7 @@ molecular dynamics. This class also creates job files in the same directory as t
             except:
                 raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
         else:
-            self.sc = Supercomp()
+            self.sc = Supercomp() # shouldn't have to wrap in str
 
     def find_job(self):
         """Returns the relevant job template"""

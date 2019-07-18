@@ -48,4 +48,7 @@ class Supercomp:
         else:
             raise TypeError('Can only concatenate Supercomp instances with strings. No addition to floats/integers')
     
+    def __call__(self):
+        return self.sc    
+    
     __str__ = __repr__
