@@ -111,15 +111,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if self.fmo:
             self.mol.separate()
             fmo_data = self.fmo_formatting()
-            self.input.fmo = fmo_data #add fmo info to settings
-            num_ions = len([frag['name'] for frag in self.mol.fragments.values() if frag['name'] not in Molecule.Neutrals])
-            self.input.gddi.ngroup = num_ions # for hy2ip use 4 groups not 5
+            self.input.fmo = fmo_data
+            self.input.fmoprp.maxit = 200
+            # num_ions = len([frag['name'] for frag in self.mol.fragments.values() if frag['name'] not in Molecule.Neutrals])
+            # self.input.gddi.ngroup = num_ions # for hy2ip use 4 groups not 5
+            self.input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
         if self.fmo:
-            desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO'] # mp2/dft after
+            desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO', 'FMOPRP'] # mp2/dft after
         else:
-            desired = ['SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS'] # no gddi or fmo sections
+            desired = ['SYSTEM', 'CONTRL', 'STATPT', 'SCF', 'BASIS']
 
 
         self.header = []
@@ -128,16 +130,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 item = line.split()[0][1:]
                 if item == i:
                     self.header.append(line)
-        # add in additional commands, given as sett.input.blah = 'blah'
+        # add in additional commands after, given as sett.input.blah = 'blah'
         else:
             for line in self.unordered_header:
                 item = line.split()[0][1:]
-                if item not in desired and item != 'FMO' and item != 'GDDI':
-                #making inputs of each fragment failed here- fmo and gddi in input originally
-                    if self.fmo:
-                        self.header.insert(-5, line)
-                    else:
-                        self.header.insert(-4, line)
+                if item not in desired:
+                    self.header.append(line)
         
         # no need for stationary point steps if not an optimisation
         if self.input.contrl.runtyp != 'optimize':
@@ -148,10 +146,21 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.header = "".join(self.header)
 
     def make_automatic_changes(self):
-        """Common scenarios are implemented to remove the commands needed to be called by the user. For example, this sets the opposite spin parameter for SRS-MP2 for the cc-pVTZ basis set without the need to define it in the user code."""
-        #automatically set to ccd, 1.752
-        if self.input.basis.gbasis.lower() == 'cct':
-            self.input.mp2.scsopo = 1.64
+        """
+        Common scenarios are implemented to remove the commands needed to be called by the user.
+        For example, this sets the opposite spin parameter for SRS-MP2 for commonly used correlation
+        consistent basis sets without the need to define it in the user code.
+        """
+        opp_spin_params = {'cct': 1.64,
+                           'ccq': 1.689,
+                           'accd': 1.372,
+                           'acct': 1.443,
+                           'accq': 1.591}
+        if 'mp2' in self.input:
+            for basis, opp in opp_spin_params.items():
+                if self.input.basis.gbasis.lower() == basis:
+                    self.input.mp2.scsopo = opp
+                    break
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
@@ -183,10 +192,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret += ' $END\n'
             else:
                 ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
-            ret = format_line_if_too_long(ret)
+            if key is not 'fmo':
+                ret = format_line_if_too_long(ret)
             return ret
     
-        self.input = self.input.remove_none_values()
 
         inp = [parse(item, self.input[item])
             for item in self.input]
@@ -216,8 +225,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # 0.8,28 
         
         sorted_info = sorted(info.items(), key = lambda val: int(val[1]['indat'].split(',')[1])) 
-        # key: given an item (the val), sort by the value of the key, value pair (val[1]), then
-        # select the indat, split on comma and return the second item, then convert to an integer
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file        
@@ -239,7 +246,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             rcorsd = 50
         
         string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
-        string += "     MPLEVL(1)=2\n"
+        if 'mp2' in self.input:
+            string += "     MPLEVL(1)=2\n"
         string += f"     INDAT(1)={self.indat[0]}\n"
         for d in self.indat[1:]:
             string += f"{' '*14}{d}\n"
@@ -279,6 +287,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             f.write(data)
 
     def create_inp(self):
+        self.input = self.input.remove_none_values()
         self.determine_fragments() #add fmo info to input settings, if self.fmo is True
         self.make_automatic_changes()
         self.unordered_header = self.parse_settings() 
@@ -313,11 +322,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
         jobfile = self.get_job_template()
-        # modify
-        if str(self.sc) == 'mgs':
+        if self.sc == 'mgs':
             jobfile = self.change_mgs_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'rjn':
+        elif self.sc == 'rjn':
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         elif self.sc == 'mon':

@@ -26,22 +26,6 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Searches all sub dirs for results
 """
-"""
-- Create opt dir or spec or hess-  when creating the jobs (make another dir)
-TODO:
-- If geom_opt has completed, extract equilibrium coords:
-  save in parent folder as equil.xyz & if no spec directory available,
-  create it. If no equil.xyz in spec dir, then copy equil.xyz over to
-  spec dir, and make files accordingly.
-
-Get results.
-...
-...
-...
-...
-Create single points for completed geom_opts? [y/n]
-"""
-
 
 def search_for_coords(dir):
     """
@@ -132,7 +116,6 @@ Choice: """))
         scomp = supercomps[sc_choice]
         return scomp
 
-    # os.path.dirname(__file__) = user_scripts
     template_dir = os.path.join(os.path.dirname(__file__),
                                 os.pardir,
                                 'templates/meta_files')
@@ -187,10 +170,6 @@ Choice: """))
         user_given = os.path.join(os.getcwd(), user_path)
         scomp = get_supercomp()
         copy_meta(user_path, scomp)
-        # load script from os.path.join(os.getcwd(), p)
-        # if no meta.py there, ask again
-
-    # run meta.py recursively
     make_files_from_meta('.')
 
 
@@ -217,6 +196,7 @@ def get_type(filepath):
             break
         elif 'Gaussian' in line:
             calc = 'gaussian'
+            break
     return calc
 
 
@@ -231,7 +211,7 @@ def parse_results(dir):
         try:
             if calc.completed():  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
-                    print(f"Searching through {calc.log}")
+                    # print(f"Searching through {calc.log}")
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
             # else:
@@ -246,24 +226,20 @@ def results_table(dir):
     """
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
-    output = parse_results(dir)
-    table_data = {'File': [],
-                  'Path': [],
-                  'Basis': [],
-                  'HF/DFT': [],
-                  'MP2/SRS': [],
-                  'MP2_opp': [],
-                  'MP2_same': []}
+    # lists are faster to fill than dict values
+    # order: files, paths, basis, hf, mp2, mp2_opp, mp2_same
+    data = [[], [], [], [], [], [], []]
 
-    def add_to_table(table_data, f, p, b, hf, mp2, mp2_opp, mp2_same):
-        table_data['File'].append(f)
-        table_data['Path'].append(p)
-        table_data['Basis'].append(b)
-        table_data['HF/DFT'].append(hf)
-        table_data['MP2/SRS'].append(mp2)
-        table_data['MP2_opp'].append(mp2_opp)
-        table_data['MP2_same'].append(mp2_same)
-        return table_data
+    output = parse_results(dir)
+
+    def add_data(data, vals):
+        """
+        NB: vals has to be a fixed order:
+            files, paths, basis, hf, mp2, mp2_opp, mp2_same
+        """
+        for i, val in enumerate(vals):
+            data[i].append(val)
+        return data
     
     def remove_column_if_all_na(data):
         return {k: v for k, v in data.items() if not all(val is 'NA' for val in v)}
@@ -272,21 +248,25 @@ def results_table(dir):
         if result['type'] == 'psi':
             f, p, b, hf, mp2_opp, mp2_same = result['data']
             mp2 = 'NA'
-            table_data = add_to_table(
-                table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
-        else:
+            vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
+            data = add_data(data, vals)
+        elif result['type'] == 'gamess':
             f, p, b, hf, mp2 = result['data']
             mp2_opp = 'NA'
             mp2_same = 'NA'
-            table_data = add_to_table(
-                table_data, f, p, b, hf, mp2, mp2_opp, mp2_same)
+            vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
+            data = add_data(data, vals)
+
+    keys = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
+    
+    table_data = {}
+    for key, val in zip(keys, data):
+        table_data[key] = val 
 
     table_data = remove_column_if_all_na(table_data)
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
-    name = write_csv_from_dict(table_data, filename = 'energies.csv')
-    # for use in other calculations (chem_assist -r uses this name)
-    return name
+    write_csv_from_dict(table_data, filename = 'energies.csv')
 
 
 def thermochemistry(dir):

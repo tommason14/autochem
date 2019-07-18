@@ -279,7 +279,7 @@ store the iteration number.
                 HF = line[-1]
             if 'E(MP2)' in line:
                 line = line.split()
-                MP2 = line[-1]
+                MP2 = line[1]
         HF, MP2 = map(float, (HF, MP2))
         return HF, MP2
 
