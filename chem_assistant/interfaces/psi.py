@@ -110,27 +110,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
         else:
             self.title = using[:-4]
-
-        # if run_dir is not None:
-        #     self.made_run_dir = True
-        # else:
-        #     self.made_run_dir = False
-         
-        
+                 
         self.is_complex = is_complex # creates a `complex` dir
 
         self.create_inp()
         self.create_job()
-        # too many subdirs
-        # self.make_run_dir()
-        # self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
 
-    # def make_run_dir(self):
-    #     if not self.made_run_dir: # only do it once
-    #         mkdir(self.base_name) # make opt/spec/hessin parent dir
-    #         self.made_run_dir = True
         
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
@@ -300,12 +287,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         """
         # not necessarily any splitting prior to this
         self.is_complex = False
-               
-        # if self.merged.nfrags != {}: #automatically creates an empty dict if called
-        #     self.mol.nfrags = self.merged.nfrags
-        # else:
-        #     self.mol.nfrags = int(input('Number of fragments: '))
-
+            
         self.mol.separate() #creating frags 
         #look over self.mol.fragments, generate inputs- make a settings object with the desired features
         

@@ -1,6 +1,7 @@
 __all__ = ['read_file', 'get_type', 'read_xyz', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
 'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
-'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof']
+'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof',
+'remove_nones_from_dict']
 
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
@@ -315,3 +316,15 @@ def eof(file, percFile):
             print("eof function passed a corrupt line in file ", File)
         # FOR LETTER IN SYMBOL
     return lines
+
+
+def remove_nones_from_dict(orig_dict):
+    """Returns a copy of a dictionary with any none values removed"""
+    d = {}
+    for k, v in orig_dict.items():
+        if isinstance(v, dict):
+            d[k] = remove_nones_from_dict(v)
+        else:
+            if v is not None:
+                d[k] = v 
+    return d

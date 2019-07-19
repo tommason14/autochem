@@ -1,5 +1,6 @@
 from os.path import (join, dirname)
 import json
+from .utils import remove_nones_from_dict
 
 __all__ = ['Settings', 'read_template', 'dict_to_settings']
 
@@ -105,6 +106,16 @@ class Settings(dict):
                     self[name].update(other[name])
             else:
                 self[name] = other[name]
+    
+    def remove_none_values(self):
+        """
+        Return a new |Settings| object with any none value removed
+        """
+        old = self.as_dict()
+        new = remove_nones_from_dict(old)
+        return Settings(new)
+        
+         
 
     __repr__ = __str__
 

@@ -18,6 +18,7 @@ from ..interfaces.psi import PsiJob
 # Add user inputs- packages? fmo? 
 
 import os
+import glob
 from shutil import copyfile
 
 # def check_dir():
@@ -205,19 +206,34 @@ def make_tree_and_copy(xyz_dir, files):
     # return calc_dir
     
 def make_job_files(base_dir, chem_package, settings):
-    parent = os.getcwd()
-    for path, dirs, files in os.walk(base_dir):
-        for file in files:
-            if file.endswith('.xyz'):
-                os.chdir(path)
-                print(f"Creating inputs for {file}...") # <- gives the user critical information
-                job_type(chem_package, file, settings)
-                if 'no_frags' in chem_package and 'fmo' not in chem_package:
-                    pass
-                else:
-                    print('-'*60)
-                # print()
-                os.chdir(parent)
+    # find all xyz files in subdir to work on
+    files = glob.glob('**/*xyz', recursive = True)
+    for file in files:
+        path, f = os.path.split(file)
+        if path is not '':
+            subdir = base_dir + '/' + path
+            os.chdir(subdir)
+            print(f"Creating inputs for {file}...")
+            job_type(chem_package, subdir + '/' + f, settings)
+            if 'no_frags' in chem_package and 'fmo' not in chem_package:
+                pass
+            else:
+                print('-'*60)
+            os.chdir(base_dir)
+    # for path, dirs, files in os.walk(base_dir):
+    #     for file in files:
+    #         if file.endswith('.xyz'):
+    #             print(file)
+    #             print(path)
+    #             os.chdir(path)
+    #             print(f"Creating inputs for {file}...")
+    #             job_type(chem_package, file, settings)
+    #             if 'no_frags' in chem_package and 'fmo' not in chem_package:
+    #                 pass
+    #             else:
+    #                 print('-'*60)
+    #             # print()
+    #             os.chdir(parent)
 
 def make_job_subdirs(base_dir):
     """Look for input files in any subdirectory of ``calcs``, then creates a directory of that type

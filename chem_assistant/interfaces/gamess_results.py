@@ -115,10 +115,10 @@ store the iteration number.
         par_dir = []
         # print(self.log)
         for part in self.path.split('/'):
-            if part not in ('opt', 'spec', 'hess'):
-                par_dir.append(part)
-            else:
+            if part in ('opt', 'spec', 'hess'):
                 break
+            else:
+                par_dir.append(part)
         MOLECULE_PARENT_DIR = '/'.join(par_dir)
         for line in self.read():
             if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
@@ -145,48 +145,18 @@ store the iteration number.
        
         if len(equil) > 0:
             print('found!')
-            # find parent dir- if multiple reruns, then don't know how far up tree to go to find
-            # parent
-            write_xyz(equil, os.path.join(MOLECULE_PARENT_DIR, 'equil.xyz'))
-            # self.create_spec_after_opt()
+            newdir = os.path.join(MOLECULE_PARENT_DIR, 'spec')
+            newname = self.basename + '_equil.xyz'
+            if not os.path.isdir(newdir):
+                os.mkdir(newdir)
+            write_xyz(equil, os.path.join(newdir, newname))
         else:
             if len(rerun) > 0:
                 print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun/rerun.xyz')
-                # make new dir, and copy over input, replacing any coords
-                # TODO: Refactor this, but cba right now
                 rerun_dir = os.path.join(self.path, 'rerun')
                 if not os.path.exists(rerun_dir): 
-                # if already exists, then simulation already re-run- skip this log, move to next
                     os.mkdir(rerun_dir)
                 write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
-                    # basename, ext = self.file.split('.')
-                    # inp = basename + '.inp'
-                    # job = basename + '.job'
-                    # orig_inp = os.path.join(self.path, inp) # path of the log file
-                    # orig_job = os.path.join(self.path, job)
-                    # rerun_inp = os.path.join(rerun_dir, 'rerun.inp')
-                    # rerun_job = os.path.join(rerun_dir, 'rerun.job')
-                    # print(orig_inp)                    
-                    # print(orig_job) 
-                    # print(rerun_inp)
-                    # print(rerun_job)
-                    #
-                    # os.system(f'sed "s/{basename}/rerun/g" {orig_job} >> {rerun_job}') # opt.inp --> rerun.inp
-                    # # os.system(f'sed "s/{self.file}/rerun.{ext}/g" rerun/rerun_job') # opt.log --> rerun.log
-                    # # parse original inp and add new coords
-                    # rerun_inp_file = []
-                    # with open(orig_inp, "r") as f:
-                    #     for line in f.readlines():
-                    #         if re.search(regex, line):
-                    #             break
-                    #         else:
-                    #             rerun_inp_file.append(line)
-                    # for line in rerun: #add coords
-                    #     rerun_inp_file.append(line + '\n') 
-                    # rerun_inp_file.append(' $END')
-                    # with open(rerun_inp, "w") as f:
-                    #     for line in rerun_inp_file:
-                    #         f.write(line)
             else:
                 print('No iterations were cycled through!')   
     
@@ -279,7 +249,7 @@ store the iteration number.
                 HF = line[-1]
             if 'E(MP2)' in line:
                 line = line.split()
-                MP2 = line[-1]
+                MP2 = line[1]
         HF, MP2 = map(float, (HF, MP2))
         return HF, MP2
 
