@@ -10,6 +10,9 @@ class Results:
     def __init__(self, log):
         self.log = log[2:]
         self.path, self.file = os.path.split(self.log)
+        self.basename = self.file.split('.')[0]
+        self.abspath = os.path.abspath(log)
+        self.parent_dir = self.abspath.split('/')[-2]
         
     def read(self):
         """Memory-efficient reading of large log files, using a generator returning lines as required"""
