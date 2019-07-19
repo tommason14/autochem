@@ -20,10 +20,11 @@ parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tre
 parser.add_argument('-e', '--equil-coords', help='Searches for equilibrium coordinates recursively', action='store_true')
 parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
 parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
-parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action = 'store')
-parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every xyz in the current directory', action = 'store_true')
-parser.add_argument('-c', '--interaction-energies', help='Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script', action = 'store')
-parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action = 'store_true')
+parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action='store')
+parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every xyz in the current directory', action='store_true')
+parser.add_argument('-c', '--interaction-energies', help='Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script', action='store')
+parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action='store_true')
+parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p', action='store_true')
 args = parser.parse_args()
 
 def imported_settings():
@@ -31,16 +32,16 @@ def imported_settings():
     imported = import_module(file_to_import)
     return imported.sett
 
-def menu_choice():
-    try:
-        choice = int(input('Choice: [0] '))
-        if option not in range(1, 9):
-            print('Choose a value between 1 and 9')
-        else:
-            return option
-    except ValueError:
-        print('Please select a number between 1 and 9')
-        menu_choice()
+# def menu_choice():
+#     try:
+#         choice = int(input('Choice: [0] '))
+#         if option not in range(1, 9):
+#             print('Choose a value between 1 and 9')
+#         else:
+#             return option
+#     except ValueError:
+#         print('Please select a number between 1 and 9')
+#         menu_choice()
 
 # if no arguments passed
 if len(sys.argv) == 1:
@@ -50,20 +51,10 @@ if args.meta:
    make_files_from_meta('.') 
 
 if args.thermochem:
-    name = thermochemistry('.')
-    # done = False
-    # while not done:
-    #     ints = input('Calculate free energies? [Y/N] ')
-    #     if ints.lower() in ('y', 'n'):
-    #         done = True
-    #         if ints.lower() == 'y':
-    #             calculate_free_energy_interactions(name)
-    #     else:   
-    #         print("Please select 'y' or 'n'")
+    thermochemistry('.')
     
 if args.free_energies:
     calculate_free_energy_interactions(args.free_energies)
-    
 
 if args.results:
     results_table('.')
@@ -87,22 +78,6 @@ if args.graph:
 if args.equil_coords:
     search_for_coords('.')
     
-#     answer = False
-#     while not answer:
-#         try:
-#             extra = input(\
-# """Create additional jobs using the `equil.xyz` files just found, 
-# by placing meta.py files into the appropriate directories? [Y/N] """)
-#         except ValueError: # type error?
-#             print("Please choose 'Y' or 'N'")
-#         if extra.upper() in ('Y', 'N'):
-#             answer = True
-#         else:
-#             print("Please choose 'Y' or 'N'")
-
-#     if extra.upper() == "Y":
-#         create_extra_jobs('.')
-
 if args.ir:
     make_ir_spectra(args.ir)
 
@@ -113,4 +88,4 @@ if args.interaction_energies:
     calculate_interaction_energies(args.interaction_energies)
 
 if args.print_frags:
-    print_frags('.')
+    print_frags('.', verbose=args.verbose)
