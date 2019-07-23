@@ -322,17 +322,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
         jobfile = self.get_job_template()
-        if self.sc == 'mgs':
+        if self.sc() == 'mgs':
             jobfile = self.change_mgs_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif self.sc == 'rjn':
+        elif self.sc() == 'rjn':
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif self.sc == 'mon':
+        elif self.sc() == 'mon':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        elif self.sc == 'mas':
+        elif self.sc() == 'mas':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        elif self.sc == 'stm':
+        elif self.sc() == 'stm':
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')
 
