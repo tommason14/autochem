@@ -53,6 +53,6 @@ class Supercomp:
    
     @property
     def supercomp(self):
-        return str(self.sc)
+        return self.sc
     
     __str__ = __repr__
