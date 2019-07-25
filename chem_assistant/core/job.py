@@ -22,11 +22,6 @@ molecular dynamics. This class also creates job files in the same directory as t
         if using is not None:
             self.molecule_name = using
             self.mol = Molecule(using)
-            #self.mol.separate() # in the "user side" file
-            #self.mol.gamess_format() # in the "user side" file
-            # for frag in self.mol.fragments: Input_type(using=f'fragments/{frag}') -> no fmo though
-    # get_sc() and create_job() are meaningless when not used in either interfaces/gamess.py or
-    # interfaces/psi.py
 
     def get_sc(self):
         if hasattr(self, 'merged'):
@@ -52,7 +47,7 @@ molecular dynamics. This class also creates job files in the same directory as t
             except:
                 raise AttributeError('Please enter a different, more specific string for the supercomputer- or remove the declaration and let the program decide.')
         else:
-            self.sc = Supercomp() # shouldn't have to wrap in str
+            self.sc = Supercomp().supercomp 
 
     def find_job(self):
         """Returns the relevant job template"""
@@ -79,20 +74,20 @@ molecular dynamics. This class also creates job files in the same directory as t
             job = f.read()       
             return job
 
-    def create_job(self):
-        """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        jobfile = self.get_job_template()
-        # modify
-        if str(self.sc) == 'mgs':
-            jobfile = self.change_mgs_job(jobfile)
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'rjn':
-            jobfile = self.change_rjn_job(jobfile)
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'mas':
-            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        elif str(self.sc) == 'mon':
-            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        elif str(self.sc) == 'stm':
-            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        self.write_file(jobfile, filetype='job')
+    # def create_job(self):
+    #     """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
+    #     jobfile = self.get_job_template()
+    #     # modify
+    #     if str(self.sc) == 'mgs':
+    #         jobfile = self.change_mgs_job(jobfile)
+    #         jobfile = jobfile.replace('name', f'{self.base_name}') 
+    #     elif str(self.sc) == 'rjn':
+    #         jobfile = self.change_rjn_job(jobfile)
+    #         jobfile = jobfile.replace('name', f'{self.base_name}') 
+    #     elif str(self.sc) == 'mas':
+    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+    #     elif str(self.sc) == 'mon':
+    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+    #     elif str(self.sc) == 'stm':
+    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+    #     self.write_file(jobfile, filetype='job')
