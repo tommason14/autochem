@@ -239,25 +239,29 @@ store the iteration number.
     
     def non_fmo_mp2_data(self):
         """
-        Returns value of E(0) as HF, E(MP2) as MP2
+        Returns value of E(0) as HF, E(2S) as the opposite spin energy and
+        E(2T) as same spin energy. Then user can scale energies accordingly.
         """
         HF = ''
-        MP2 = ''
+        MP2_opp = ''
+        MP2_same = ''
         for line in eof(self.log, 0.2):
-            if 'E(0)' in line:
-                line = line.split()
+            line = line.split()
+            if 'E(0)=' in line:
                 HF = line[-1]
-            if 'E(MP2)' in line:
-                line = line.split()
-                MP2 = line[1]
-        HF, MP2 = map(float, (HF, MP2))
-        return HF, MP2
+            if 'E(2S)=' in line:
+                MP2_opp = line[-1]
+            if 'E(2T)=' in line:
+                MP2_same = line[-1]
+
+        HF, MP2_opp, MP2_same = map(float, (HF, MP2_opp, MP2_same))
+        return HF, MP2_opp, MP2_same
 
     def get_data(self):
         """
         Returns the last occurrence of FMO energies 
-        (FMO3 given if available, else FMO2), SRS and HF
-        energies. Works because FMO3 values are printed 
+        (FMO3 given if available, else FMO2), MP2 correlation energies
+        and HF energies. Works because FMO3 values are printed 
         after FMO2, and the function returns the last 
         value printed.
         """
@@ -265,17 +269,23 @@ store the iteration number.
         fmo, mp2, scs = self.calc_type()
         if fmo and scs:
             HF, MP2 = self.mp2_data('SCS')
+            MP2_opp = 'NA'
+            MP2_same = 'NA'
         elif fmo and mp2 and not scs:
             HF, MP2 = self.mp2_data('MP2')
+            MP2_opp = 'NA'
+            MP2_same = 'NA'
         elif not fmo:
-            HF, MP2 = self.non_fmo_mp2_data()
+            HF, MP2_opp, MP2_same = self.non_fmo_mp2_data()
+            MP2 = 'NA'
+        # may need another function for just HF?
         ## DFT
         if fmo and not mp2 and not scs:
             pass
         if all(val is False for val in (fmo, mp2, scs)):
             pass
 
-        return self.file, self.path, self.basis, HF, MP2        
+        return self.file, self.path, self.basis, HF, MP2, MP2_opp, MP2_same    
 
 
             

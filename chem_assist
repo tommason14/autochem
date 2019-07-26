@@ -26,6 +26,8 @@ parser.add_argument('-c', '--interaction-energies', help='Automating the process
 parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action='store_true')
 parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p, or prints formatted table if used with --interaction-energies', action='store_true')
 parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
+parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
+parser.add_argument('--psi', help='Use with --interaction-energies to indicate that output is from Psi4', action='store_true')
 args = parser.parse_args()
 
 def imported_settings():
@@ -75,7 +77,7 @@ if args.hydrogen_bonds:
     get_h_bonds('.')
 
 if args.interaction_energies:
-    calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose)
-
+        calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose, software=args.soft)
+    
 if args.print_frags:
     print_frags('.', verbose=args.verbose)

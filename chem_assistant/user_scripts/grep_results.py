@@ -211,12 +211,8 @@ def parse_results(dir):
         try:
             if calc.completed():  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
-                    # print(f"Searching through {calc.log}")
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
-            # else:
-                # print(f'{calc.log}: Incomplete') # don't care about knowing which files are
-                # incomplete
         except AttributeError:  # if log/out files are not logs of calculations
             continue
     return output
@@ -251,9 +247,7 @@ def results_table(dir):
             vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
             data = add_data(data, vals)
         elif result['type'] == 'gamess':
-            f, p, b, hf, mp2 = result['data']
-            mp2_opp = 'NA'
-            mp2_same = 'NA'
+            f, p, b, hf, mp2, mp2_opp, mp2_same = result['data']
             vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
             data = add_data(data, vals)
 

@@ -12,7 +12,7 @@ def all_values_are_not_na(column):
     """
     return not all(x for x in np.isnan(column.unique()))
 
-def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False):
+def calculate_interaction_energies(csv, ionic_present=False, software='gamess', pretty_print=False):
     """
     Calculate interaction energies for ionic clusters from a csv file created
     with this python script; the function assumes that the first subdirectory of
@@ -26,24 +26,20 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
     @make_symbolic
     def if_else(bools, val_if_true, val_if_false):
         return np.where(bools, val_if_true, val_if_false)
+    
+    @make_symbolic
+    def is_nan(series):
+        return np.isnan(series)
 
-    # split df to give rows of gamess and psi4
     gamess_df = None
     psi4_df = None
     df = pd.read_csv(csv)
-    
-    if 'MP2_opp' not in df.columns:
+    if software == 'gamess':
         gamess_df = df
     else:
-        if all_values_are_not_na(df['MP2_opp']): # all values are numbers
-            psi4_df = df
-        else:
-            gamess_df = df[np.isnan(df['MP2_opp'])].drop(['MP2_opp', 'MP2_same'], axis=1)
-            psi4_df = df[np.isnan(df['MP2/SRS'])].drop('MP2/SRS', axis=1)
-
-    ### gamess
+        psi4_df = df
+                
     if gamess_df is not None:
-        print('GAMESS data')
         if ionic_present:
             data = (gamess_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
@@ -51,7 +47,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                                     if_else(X.Path.str.contains('ionic'), 'ionic',
                                             'complex'))) >>
                 mutate(HF = X['HF/DFT']) >>
-                mutate(SRS = X['MP2/SRS']) >>
+                mutate(SRS = if_else(is_nan(X['MP2/SRS']), X.HF + (1.64 * X.MP2_opp), X['MP2/SRS'])) >>
                 mutate(Corr = X.SRS - X.HF) >>
                 gather('energy', 'values', [X.HF, X.Corr]) >>
                 mutate(energy_type = X.energy + '-' + X.Type) >>
@@ -66,8 +62,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                         hf_frags = X['HF-frag'].sum()) >>
                 mutate(hf_int_kj = (X.hf_complex - X.hf_ionic - X.hf_frags) * 2625.5,
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
-                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj,
-                srs_original_complex = X.hf_complex + X.corr_complex)        
+                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
             if pretty_print:
                 data = data.to_dict(orient='list')
@@ -79,7 +74,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                 mutate(Config = X.Path.str.split('/').str[0]) >>
                 mutate(Type = if_else(X.Path.str.contains('frag'), 'frag', 'complex')) >>
                 mutate(HF = X['HF/DFT']) >>
-                mutate(SRS = X['MP2/SRS']) >>
+                mutate(SRS = if_else(is_nan(X['MP2/SRS']), X.HF + (1.64 * X.MP2_opp), X['MP2/SRS'])) >>
                 mutate(Corr = X.SRS - X.HF) >>
                 gather('energy', 'values', [X.HF, X.Corr]) >>
                 mutate(energy_type = X.energy + '-' + X.Type) >>
@@ -92,8 +87,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                         hf_frags = X['HF-frag'].sum()) >>
                 mutate(hf_int_kj = (X.hf_complex - X.hf_frags) * 2625.5,
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5)>>
-                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj,
-                    srs_original_complex = X.hf_complex + X.corr_complex)
+                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)
             )
             if pretty_print:
                 data = data.to_dict(orient='list')
@@ -101,9 +95,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
             else:
                 print(data)
 
-    ###psi4 
     if psi4_df is not None:
-        print('Psi4 data')
         if ionic_present:
             data = (psi4_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
@@ -125,8 +117,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                         hf_frags = X['HF-frag'].sum()) >>
                 mutate(hf_int_kj = (X.hf_complex - X.hf_ionic - X.hf_frags) * 2625.5,
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
-                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj,
-                srs_original_complex = X.hf_complex + X.corr_complex)        
+                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
             if pretty_print:
                 data = data.to_dict(orient='list')
@@ -151,8 +142,7 @@ def calculate_interaction_energies(csv, ionic_present=False, pretty_print=False)
                         hf_frags = X['HF-frag'].sum()) >>
                 mutate(hf_int_kj = (X.hf_complex - X.hf_frags) * 2625.5,
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5) >>
-                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj,
-                srs_original_complex = X.hf_complex + X.corr_complex)     
+                mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)     
             )
             if pretty_print:
                 data = data.to_dict(orient='list')
