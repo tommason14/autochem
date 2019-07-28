@@ -94,6 +94,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
         else:
             self.title = using[:-4]
+        self.xyz = using
         
         self.is_complex = is_complex # creates a `complex` dir
 
@@ -104,6 +105,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
          
         self.create_inp()
         self.create_job()
+        self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
         
@@ -347,13 +349,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
+        complex_dir = join(getcwd(), 'complex')
         if self.is_complex:
-            if not exists(join(self.base_name, 'complex')):
-                mkdir(join(self.base_name, 'complex'))
+            if not exists(complex_dir):
+                mkdir(complex_dir)
         #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
-                if 'equil.xyz' in listdir('.'):
-                    system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
-            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
+            system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
+            system(f'cp {self.xyz} complex/complex.xyz')
 
     def ionic_mol_has_two_or_more_frags(self):
         """
@@ -419,25 +421,26 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 count += 1
 
         if hasattr(self.mol, 'ionic'):
-            # only 1 ionic network        
-            subdir_ionic = join(getcwd(), 'ionic')
-            if not exists(subdir_ionic):
-                mkdir(subdir_ionic)
-            chdir(subdir_ionic)
-            write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
-        
-            # re-use settings from complex
-            if hasattr(self, 'merged'):
-                frag_settings = self.merged
-            else:
-                frag_settings = self.defaults
-            frag_settings.input.contrl.icharg = self.mol.ionic['charge']
-            if self.mol.ionic['multiplicity'] != 1:
-                frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
+            if len(self.mol.ionic['atoms']) > 0:
+                # only 1 ionic network        
+                subdir_ionic = join(getcwd(), 'ionic')
+                if not exists(subdir_ionic):
+                    mkdir(subdir_ionic)
+                chdir(subdir_ionic)
+                write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
+            
+                # re-use settings from complex
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.contrl.icharg = self.mol.ionic['charge']
+                if self.mol.ionic['multiplicity'] != 1:
+                    frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
 
-            ## FMO only if more than 2 fragments
-            if complex_is_fmo:
-                complex_is_fmo = self.ionic_mol_has_two_or_more_frags()
-                
-            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
-            chdir(parent_dir)
+                ## FMO only if more than 2 fragments
+                if complex_is_fmo:
+                    complex_is_fmo = self.ionic_mol_has_two_or_more_frags()
+                    
+                job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
+                chdir(parent_dir)
