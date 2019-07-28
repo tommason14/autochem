@@ -96,7 +96,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.title = using[:-4]
         self.xyz = using
         
-        self.is_complex = is_complex # creates a `complex` dir
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
 
         if run_dir is not None:
             self.made_run_dir = True
@@ -106,17 +106,21 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.create_inp()
         self.create_job()
         self.place_files_in_dir()
+
         if frags_in_subdir:
             self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
         
+    def create_complex_dir_if_required(self, boolean, make_frags):
+        self.is_complex = is_complex 
+        if make_frags and not is_complex:
+            self.is_complex = True
+
     def determine_fragments(self):
         if self.fmo:
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data
             self.input.fmoprp.maxit = 200
-            # num_ions = len([frag['name'] for frag in self.mol.fragments.values() if frag['name'] not in Molecule.Neutrals])
-            # self.input.gddi.ngroup = num_ions # for hy2ip use 4 groups not 5
             self.input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
@@ -214,6 +218,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         for frag, data in self.mol.fragments.items():
             if frag is not 'ionic':
                 if len(data['atoms']) == 1:
+                    # should add to next fragment- wasteful to run on own node
                     info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
                     "charg" : str(data['charge'])}
                 else:
