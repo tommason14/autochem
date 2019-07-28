@@ -426,6 +426,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if self.mol.ionic['multiplicity'] != 1:
                 frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
             ## FMO only if more than 2 fragments
-            print(self.mol.ionic)
+            
+            print(Molecule(self.mol.ionic['atoms']).separate())
             job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
             chdir(parent_dir)
