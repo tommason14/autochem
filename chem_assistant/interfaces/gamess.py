@@ -161,6 +161,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if self.input.basis.gbasis.lower() == basis:
                     self.input.mp2.scsopo = opp
                     break
+        if 'fmo' and 'pcm' in self.input:
+            self.input.pcm.ifmo = -1
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
@@ -423,5 +425,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             frag_settings.input.contrl.icharg = self.mol.ionic['charge']
             if self.mol.ionic['multiplicity'] != 1:
                 frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
+            ## FMO only if more than 2 fragments
+            print(self.mol.ionic)
             job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
             chdir(parent_dir)
