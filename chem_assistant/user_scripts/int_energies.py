@@ -12,7 +12,7 @@ def all_values_are_not_na(column):
     """
     return not all(x for x in np.isnan(column.unique()))
 
-def calculate_interaction_energies(csv, ionic_present=False, software='gamess', pretty_print=False):
+def calculate_interaction_energies(csv, ionic_present=False, software='gamess', pretty_print=False, output=None):
     """
     Calculate interaction energies for ionic clusters from a csv file created
     with this python script; the function assumes that the first subdirectory of
@@ -64,6 +64,8 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
+            if output is not None:
+                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
@@ -89,6 +91,8 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5)>>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)
             )
+            if output is not None:
+                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
@@ -119,6 +123,8 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
+            if output is not None:
+                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
@@ -144,6 +150,8 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)     
             )
+            if output is not None:
+                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
