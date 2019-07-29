@@ -1,4 +1,4 @@
-__all__ = ['calculate_interaction_energies']
+__all__ = ['calculate_interaction_energies', 'apply_boltzmann_weightings']
 
 import pandas as pd
 from dfply import *
@@ -157,3 +157,38 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                 responsive_table(data, strings = [1], min_width=16)
             else:
                 print(data)
+
+
+def apply_boltzmann_weightings(csv, grouping, output):
+    """
+    Take in a csv produced from `calculate_interaction_energies` and weight configurations
+    according a boltzmann distribution of total energy.
+    """
+    def bp(series, as_percent = False):
+        """
+        Takes in energies in Hartrees, produces
+        probabilities according to a Boltzmann distribution.
+        Also works with group by objects.
+        """
+        R = 8.3145
+        T = 298.15
+        h_to_kJ = 2625.5
+        series = series * h_to_kJ
+        diffs = series - series.min()
+        exponent = np.exp((-1 * diffs * 1000) / (R * T))
+        summed = exponent.sum()
+        if as_percent:
+            return (exponent / summed) * 100
+        return exponent / summed
+
+
+    df = pd.read_csv(csv)
+    df['complex_total_energy'] = df['hf_complex'] + df['corr_complex']
+    df['Groups'] = eval(grouping)
+    df['weightings'] = df.groupby('Groups')['complex_total_energy'].apply(bp)
+    df['hf_weighted'] = df['hf_int_kj'] * df['weightings']
+    df['corr_weighted'] = df['corr_int_kj'] * df['weightings']
+    weighted = df.groupby('Groups').agg({'hf_weighted': sum, 'corr_weighted': sum})
+    weighted.columns = ['Electrostatics', 'Dispersion']
+    print(weighted)
+    weighted.reset_index().to_csv(output, index=False)
