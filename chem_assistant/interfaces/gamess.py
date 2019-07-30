@@ -110,7 +110,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if frags_in_subdir:
             self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
         
-    def create_complex_dir_if_required(self, boolean, make_frags):
+    def create_complex_dir_if_required(self, is_complex, make_frags):
         self.is_complex = is_complex 
         if make_frags and not is_complex:
             self.is_complex = True
