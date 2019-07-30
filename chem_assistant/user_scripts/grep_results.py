@@ -218,7 +218,7 @@ def parse_results(dir):
     return output
 
 
-def results_table(dir):
+def results_table(dir, file_name):
     """
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
@@ -260,7 +260,7 @@ def results_table(dir):
     table_data = remove_column_if_all_na(table_data)
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
-    write_csv_from_dict(table_data, filename = 'energies.csv')
+    write_csv_from_dict(table_data, filename=file_name)
 
 
 def thermochemistry(dir):

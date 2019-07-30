@@ -52,7 +52,9 @@ if args.free_energies:
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
-    results_table('.')
+    if not args.output:
+        args.output='energies.csv'
+    results_table('.', file_name=args.output)
 
 if args.settings:
     settings = imported_settings()
