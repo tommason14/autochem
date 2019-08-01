@@ -186,6 +186,17 @@ class Molecule:
             mass += PT.get_mass(element) * number
         return f"{mass:.2f} g mol⁻¹"
 
+    def overall_charge_and_mult(self):
+        """
+        Checks system for overall charge and multiplicity
+        """
+        mol = Molecule(atoms = [i for i in self.coords])
+        mol.separate()
+        charge = Molecule.get_charge(mol.fragments)
+        multiplicity = Molecule.get_multiplicity(mol.fragments)
+        print(charge, multiplicity)
+        return charge, multiplicity
+     
     def read_xyz(self, using):
         """
         Reads coordinates of an xyz file and return a list of |Atom| objects,
@@ -333,14 +344,12 @@ class Molecule:
             for i, atom in enumerate(data['atoms']):
                 atom.number = i + 1
 
-
     def renumber_molecules(self):
         """
         Molecule numbers (Mol: _) are sometimes not in a numerical order. 
         This function takes the molecules and gives them a number from 1 to the 
         number of fragments
         """ 
-
         current = set([atom.mol for atom in self.coords])
         convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)} # old: new
         frags = list(self.fragments.items())
@@ -453,7 +462,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                         if atom_i not in atom_j.connected_atoms:
                             atom_j.connected_atoms.append(atom_i)
 
-        
+
     def add_ionic_network(self):
         """
         Adds one item to self.fragments- removing all neutral species, 
@@ -466,10 +475,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             """
             ionic_mol = Molecule(atoms = coords)
             ionic_mol.separate()
-            ionic_frags = ionic_mol.fragments.values()
-            charge = sum(frag['charge'] for frag in ionic_frags)
-            multiplicity = 2 if any(frag['type'] == 'radical' for frag in ionic_frags) else 1
-            # extend multiplicity for biradicals etc...
+            ionic_frags = ionic_mol.fragments
+            charge = sum(frag['charge'] for frag in ionic_frags.values())
+            multiplicity = Molecule.get_multiplicity(ionic_frags)
+            
             return charge, multiplicity
 
         coord_list = [coord for coord in self.coords] 
@@ -592,6 +601,41 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
         
+    @classmethod
+    def create_complex_properties_dict(self):
+        """
+        Checks system for overall charge and multiplicity, and returns
+        properties in a dictionary
+        """
+        def check_charge_and_mult(atoms):
+            """
+            Must check charge of overall complex, may not be zero.
+            This function achieves this by creating a copy of the molecule, 
+            fragmenting the copy and then summing the charges of each fragment.
+            The reason being that the user may not want to have each fragment
+            written to a file- which would happen if fragmenting self??? Test it
+            Modify the self.complex dictionary
+            """
+            mol = Molecule(atoms = atoms)
+            mol.separate()
+            charge = Molecule.get_charge(mol.fragments)
+            multiplicity = Molecule.get_multiplicity(mol.fragments)
+            print(charge, multiplicity)
+            return charge, multiplicity
+
+        charge, mult = check_charge_and_mult(atoms)
+        # self.complex used in input files
+        # assuming a neutral closed shell system
+        return {
+            "type": "complex",
+            "name": "complex",
+            "atoms": atoms,
+            "charge": charge,
+            "mult": mult,
+            "elements": sort_elements(atoms)
+        }
+
+
     def find_h_bonds(self):
         """
         Gives hydrogen bonding data back to the user. Checks for suitable
@@ -752,8 +796,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             for a in frag['atoms']:
                 if a.index == atom.index:
                     return frag['name']
-        
 
+    @classmethod
+    def get_charge(cls, fragment_dict):
+        return sum(frag['charge'] for frag in fragment_dict.values())
 
-
+    @classmethod
+    def get_multiplicity(cls, fragment_dict):
+        return 2 if any(frag['type'] == 'radical' for frag in fragment_dict.values()) else 1
+        # extend multiplicity for biradicals etc...
 
