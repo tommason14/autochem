@@ -27,7 +27,6 @@ parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz 
 parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p, or prints formatted table if used with --interaction-energies', action='store_true')
 parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
 parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
-parser.add_argument('--psi', help='Use with --interaction-energies to indicate that output is from Psi4', action='store_true')
 parser.add_argument('-o', '--output', help='Use with --interaction-energies to give filename of csv to save data to.', action='store')
 parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups', action='store')
 parser.add_argument('--group', help="Pandas command to apply groups to the csv passed into --weight. Refer to the dataframe as df. Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`", action='store', type=str)
