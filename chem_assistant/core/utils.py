@@ -290,7 +290,8 @@ def responsive_table(data, strings, min_width = 13):
         formatting = []   
         for val in zip(line, all_sizes):
             entry, size = val
-            if not isinstance(entry, str):
+            # if not isinstance(entry, str):
+            if isinstance(entry, float):
                 size = f'{size}.5f'
             formatting.append(entry)
             formatting.append(size)

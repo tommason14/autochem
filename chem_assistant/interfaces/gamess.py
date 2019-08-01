@@ -94,8 +94,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
         else:
             self.title = using[:-4]
+        self.xyz = using
         
-        self.is_complex = is_complex # creates a `complex` dir
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
 
         if run_dir is not None:
             self.made_run_dir = True
@@ -104,17 +105,22 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
          
         self.create_inp()
         self.create_job()
+        self.place_files_in_dir()
+
         if frags_in_subdir:
             self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
         
+    def create_complex_dir_if_required(self, is_complex, make_frags):
+        self.is_complex = is_complex 
+        if make_frags and not is_complex:
+            self.is_complex = True
+
     def determine_fragments(self):
         if self.fmo:
             self.mol.separate()
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data
             self.input.fmoprp.maxit = 200
-            # num_ions = len([frag['name'] for frag in self.mol.fragments.values() if frag['name'] not in Molecule.Neutrals])
-            # self.input.gddi.ngroup = num_ions # for hy2ip use 4 groups not 5
             self.input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
@@ -161,6 +167,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if self.input.basis.gbasis.lower() == basis:
                     self.input.mp2.scsopo = opp
                     break
+        if 'fmo' and 'pcm' in self.input:
+            self.input.pcm.ifmo = -1
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
@@ -210,6 +218,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         for frag, data in self.mol.fragments.items():
             if frag is not 'ionic':
                 if len(data['atoms']) == 1:
+                    # should add to next fragment- wasteful to run on own node
                     info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
                     "charg" : str(data['charge'])}
                 else:
@@ -345,13 +354,22 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def place_files_in_dir(self):
         """Move input and job files into a directory named with the input name (``base_name``) i.e.
         moves opt.inp and opt.job into a directory called ``opt``."""
+        complex_dir = join(getcwd(), 'complex')
         if self.is_complex:
-            if not exists(join(self.base_name, 'complex')):
-                mkdir(join(self.base_name, 'complex'))
+            if not exists(complex_dir):
+                mkdir(complex_dir)
         #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
-                if 'equil.xyz' in listdir('.'):
-                    system(f'cp equil.xyz {self.base_name}/complex/complex.xyz')
-            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/complex/')
+            system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
+            system(f'cp {self.xyz} complex/complex.xyz')
+
+    def ionic_mol_has_two_or_more_frags(self):
+        """
+        If ionic molecule has more than two fragments, return True, and use fmo,
+        else make a non-fmo calculation
+        """
+        ionic_mol=Molecule(atoms=self.mol.ionic['atoms'])
+        ionic_mol.separate()
+        return len(ionic_mol.fragments) > 2
 
     def create_inputs_for_fragments(self, complex_is_fmo = False):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
@@ -408,20 +426,26 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 count += 1
 
         if hasattr(self.mol, 'ionic'):
-            # only 1 ionic network        
-            subdir_ionic = join(getcwd(), 'ionic')
-            if not exists(subdir_ionic):
-                mkdir(subdir_ionic)
-            chdir(subdir_ionic)
-            write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
-        
-            # re-use settings from complex
-            if hasattr(self, 'merged'):
-                frag_settings = self.merged
-            else:
-                frag_settings = self.defaults
-            frag_settings.input.contrl.icharg = self.mol.ionic['charge']
-            if self.mol.ionic['multiplicity'] != 1:
-                frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
-            job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
-            chdir(parent_dir)
+            if len(self.mol.ionic['atoms']) > 0:
+                # only 1 ionic network        
+                subdir_ionic = join(getcwd(), 'ionic')
+                if not exists(subdir_ionic):
+                    mkdir(subdir_ionic)
+                chdir(subdir_ionic)
+                write_xyz(atoms = self.mol.ionic['atoms'], filename = 'ionic.xyz')
+            
+                # re-use settings from complex
+                if hasattr(self, 'merged'):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                frag_settings.input.contrl.icharg = self.mol.ionic['charge']
+                if self.mol.ionic['multiplicity'] != 1:
+                    frag_settings.input.contrl.mult = self.mol.ionic['multiplicity']
+
+                ## FMO only if more than 2 fragments
+                if complex_is_fmo:
+                    complex_is_fmo = self.ionic_mol_has_two_or_more_frags()
+                    
+                job = GamessJob(using = 'ionic.xyz', settings=frag_settings, fmo = complex_is_fmo, run_dir = True) 
+                chdir(parent_dir)

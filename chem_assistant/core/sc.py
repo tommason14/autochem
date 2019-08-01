@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 __all__ = ['Supercomp']
 
@@ -17,19 +18,21 @@ class Supercomp:
     """
 
     def __init__(self):
-        cwd = os.getcwd()
-        cases = {'565': 'rjn',
-                 'pawsey': 'mgs',
+        cases = {'raijin': 'rjn',
+                 'magnus': 'mgs',
                  'nfs': 'gaia',
-                 'massive': 'mas',
-                 '06233': 'stm'
+                 'm3': 'mas',
+                 'monarch': 'mon',
+                 'stampede': 'stm'
                  }
+        hostname = subprocess.run('hostname', encoding = 'utf-8',
+                   stdout = subprocess.PIPE).stdout[:-1]
         for key in cases:
-            if key in cwd:
+            if key in hostname:
                 self.sc = cases[key]
                 break
             else:
-                self.sc = 'stm' #default to raijin
+                self.sc = 'stm' 
 
     def __repr__(self):
         return str(self.sc)
@@ -47,8 +50,9 @@ class Supercomp:
             return other + self.sc
         else:
             raise TypeError('Can only concatenate Supercomp instances with strings. No addition to floats/integers')
-    
-    def __call__(self):
-        return self.sc    
+   
+    @property
+    def supercomp(self):
+        return self.sc
     
     __str__ = __repr__

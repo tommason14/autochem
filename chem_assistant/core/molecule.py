@@ -87,11 +87,9 @@ class Molecule:
     def __init__(self, using = None, atoms = None, nfrags = None, user_created = False):
         if using is not None:
             self.coords = self.read_xyz(using)
-            #list of Atom objects, more useful than list of coordinates
         if atoms is not None and using is None:
             if len(atoms) == 0:
                 sys.exit('Error: atoms argument passed into Molecule is empty')
-            # list of atoms might not be atom objects
             if not isinstance(atoms[0], Atom):
                 self.coords = []
                 for atom in atoms:
@@ -461,6 +459,19 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         Adds one item to self.fragments- removing all neutral species, 
         along with the one-atom ions
         """
+
+        def ionic_mol_properties(coords):
+            """
+            Returns charge and multiplicity of ionic network
+            """
+            ionic_mol = Molecule(atoms = coords)
+            ionic_mol.separate()
+            ionic_frags = ionic_mol.fragments.values()
+            charge = sum(frag['charge'] for frag in ionic_frags)
+            multiplicity = 2 if any(frag['type'] == 'radical' for frag in ionic_frags) else 1
+            # extend multiplicity for biradicals etc...
+            return charge, multiplicity
+
         coord_list = [coord for coord in self.coords] 
         for k, frag in self.fragments.items():
             # remove neutrals
@@ -477,13 +488,15 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     for i, atom in enumerate(coord_list):
                         if coord.index == atom.index:
                             del coord_list[i]
-        if len(coord_list) != len(self.coords):
+        if len(coord_list) != len(self.coords) and len(coord_list) != 0:
+            # split and add charges and multiplicities up
+            charge, multiplicity = ionic_mol_properties(coord_list)
             self.ionic = {
                 "type": 'ionic',
                 "name" : 'ionic',
                 "atoms": coord_list,
-                "charge": 0,
-                "multiplicity": 1,
+                "charge": charge,
+                "multiplicity": multiplicity,
                 "elements": sort_elements(coord_list),
                 "frag_type": "ionic"
             }
