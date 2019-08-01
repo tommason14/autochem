@@ -87,11 +87,9 @@ class Molecule:
     def __init__(self, using = None, atoms = None, nfrags = None, user_created = False):
         if using is not None:
             self.coords = self.read_xyz(using)
-            #list of Atom objects, more useful than list of coordinates
         if atoms is not None and using is None:
             if len(atoms) == 0:
                 sys.exit('Error: atoms argument passed into Molecule is empty')
-            # list of atoms might not be atom objects
             if not isinstance(atoms[0], Atom):
                 self.coords = []
                 for atom in atoms:
@@ -490,7 +488,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     for i, atom in enumerate(coord_list):
                         if coord.index == atom.index:
                             del coord_list[i]
-        if len(coord_list) != len(self.coords):
+        if len(coord_list) != len(self.coords) and len(coord_list) != 0:
             # split and add charges and multiplicities up
             charge, multiplicity = ionic_mol_properties(coord_list)
             self.ionic = {

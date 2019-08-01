@@ -367,7 +367,6 @@ def geodesics(dir):
     results = []
 
     files = get_files(dir, ['log', 'out'])
-
     for logfile in files:
         if file_is_gamess(logfile):
             path, filename = os.path.split(logfile)
@@ -392,10 +391,9 @@ def geodesics(dir):
                     if re.search(charge_regex, line):
                         res[counter].append(float(line.split()[1]))
                         counter += 1
-            coords = [atom[1] for atom in res]
-            mol = Molecule(atoms = coords)
+            coordinates = [atom[1] for atom in res]
+            mol = Molecule(atoms = coordinates)
             mol.separate()
-            # bad practice, should use for i, j in zip(mol.coords, res):
             for atom, r in zip(mol.coords, res):
                 path, _, geodesic_charge = r
                 results.append([path, atom.index, atom.symbol, geodesic_charge, atom.x, atom.y, atom.z, f"{mol.fragments[atom.mol]['name']}_{atom.mol}"])
