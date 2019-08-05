@@ -4,8 +4,9 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 16
-#SBATCH --mem=64G
 #SBATCH -t 03:00:00
+#SBATCH --mem=64G
+#SBATCH --qos=partner
 
 module load psi4/v1.1
 psi4 base_name.inp base_name.log
