@@ -191,13 +191,16 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 line = ' '.join(line) + '\n'
             return line
 
-        def preserve_key(key, value):
-            print(key)
-            print(value)
-            return False
+        def preserve_value(value):
+            """
+            If user inserts newline, don't remove it.
+            Presumably there is some desired formatting of that group
+            """
+            return '\n' in value
 
         def parse(key, value):
             ret = ''
+
             if isinstance(value, Settings):
                 ret += ' ${}'.format(key.upper())
                 for el in value:
@@ -205,7 +208,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret += ' $END\n'
             else:
                 ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
-            if key is not 'fmo' or not preserve_key(key, value):
+            if not preserve_value(value):
                 ret = format_line_if_too_long(ret)
             return ret
     
