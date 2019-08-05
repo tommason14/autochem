@@ -58,3 +58,38 @@ class GaussJob(Job):
     # sett.input.grid = 'ultrafine'
     # sett.input.method = 'wB97xD'
     # sett.input.basis = 'aug-ccpvdz' # -> wB97xD/aug-ccpVDZ 
+
+    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None):
+        super().__init__(using)
+        self.filename = filename
+        self.defaults = read_template('gauss.json') #settings object 
+        if settings is not None:
+            self.merged = self.defaults.merge(settings) # merges inp, job data 
+            self.input = self.merged.input
+            self.job = self.merged.job
+        else:
+            self.input = self.defaults.input
+        if '/' in using:
+            self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
+        else:
+            self.title = using[:-4]
+        self.xyz = using
+        
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
+
+        if run_dir is not None:
+            self.made_run_dir = True
+        else:
+            self.made_run_dir = False
+         
+        self.create_inp()
+        self.create_job()
+        self.place_files_in_dir()
+
+        if frags_in_subdir:
+            self.create_inputs_for_fragments(complex_is_fmo = self.fmo)
+        
+    def create_complex_dir_if_required(self, is_complex, make_frags):
+        self.is_complex = is_complex 
+        if make_frags and not is_complex:
+            self.is_complex = True

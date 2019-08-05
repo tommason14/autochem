@@ -78,8 +78,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             ├── opt.inp
             └── opt.job
     """
-    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename
-= None, is_complex = False, run_dir = None):
+    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None):
         super().__init__(using)
         self.fmo = fmo # Boolean
         self.filename = filename
