@@ -191,6 +191,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 line = ' '.join(line) + '\n'
             return line
 
+        def preserve_key(key, value):
+            print(key)
+            print(value)
+            return False
+
         def parse(key, value):
             ret = ''
             if isinstance(value, Settings):
@@ -200,7 +205,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret += ' $END\n'
             else:
                 ret += ' ${} {}\n $END\n'.format(key.upper(), value.upper())
-            if key is not 'fmo':
+            if key is not 'fmo' or not preserve_key(key, value):
                 ret = format_line_if_too_long(ret)
             return ret
     

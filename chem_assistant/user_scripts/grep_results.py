@@ -355,7 +355,7 @@ def file_is_gamess(file):
     with open(file, 'r') as f:
         return 'rungms' in f.readline()
 
-def geodesics(dir):
+def geodesics(dir, output):
     """
     Recursively pulls geodesic charges from GAMESS calculations.
     Writes to `charges.csv` if desired
@@ -405,4 +405,4 @@ def geodesics(dir):
         data[value] = [val[index] for val in results]
     responsive_table(data, strings=[1, 3, 8], min_width=10)
 
-    write_csv_from_nested(results, col_names = keys, filename='charges.csv')
+    write_csv_from_nested(results, col_names = keys, filename=output)

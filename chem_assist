@@ -95,4 +95,6 @@ if args.weight:
     apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
 if args.geodesics:
-    geodesics('.')
+    if not args.output:
+        args.output = 'charges.csv'
+    geodesics('.', output=args.output)

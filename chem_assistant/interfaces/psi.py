@@ -235,17 +235,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
         jobfile = self.get_job_template()
         # modify
-        if str(self.sc) == 'mgs':
+        if self.sc == 'mgs':
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'rjn':
+        elif self.sc == 'rjn':
             # should alter the job time as they never need 4 hours- 
             # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
             jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'mas':
+        elif self.sc == 'mas':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-        elif str(self.sc) == 'mon':
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
-        elif str(self.sc) == 'stm':
+        elif self.sc == 'mon':
+            jobfile = jobfile.replace('base_name', f'{self.base_name}') 
+        elif self.sc == 'stm':
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')        
 
