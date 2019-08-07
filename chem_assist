@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-from chem_assistant.user_scripts import *
-from chem_assistant.core import Settings
-from chem_assistant.core.thermo import make_ir_spectra
-from importlib import import_module
 import argparse
 import sys
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
@@ -34,6 +28,7 @@ parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from 
 args = parser.parse_args()
 
 def imported_settings():
+    from importlib import import_module
     file_to_import = args.settings[:-3] #lose the .py extension
     imported = import_module(file_to_import)
     return imported.sett
@@ -43,15 +38,19 @@ if len(sys.argv) == 1:
     parser.print_help()
 
 if args.meta:
-   make_files_from_meta('.') 
+    from chem_assistant.user_scripts import make_files_from_meta
+    make_files_from_meta('.') 
 
 if args.thermochem:
+    from chem_assistant.user_scripts import thermochemistry
     thermochemistry('.')
     
 if args.free_energies:
+    from chem_assistant.user_scripts import calculate_free_energy_interactions
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
+    from chem_assistant.user_scripts import results_table
     if not args.output:
         args.output='energies.csv'
     results_table('.', file_name=args.output)
@@ -60,34 +59,44 @@ if args.settings:
     settings = imported_settings()
 
 if args.dir_tree_from_files and args.settings:
+    from chem_assistant.user_scripts import xyz_to_tree
     settings = imported_settings()
     xyz_to_tree(settings)
 
 if args.dir_tree_from_files and not args.settings:
+    from chem_assistant.user_scripts import xyz_to_tree
+    from chem_assistant.core import Settings
     settings = Settings()
     # default options- Settings object required even 
     # if empty
     xyz_to_tree(settings)
 
 if args.graph:
+    from chem_assistant.user_scripts import plot_opt
     plot_opt(args.graph)
 
 if args.equil_coords:
+    from chem_assistant.user_scripts import search_for_coords
     search_for_coords('.')
     
 if args.ir:
+    from chem_assistant.core.thermo import make_ir_spectra
     make_ir_spectra(args.ir)
 
 if args.hydrogen_bonds:
+    from chem_assistant.user_scripts import get_h_bonds
     get_h_bonds('.')
 
 if args.interaction_energies:
+    from chem_assistant.user_scripts import calculate_interaction_energies
     calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose, software=args.soft, output=args.output)
     
 if args.print_frags:
+    from chem_assistant.user_scripts import print_frags
     print_frags('.', verbose=args.verbose)
 
 if args.weight:
+    from chem_assistant.user_scripts import apply_boltzmann_weightings
     if not args.group:
         args.group = "df['Config']"
     if not args.output:
@@ -95,6 +104,7 @@ if args.weight:
     apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
 if args.geodesics:
+    from chem_assistant.user_scripts import geodesics
     if not args.output:
         args.output = 'charges.csv'
     geodesics('.', output=args.output)
