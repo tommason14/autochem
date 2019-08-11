@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -J spec
-#SBATCH -e spec.err
+#SBATCH -J name
+#SBATCH -e name.err
 #SBATCH -p normal
 #SBATCH -N 1
 #SBATCH -n 1
@@ -8,5 +8,5 @@
 #SBATCH -t 03:00:00
 
 module load psi4
-psi4 spec.inp spec.log
+psi4 name.inp name.log
 find . -empty -delete

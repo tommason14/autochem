@@ -82,7 +82,7 @@ class PsiJob(Job):
     
     The names of files created default to the type of calculation: optimisation (opt), single point
 energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
-        >>> job = GamessJob(using = 'file.xyz', filename = 'benzene')
+        >>> job = PsiJob(using = 'file.xyz', filename = 'benzene')
     This command produces two files, benzene.inp and benzene.job.
     
     If a system is comprised of multiple fragments, each fragment can have its own input file created in a subdirectory by passing in ``frags_in_subdir`` = True.
@@ -115,6 +115,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
         self.create_inp()
         self.create_job()
+        self.create_complex_dir_and_move_files()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
 
@@ -249,20 +250,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')        
 
-    def place_files_in_dir(self):
-        """Move input and job files into a directory named with the input name (``base_name``) i.e.
-        moves opt.inp and opt.job into a directory called ``opt``."""
+    def create_complex_dir_and_move_files(self):
+        """
+        Move input and job files into a directory named `complex`, if self.is_complex
+        is set to True
+        """
         if self.is_complex:
-            if not exists(join('complex', self.base_name)):
+            if not exists(join(self.path, 'complex')):
                 mkdir('complex')
-                mkdir(join('complex', self.base_name))
-                # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
-                system('cp *.xyz complex/complex.xyz')
-            system(f'mv {self.base_name}.inp {self.base_name}.job complex/{self.base_name}/')
-        else:
-            if not exists(self.base_name):    
-                mkdir(self.base_name)
-            system(f'mv {self.base_name}.inp {self.base_name}.job {self.base_name}/')
+            system('cp *.xyz complex/complex.xyz')
+            system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
+
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
