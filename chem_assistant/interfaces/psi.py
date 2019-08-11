@@ -115,7 +115,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
         self.create_inp()
         self.create_job()
-        self.create_complex_dir_and_move_files()
+        self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
 
@@ -250,14 +250,15 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('name', f'{self.base_name}') 
         self.write_file(jobfile, filetype='job')        
 
-    def create_complex_dir_and_move_files(self):
+    def place_files_in_dir(self):
         """
         Move input and job files into a directory named `complex`, if self.is_complex
         is set to True
         """
+        complex_dir = join(getcwd(), 'complex')
         if self.is_complex:
-            if not exists(join(self.path, 'complex')):
-                mkdir('complex')
+            if not exists(complex_dir):
+                mkdir(complex_dir)
             system('cp *.xyz complex/complex.xyz')
             system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
 
