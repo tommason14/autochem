@@ -500,13 +500,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             del coord_list[i]
         if len(coord_list) != len(self.coords) and len(coord_list) != 0:
             # split and add charges and multiplicities up
-            charge, multiplicity = ionic_mol_properties(coord_list)
+            # charge, multiplicity = ionic_mol_properties(coord_list)
             self.ionic = {
                 "type": 'ionic',
                 "name" : 'ionic',
                 "atoms": coord_list,
-                "charge": charge,
-                "multiplicity": multiplicity,
+                "charge": 0,
+                "multiplicity": 1,
                 "elements": sort_elements(coord_list),
                 "frag_type": "ionic"
             }
@@ -538,7 +538,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 self.reassign_frags_manually()
                 if self.all_atoms_assigned():
                     all_assigned = True
-        # self.add_ionic_network()
+        self.add_ionic_network()
 
 
     def distance_matrix(self):
