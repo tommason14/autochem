@@ -164,6 +164,7 @@ def apply_boltzmann_weightings(csv, grouping, output):
     Take in a csv produced from `calculate_interaction_energies` and weight configurations
     according a boltzmann distribution of total energy.
     """
+    @make_symbolic
     def bp(series, as_percent = False):
         """
         Takes in energies in Hartrees, produces
@@ -181,14 +182,31 @@ def apply_boltzmann_weightings(csv, grouping, output):
             return (exponent / summed) * 100
         return exponent / summed
 
+    @make_symbolic
+    def confidence(column):
+        """
+        95% confidence intervals defined as:
+            1.96 * standard deviation from the mean / sqrt(number of items)
+
+        1.96 assumes a normal distribution.
+
+        https://www.itl.nist.gov/div898/handbook/prc/section1/prc14.htm
+        http://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/BS704_Confidence_Intervals/BS704_Confidence_Intervals_print.html
+        """
+        return 1.96 * sd(column) * (n(column) ** -0.5)
+
 
     df = pd.read_csv(csv)
-    df['complex_total_energy'] = df['hf_complex'] + df['corr_complex']
-    df['Groups'] = eval(grouping)
-    df['weightings'] = df.groupby('Groups')['complex_total_energy'].apply(bp)
-    df['hf_weighted'] = df['hf_int_kj'] * df['weightings']
-    df['corr_weighted'] = df['corr_int_kj'] * df['weightings']
-    weighted = df.groupby('Groups').agg({'hf_weighted': sum, 'corr_weighted': sum})
-    weighted.columns = ['Electrostatics', 'Dispersion']
+    weighted = (df >> 
+        mutate(complex_total_energy = X.hf_complex + X.corr_complex,
+               Groups = eval(grouping)) >>
+        group_by(X.Groups) >>
+        mutate(weightings = bp(X.complex_total_energy)) >>
+        mutate(hf_weighted = X.hf_int_kj * X.weightings,
+               corr_weighted = X.corr_int_kj * X.weightings) >>
+        summarise(Electrostatics = X.hf_weighted.sum(),
+                  Dispersion = X.corr_weighted.sum(),
+                  Electro_CI = confidence(X.hf_weighted),
+                  Dispersion_CI = confidence(X.corr_weighted)))
     print(weighted)
-    weighted.reset_index().to_csv(output, index=False)
+    weighted.to_csv(output, index=False)

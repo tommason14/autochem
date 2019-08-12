@@ -100,7 +100,7 @@ if args.weight:
     if not args.group:
         args.group = "df['Config']"
     if not args.output:
-        args.ouput = 'weighted.csv'
+        args.output = 'weighted.csv'
     apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
 if args.geodesics:
