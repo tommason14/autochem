@@ -474,11 +474,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             Returns charge and multiplicity of ionic network
             """
             ionic_mol = Molecule(atoms = coords)
+            # causing errors here I think, when separating and using for input
             ionic_mol.separate()
             ionic_frags = ionic_mol.fragments
             charge = sum(frag['charge'] for frag in ionic_frags.values())
             multiplicity = Molecule.get_multiplicity(ionic_frags)
-            
+
             return charge, multiplicity
 
         coord_list = [coord for coord in self.coords] 
@@ -499,13 +500,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             del coord_list[i]
         if len(coord_list) != len(self.coords) and len(coord_list) != 0:
             # split and add charges and multiplicities up
-            charge, multiplicity = ionic_mol_properties(coord_list)
+            # charge, multiplicity = ionic_mol_properties(coord_list)
             self.ionic = {
                 "type": 'ionic',
                 "name" : 'ionic',
                 "atoms": coord_list,
-                "charge": charge,
-                "multiplicity": multiplicity,
+                "charge": 0,
+                "multiplicity": 1,
                 "elements": sort_elements(coord_list),
                 "frag_type": "ionic"
             }
