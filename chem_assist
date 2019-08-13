@@ -33,6 +33,7 @@ def imported_settings():
     imported = import_module(file_to_import)
     return imported.sett
 
+
 # if no arguments passed
 if len(sys.argv) == 1:
     parser.print_help()
@@ -42,7 +43,7 @@ if args.meta:
     make_files_from_meta('.') 
 
 if args.thermochem:
-    from chem_assistant.user_scripts import thermochemistry
+    from chem_assistant.user_scripts.grep_results import thermochemistry
     thermochemistry('.')
     
 if args.free_energies:
@@ -50,7 +51,7 @@ if args.free_energies:
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
-    from chem_assistant.user_scripts import results_table
+    from chem_assistant.user_scripts.grep_results import results_table
     if not args.output:
         args.output='energies.csv'
     results_table('.', file_name=args.output)
