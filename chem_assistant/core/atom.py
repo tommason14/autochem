@@ -28,6 +28,7 @@ class Atom:
             self.atnum = atnum
             self.symbol = PT.get_symbol(self)
 
+        self.mass = PT.get_mass(self)
         self.mol = mol
         self.bonds = bonds or []
         self.connected_atoms = []
