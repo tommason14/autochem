@@ -77,7 +77,7 @@ def grep_data(fort):
     {
         'TC h'   : 'TC',
         'S elec' : 'S elec',
-        'S tran' : 'S tran',
+        'S trans' : 'S trans',
         'S rot'  : 'S rot',
         'S vib'  : 'S vib',
         'Stot'   : 'S tot',
