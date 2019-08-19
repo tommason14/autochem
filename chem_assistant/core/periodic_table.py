@@ -149,7 +149,7 @@ class PeriodicTable:
     @classmethod
     def get_mass(cls, atom):
         """Returns atomic mass for a given element"""
-        atnum = cls.get_atnum(atom.symbol)
+        atnum = cls.get_atnum(atom)
         return float(cls.ptable[atom.atnum][1])
 
     @classmethod
@@ -164,6 +164,3 @@ class PeriodicTable:
         atnum = cls.get_atnum(atom)
         return float(cls.ptable[atom.atnum][-1])
         
-
-
-

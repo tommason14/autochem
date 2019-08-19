@@ -274,19 +274,18 @@ def thermochemistry(dir):
             'ZPVE': [],
             'TC': [],
             'S elec': [],
-            'S tran': [],
+            'S trans': [],
             'S rot': [],
             'S vib': [],
             'S tot': [],
             'TC - TS': []
         }
-
+    print('Print csv for more info')
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
         try:
             if r.completed():
                 if r.is_hessian():
-                    print(f'Thermo data for {r.log}')
                     res = thermo_data(r.log)  # run fortran script
                     res['File'] = r.log
                     for k, v in res.items():
@@ -300,7 +299,7 @@ def thermochemistry(dir):
     # add units to dict keys
 
     kj = ('ZPVE', 'TC', 'TC - TS')
-    jmol = ('S elec', 'S tran', 'S rot', 'S vib', 'S tot')
+    jmol = ('S elec', 'S trans', 'S rot', 'S vib', 'S tot')
     kv = list(collected.items())
     collected.clear()
     for k, v in kv:
@@ -310,9 +309,10 @@ def thermochemistry(dir):
             collected[k + ' [J/(mol K)]'] = v
         else:
             collected[k] = v
-    name = write_csv_from_dict(
-        collected, return_name=True, filename='thermo.csv')
-    return name
+    responsive_table({k:v for k,v in collected.items() if
+                      k in ['File','S tot [J/(mol K)]']}, 
+                      strings=[1], min_width=10)
+    name = write_csv_from_dict(collected, filename='thermo.csv')
 
 
 def get_h_bonds(dir):

@@ -33,24 +33,25 @@ def imported_settings():
     imported = import_module(file_to_import)
     return imported.sett
 
+
 # if no arguments passed
 if len(sys.argv) == 1:
     parser.print_help()
 
 if args.meta:
-    from chem_assistant.user_scripts import make_files_from_meta
+    from chem_assistant.user_scripts.make_files_meta import make_files_from_meta
     make_files_from_meta('.') 
 
 if args.thermochem:
-    from chem_assistant.user_scripts import thermochemistry
+    from chem_assistant.user_scripts.grep_results import thermochemistry
     thermochemistry('.')
     
 if args.free_energies:
-    from chem_assistant.user_scripts import calculate_free_energy_interactions
+    from chem_assistant.user_scripts.free_energy_interactions import calculate_free_energy_interactions
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
-    from chem_assistant.user_scripts import results_table
+    from chem_assistant.user_scripts.grep_results import results_table
     if not args.output:
         args.output='energies.csv'
     results_table('.', file_name=args.output)
@@ -59,24 +60,24 @@ if args.settings:
     settings = imported_settings()
 
 if args.dir_tree_from_files and args.settings:
-    from chem_assistant.user_scripts import xyz_to_tree
+    from chem_assistant.user_scripts.make_dir_tree import xyz_to_tree
     settings = imported_settings()
     xyz_to_tree(settings)
 
 if args.dir_tree_from_files and not args.settings:
-    from chem_assistant.user_scripts import xyz_to_tree
-    from chem_assistant.core import Settings
+    from chem_assistant.user_scripts.make_dir_tree import xyz_to_tree
+    from chem_assistant.core.settings import Settings
     settings = Settings()
     # default options- Settings object required even 
     # if empty
     xyz_to_tree(settings)
 
 if args.graph:
-    from chem_assistant.user_scripts import plot_opt
+    from chem_assistant.user_scripts.make_graph import plot_opt
     plot_opt(args.graph)
 
 if args.equil_coords:
-    from chem_assistant.user_scripts import search_for_coords
+    from chem_assistant.user_scripts.grep_results import search_for_coords
     search_for_coords('.')
     
 if args.ir:
@@ -84,27 +85,27 @@ if args.ir:
     make_ir_spectra(args.ir)
 
 if args.hydrogen_bonds:
-    from chem_assistant.user_scripts import get_h_bonds
+    from chem_assistant.user_scripts.grep_results import get_h_bonds
     get_h_bonds('.')
 
 if args.interaction_energies:
-    from chem_assistant.user_scripts import calculate_interaction_energies
+    from chem_assistant.user_scripts.int_energies import calculate_interaction_energies
     calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose, software=args.soft, output=args.output)
     
 if args.print_frags:
-    from chem_assistant.user_scripts import print_frags
+    from chem_assistant.user_scripts.check_frags import print_frags
     print_frags('.', verbose=args.verbose)
 
 if args.weight:
-    from chem_assistant.user_scripts import apply_boltzmann_weightings
+    from chem_assistant.user_scripts.int_energies import apply_boltzmann_weightings
     if not args.group:
         args.group = "df['Config']"
     if not args.output:
-        args.ouput = 'weighted.csv'
+        args.output = 'weighted.csv'
     apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
 if args.geodesics:
-    from chem_assistant.user_scripts import geodesics
+    from chem_assistant.user_scripts.grep_results import geodesics
     if not args.output:
         args.output = 'charges.csv'
     geodesics('.', output=args.output)

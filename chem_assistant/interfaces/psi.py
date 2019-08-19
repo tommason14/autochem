@@ -85,14 +85,16 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         >>> job = PsiJob(using = 'file.xyz', filename = 'benzene')
     This command produces two files, benzene.inp and benzene.job.
     
-    If a system is comprised of multiple fragments, each fragment can have its own input file created in a subdirectory by passing in ``frags_in_subdir`` = True.
-    Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
-        .
-        └── opt
-            ├── opt.inp
-            └── opt.job
+    To run a counterpoise corrected calculation, pass in `cp=True` to the constructor:
+        >>> job = PsiJob(using = 'file.xyz', filename = 'benzene', cp=True)
+    
+   This produces an extra file- a counterpoise corrected Hartree-Fock calculation of the entire
+cluster.
+       
+ 
     """
-    def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None):
+    def __init__(self, using = None, frags_in_subdir = False, settings = None, filename = None,
+is_complex = False, run_dir = None, cp = False):
         super().__init__(using)
         self.filename = filename
         self.defaults = read_template('psi.json') #settings object 
@@ -113,7 +115,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                  
         self.is_complex = is_complex # creates a `complex` dir
 
-        self.create_inp()
+        self.cp = cp
+        self.create_inp(counterpoise=self.cp)
         self.create_job()
         self.place_files_in_dir()
         if frags_in_subdir:
@@ -217,14 +220,93 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
+    def make_counterpoise(self):
+        """
+        Make a counterpoise corrected HF input file and place in a separate directory.
+        """
+        # make new PsiJob object, the only thing that changes is atoms, and directory name
+        # class PsiJob_CP(PsiJob):
+        #    
+        #   def convert_atoms_to_cp(self):
+        #       
+        #       if not hasattr(self.mol, 'fragments'):
+        #           self.mol.separate()
+        #       for frag in self.mol.fragments.values():
+        #           for atom in frag['atoms']:
+        #               atoms.append(f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}")
+        #           atoms.append('--') 
+        #       atoms = "\n".join(atoms[:-1]) + '\n'
+        #       return atoms
 
-    def create_inp(self):
+
+        comment = f"# PSI4 Calc: {self.title}\n\n"
+        mem  = f"memory {self.input.memory}\n\n"
+        mol = "molecule complex {\n"
+        charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
+        atoms=[]
+        if not hasattr(self.mol, 'fragments'):
+            self.mol.separate()
+        for frag in self.mol.fragments.values():
+            for atom in frag['atoms']:
+                atoms.append(f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}")
+            atoms.append('--') 
+        atoms = "\n".join(atoms[:-1]) + '\n'
+        units = f"units {self.input.molecule.units}\n"
+        sym = f"symmetry {self.input.molecule.symmetry}\n"
+        reorient = "no_reorient\n"
+        end = "}\n"
+
+        data = [comment, mem, mol, charge, atoms, units, reorient, sym,  end]
+
+        # add in user options
+        for key, value in self.input.molecule.items():
+            if key not in ("charge", "multiplicity", "units", "symmetry"):
+                key = f"{key} {value}\n"
+                data.insert(-1, key) #insert before last item
+        data.append('\nset globals {\n')
+        for key, value in self.input.globals.items():
+            data.append(f"    {key} {value}\n")
+        data.append('}\n')
+ 
+        data.append("energy('HF', bsse_type='cp')")
+        cp_dir = join(getcwd(), 'cp-hf')
+        if not exists(cp_dir):
+            mkdir(cp_dir)
+        cp_input = join(cp_dir, f'{self.base_name}.inp')
+        cp_job = join(cp_dir, f'{self.base_name}.job')
+        with open(cp_input, 'w') as f:
+            for line in data:
+                f.write(line)    
+        
+        job_file = self.find_job()
+        with open(job_file) as f:
+            job = f.read()
+        
+        if self.sc == 'mgs':
+            job = job.replace('name', f'{self.base_name}')
+        elif self.sc == 'rjn':
+            # should alter the job time as they never need 4 hours-
+            # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
+            job = job.replace('name', f'{self.base_name}')
+        elif self.sc == 'mas':
+            job = job.replace('base_name', f'{self.base_name}')
+        elif self.sc == 'mon':
+            job = job.replace('base_name', f'{self.base_name}')
+        elif self.sc == 'stm':
+            job = job.replace('name', f'{self.base_name}')
+        
+        with open(cp_job, 'w') as j:
+            j.write(job)
+
+    def create_inp(self, counterpoise=False):
         self.make_header()
         self.add_unbound()
         self.add_globals()
         self.add_run()
         self.file_basename()
         self.write_file(self.inp, filetype = 'inp')
+        if counterpoise:
+            self.make_counterpoise()
 
     def get_job_template(self):
         job_file = self.find_job()
