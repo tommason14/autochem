@@ -166,7 +166,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if self.input.basis.gbasis.lower() == basis:
                     self.input.mp2.scsopo = opp
                     break
-        if 'fmo' and 'pcm' in self.input:
+        if self.fmo and 'pcm' in self.input:
             self.input.pcm.ifmo = -1
 
     def parse_settings(self):
