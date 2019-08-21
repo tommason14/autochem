@@ -103,7 +103,9 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
         if ionic_present:
             data = (psi4_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
-                mutate(Type = if_else(X.Path.str.contains('frag'), 'frag', 'complex')) >>
+                mutate(Type = if_else(X.Path.str.contains('frag'), 'frag', 
+                                    if_else(X.Path.str.contains('ionic'), 'ionic',
+                                            'complex'))) >>
                 mutate(HF = X['HF/DFT']) >>
                 mutate(SRS = X['HF/DFT'] + 1.64 * X.MP2_opp) >>
                 mutate(Corr= X.SRS - X.HF) >>
