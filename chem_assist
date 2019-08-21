@@ -90,6 +90,8 @@ if args.hydrogen_bonds:
 
 if args.interaction_energies:
     from chem_assistant.user_scripts.int_energies import calculate_interaction_energies
+    if not args.output:
+        args.output = 'ints.csv'
     calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose, software=args.soft, output=args.output)
     
 if args.print_frags:

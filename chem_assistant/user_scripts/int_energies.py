@@ -64,13 +64,13 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
-            if output is not None:
-                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
             else:
                 print(data)
+            if output is not None:
+                data.to_csv(output, index=False)
         else:
             data = (gamess_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
@@ -91,13 +91,13 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5)>>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)
             )
-            if output is not None:
-                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
             else:
                 print(data)
+            if output is not None:
+                data.to_csv(output, index=False)
 
     if psi4_df is not None:
         if ionic_present:
@@ -125,13 +125,13 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_ionic - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)        
             )
-            if output is not None:
-                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
             else:
                 print(data)
+            if output is not None:
+                data.to_csv(output, index=False)
         else:
             data = (psi4_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
@@ -152,13 +152,13 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
                     corr_int_kj = (X.corr_complex - X.corr_frags) * 2625.5) >>
                 mutate(total_int_kj = X.hf_int_kj + X.corr_int_kj)     
             )
-            if output is not None:
-                data.to_csv(output, index=False)
             if pretty_print:
                 data = data.to_dict(orient='list')
                 responsive_table(data, strings = [1], min_width=16)
             else:
                 print(data)
+            if output is not None:
+                data.to_csv(output, index=False)
 
 
 def apply_boltzmann_weightings(csv, grouping, output):
