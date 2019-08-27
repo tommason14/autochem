@@ -139,6 +139,11 @@ is_complex = False, run_dir = None, cp = False):
                 
         data = [comment, mem, mol, charge, atoms, units, reorient, sym,  end]
         
+
+        # rm unneccesary options
+        self.input = self.input.remove_none_values()        
+
+
         # add in user options
         for key, value in self.input.molecule.items():
             if key not in ("charge", "multiplicity", "units", "symmetry"):
