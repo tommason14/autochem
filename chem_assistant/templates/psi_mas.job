@@ -6,6 +6,8 @@
 #SBATCH -c 16
 #SBATCH -t 03:00:00
 
+export PROJECT="sn29"
+
 module load psi4/v1.1
 psi4 base_name.inp base_name.log
 find . -empty -delete
