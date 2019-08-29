@@ -4,6 +4,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 16
+#SBATCH --mem=32G
 #SBATCH -t 03:00:00
 
 export PROJECT="sn29"
