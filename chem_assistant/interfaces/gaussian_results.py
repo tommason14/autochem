@@ -30,12 +30,29 @@ class GaussianResults(Results):
     __str__ = __repr__
 
     def get_runtype(self):
+        """
+        Can have multiple runs in one file i.e. opt freq
+        Looks for one or both of 'opt' and 'freq'.
+        If not found, defaults to single point calculation.
+        """
+        opt = False
+        freq = False
         for line in self.read():
             if '#P' in line.upper():
                 parts = line.split()
-                return parts[2].lower()
-                    # if '' in p:
-                    #     return p.split('=')[1].lower()
+                for p in parts:
+                    if 'opt' in p:
+                        opt = True
+                    if 'freq' in p:
+                        freq = True
+        if opt and not freq:
+            return 'opt'
+        if opt and freq: 
+            return 'opt-freq'
+        if freq and not opt:
+            return 'freq'
+        if not opt and not freq:
+            return 'spec'
 
     def completed(self):
         # found = False
@@ -98,13 +115,13 @@ class GaussianResults(Results):
 
 
     def is_optimisation(self):
-        return self.get_runtype() == 'opt'
+        return 'opt' in self.get_runtype()
 
     def is_spec(self):
-        return self.get_runtype() == 'sp'
+        return self.get_runtype() == 'spec'
 
     def is_hessian(self):
-        return self.get_runtype() == 'freq'
+        return 'freq' in self.get_runtype()
 
     def get_data(self):
         """
