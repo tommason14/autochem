@@ -366,6 +366,7 @@ def geodesics(dir, output):
     files = get_files(dir, ['log', 'out'])
     for logfile in files:
         if file_is_gamess(logfile):
+            print(logfile)
             path, filename = os.path.split(logfile)
             inpfile = logfile[:-3] + 'inp'
 
