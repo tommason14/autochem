@@ -363,7 +363,7 @@ def geodesics(dir, output):
 
     results = []
 
-    files = get_files(dir, ['log', 'out'])
+    files = get_files(dir, ['log'])
     for logfile in files:
         if file_is_gamess(logfile):
             print(logfile)
