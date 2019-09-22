@@ -8,6 +8,8 @@
 #SBATCH --mem=64G
 #SBATCH --qos=partner
 
+export PROJECT="p2015120004"
+
 module load psi4/v1.1
 psi4 base_name.inp base_name.log
 find . -empty -delete

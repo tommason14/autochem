@@ -40,11 +40,11 @@ def search_for_coords(dir):
     for log in get_files(dir, ('.log', '.out')):
         r = get_results_class(log)
         if r is not None:
-                if r.is_optimisation():
-                    print(f'Searching {r.log}',
-                          end=" ")
-                    r.get_equil_coords()
-                    print()
+            if r.is_optimisation():
+                print(f'Searching {r.log}',
+                      end=" ")
+                r.get_equil_coords()
+                print()
 
 
 def create_extra_jobs(dir):
@@ -366,6 +366,7 @@ def geodesics(dir, output):
     files = get_files(dir, ['log', 'out'])
     for logfile in files:
         if file_is_gamess(logfile):
+            print(logfile)
             path, filename = os.path.split(logfile)
             inpfile = logfile[:-3] + 'inp'
 

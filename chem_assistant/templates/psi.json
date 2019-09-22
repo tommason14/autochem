@@ -1,6 +1,6 @@
 {
   "input" : {
-    "memory": "46 gb",
+    "memory": "30 gb",
     "molecule": {
       "charge": 0,
       "multiplicity": 1,
