@@ -5,7 +5,8 @@ import re
 import subprocess
 import sys
 
-__all__ = ['thermo_data', 'make_ir_spectra']
+__all__ = ['thermo_data']
+# __all__ = ['thermo_data', 'make_ir_spectra']
 
 def get_filetype(file):
     """
@@ -182,21 +183,21 @@ def thermo_data(file):
     cleanup()
     return data
 
-def make_ir_spectra(file):
-    """Plot of wavenumber against intensities for vibrations found by diagonalisation of a computed
-hessian matrix"""
-
-    import warnings
-    warnings.filterwarnings("ignore")
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    res = freq_data(file)
-    # now add gaussians... interesting project
-    sns.set_style('darkgrid')
-    sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
-    plt.xlabel('Wavenumber (cm$^{-1}$)')
-    plt.ylabel('Intensity')
-    plt.show()
-    write_csv_from_dict(res, filename = 'freq.data')
-    
+# def make_ir_spectra(file):
+#     """Plot of wavenumber against intensities for vibrations found by diagonalisation of a computed
+# hessian matrix"""
+#
+#     import warnings
+#     warnings.filterwarnings("ignore")
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#
+#     res = freq_data(file)
+#     # now add gaussians... interesting project
+#     sns.set_style('darkgrid')
+#     sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
+#     plt.xlabel('Wavenumber (cm$^{-1}$)')
+#     plt.ylabel('Intensity')
+#     plt.show()
+#     write_csv_from_dict(res, filename = 'freq.data')
+#     
