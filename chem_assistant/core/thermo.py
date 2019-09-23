@@ -133,6 +133,7 @@ def run(file, filetype):
     p = subprocess.Popen(command, shell=True, 
     stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True) 
     newline = os.linesep
+    commands = ['y', 'y', 'y', '1', '298.15']
     p.communicate(newline.join(commands))
 
 def read_fort():

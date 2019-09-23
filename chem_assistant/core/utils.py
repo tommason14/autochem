@@ -6,6 +6,7 @@ __all__ = ['read_file', 'get_type', 'read_xyz', 'write_xyz', 'get_files', 'modul
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
 import re
+import sys
 import time
 
 def timeit(method):
@@ -72,24 +73,36 @@ def write_xyz(atoms, filename = None):
                     file.write(f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
 
 
-def get_files(directory, ext):
+def get_files(directory, ext, filepath_includes=None):
     """
-    Accepts a tuple of file extensions, searches in all subdirectories of the directory given for relevant files. Returns a list of files with their relative path to the directory passed in.
+    Accepts a tuple of file extensions, searches in all subdirectories of the directory given for relevant files. Returns a list of
+    files with their relative path to the directory passed in.
 
     Usage:
         >>> for filepath in get_files('.', ("log", "out")):
         >>>     parse_file(filepath)
+
+    Can also pass a string to find in the filepath with the `filepath_includes` flag:
+
+    Usage:
+        >>> for filepath in get_files('.', ("log", "out"), filepath_includes='spec'):
+        >>>     parse_file(filepath)
     """
     import os
+
 
     file_list = []
     for path, dirs, files in os.walk(directory):
         for file in files:
             for e in ext:
-                if re.search(e, file) and file != 'freq.out': 
+                if re.search(f'{e}$', file) and file != 'freq.out':
                     # freq.out used for thermo calculations 
                     # with the fortran code
-                    file_list.append(os.path.join(path, file))
+                    if filepath_includes is not None:
+                        if filepath_includes in path:
+                            file_list.append(os.path.join(path, file))
+                    else:
+                        file_list.append(os.path.join(path, file))
     return file_list
 
 def module_exists(module_name):
@@ -264,9 +277,12 @@ def responsive_table(data, strings, min_width = 13):
     content = zip(*[data[key] for key in data.keys()]) # dict values into list of lists
     # unknown number of arguments
     max_sizes = {}
-    for k, v in data.items():
-        max_sizes[k] = len(max([str(val) for val in v], key = len))
-   
+    try:
+        for k, v in data.items():
+            max_sizes[k] = len(max([str(val) for val in v], key = len))
+    except ValueError:
+        sys.exit('>>> Error: No data is passed into chem_assistant.core.utils.responsive_table')   
+
     # create the thing to pass into .format()- can't have brackets like zip gives
     formatting = [] 
     index = 0

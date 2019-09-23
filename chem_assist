@@ -25,6 +25,7 @@ parser.add_argument('-o', '--output', help='Use with --interaction-energies to g
 parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups', action='store')
 parser.add_argument('--group', help="Pandas command to apply groups to the csv passed into --weight. Refer to the dataframe as df. Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`", action='store', type=str)
 parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
+parser.add_argument('-l', '--select', help='Use with -r or -t to select certain files, or limit the selection i.e, use `-l spec` to limit the output to only include files with spec in their path')
 args = parser.parse_args()
 
 def imported_settings():
@@ -44,7 +45,7 @@ if args.meta:
 
 if args.thermochem:
     from chem_assistant.user_scripts.grep_results import thermochemistry
-    thermochemistry('.')
+    thermochemistry('.', string_to_find=args.select)
     
 if args.free_energies:
     from chem_assistant.user_scripts.free_energy_interactions import calculate_free_energy_interactions
@@ -54,7 +55,7 @@ if args.results:
     from chem_assistant.user_scripts.grep_results import results_table
     if not args.output:
         args.output='energies.csv'
-    results_table('.', file_name=args.output)
+    results_table('.', file_name=args.output, string_to_find=args.select)
 
 if args.settings:
     settings = imported_settings()

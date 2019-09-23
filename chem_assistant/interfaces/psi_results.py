@@ -17,7 +17,7 @@ class PsiResults(Results):
     def completed(self):
         complete = False
         for line in self.read():
-            if 'Psi4 exiting successfully' in line:
+            if 'exiting successfully' in line:
                 complete = True
         return complete
 
