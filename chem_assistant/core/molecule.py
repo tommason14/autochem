@@ -526,7 +526,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         distances along with van der waals radii. Note this function only works 
         with intermolecular fragments and cannot split molecules on bonds.
         """
-
         self.split()
         self.check_db()
         self.renumber_molecules()

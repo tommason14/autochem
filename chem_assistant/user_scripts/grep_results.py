@@ -191,7 +191,7 @@ def get_type(filepath):
         if 'GAMESS' in line:
             calc = 'gamess'
             break
-        elif 'Psi4' in line:
+        elif 'Psi4' in line or 'PSI4' in line:
             calc = 'psi'
             break
         elif 'Gaussian' in line:
@@ -200,17 +200,18 @@ def get_type(filepath):
     return calc
 
 
-def parse_results(dir):
+def parse_results(dir, filepath_includes):
     """
     Used internally to parse log files for energies
     """
     output = []
-    for log in get_files(dir, ('.out', '.log')):
+    for log in get_files(dir, ('.out', '.log'), filepath_includes=filepath_includes):
         calc = get_results_class(log)
         filetype = get_type(log)
         try:
             if calc.completed():  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian():
+                    print(log)
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
         except AttributeError:  # if log/out files are not logs of calculations
@@ -218,7 +219,7 @@ def parse_results(dir):
     return output
 
 
-def results_table(dir, file_name):
+def results_table(dir, file_name, string_to_find):
     """
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
@@ -226,7 +227,7 @@ def results_table(dir, file_name):
     # order: files, paths, basis, hf, mp2, mp2_opp, mp2_same
     data = [[], [], [], [], [], [], []]
 
-    output = parse_results(dir)
+    output = parse_results(dir, filepath_includes=string_to_find)
 
     def add_data(data, vals):
         """
@@ -263,7 +264,7 @@ def results_table(dir, file_name):
     write_csv_from_dict(table_data, filename=file_name)
 
 
-def thermochemistry(dir):
+def thermochemistry(dir, string_to_find):
     """
     Returns thermochemical data for all the relevant hessian log files in the given directory and
     subdirectories. Saves to csv file.
@@ -281,7 +282,7 @@ def thermochemistry(dir):
             'TC - TS': []
         }
     print('Print csv for more info')
-    for log in get_files(dir, ('.log', '.out')):
+    for log in get_files(dir, ('.log', '.out'), filepath_includes=string_to_find):
         r = get_results_class(log)
         try:
             if r.completed():
