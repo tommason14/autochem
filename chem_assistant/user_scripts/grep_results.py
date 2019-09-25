@@ -339,13 +339,13 @@ def get_h_bonds(dir):
     if len(output) > 0:
         data = {}
         keys = ('File', 'Path', 'Molecule1', 'Atom1',
-                'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)')
+                'Molecule2', 'Atom2', 'Length', 'Angle')
         for index, value in enumerate(keys):
             data[value] = [val[index] for val in output]
         responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=6)
         print()
         write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1',
-                                                 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename='hbonds.csv')
+                                                 'Molecule2', 'Atom2', 'Length', 'Angle'), filename='hbonds.csv')
 
 
 def file_is_gamess(file):
