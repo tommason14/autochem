@@ -345,7 +345,7 @@ def get_h_bonds(dir):
         responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=6)
         print()
         write_csv_from_nested(output, col_names=('File', 'Path', 'Molecule1', 'Atom1',
-                                                 'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename='hbonds.csv')
+        'Molecule2', 'Atom2', 'Length (Å)', 'Angle (°)'), filename='hbonds.csv')
 
 
 def file_is_gamess(file):
@@ -395,7 +395,8 @@ def geodesics(dir, output):
             mol.separate()
             for atom, r in zip(mol.coords, res):
                 path, _, geodesic_charge = r
-                results.append([path, atom.index, atom.symbol, geodesic_charge, atom.x, atom.y, atom.z, f"{mol.fragments[atom.mol]['name']}_{atom.mol}"])
+                results.append([path, atom.index, atom.symbol, geodesic_charge, 
+                atom.x, atom.y, atom.z, f"{mol.fragments[atom.mol]['name']}_{atom.mol}"])
 
     # nested list (one level) to dict
     data = {}

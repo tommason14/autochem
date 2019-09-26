@@ -130,8 +130,9 @@ class PsiResults(Results):
     
     def mp2_data(self):
         """
-        Returns data for MP2 calculations: filename, filepath, basis set, hf energy, opp spin energy, same
-        spin energy.
+        Returns data for MP2 calculations: filename, filepath, 
+        basis set, hf energy, opp spin energy, same spin energy.
         """
         
-        return self.file, self.path, self.basis, self.hf_energy_for_mp2, self.mp2_opp, self.mp2_same
+        return (self.file, self.path, self.basis, 
+        self.hf_energy_for_mp2, self.mp2_opp, self.mp2_same)
