@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "nproc": 16,
+    "mem": "32gb",
+    "chk": "name.chk"
+  },
+  "input":{
+    "method": "m06-2x",
+    "basis": "cc-pvdz",
+    "scrf": "SMD,solvent=water",
+    "int": "grid=ultrafine"
+  }
+}

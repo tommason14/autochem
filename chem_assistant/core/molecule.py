@@ -106,7 +106,7 @@ class Molecule:
 
         if hasattr(self, 'coords'):
         # self.complex used in input files
-        # assuming a neutral closed shell system
+        # assuming a neutral closed shell system as the default
             self.complex = {
                 "type": "complex",
                 "name": "complex",
@@ -115,6 +115,7 @@ class Molecule:
                 "mult": 1,
                 "elements": sort_elements(self.coords)
             }
+        self.calc_overall_charge_and_mult()
 
     def __repr__(self):
         els = [i[0] for i in self.complex['elements']]
@@ -186,16 +187,14 @@ class Molecule:
             mass += PT.get_mass(element) * number
         return f"{mass:.2f} g mol⁻¹"
 
-    def overall_charge_and_mult(self):
+    def calc_overall_charge_and_mult(self):
         """
         Checks system for overall charge and multiplicity
         """
-        mol = Molecule(atoms = [i for i in self.coords])
-        mol.separate()
-        charge = Molecule.get_charge(mol.fragments)
-        multiplicity = Molecule.get_multiplicity(mol.fragments)
-        print(charge, multiplicity)
-        return charge, multiplicity
+        if not hasattr(self, 'fragments'):
+            self.separate()
+        self.overall_charge = Molecule.get_charge(self.fragments)
+        self.overall_mult = Molecule.get_multiplicity(self.fragments)
      
     def read_xyz(self, using):
         """
@@ -222,72 +221,6 @@ class Molecule:
                 f.write(str(len(atoms)) + '\n\n')
                 for atom in atoms:
                     f.write(f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n")
-
-
-    def split_old(self):
-        """
-        Assigns each atom in ``self.coords`` to a different fragment- very 
-        useful for FMO calculations.
-        Note: Only works if all intramolecular bonds are shorter than all
-        intermolecular bonds. A long bond in the middle of a molecule or a 
-        short hydrogen bond will cause this to fail!
-        """
-
-        self.mol_dict = {}
-        for atom in self.coords:
-            self.mol_dict[atom.index] = Molecule(atoms = [atom]) 
-            # 1-atom molecules
-
-        def min_dist(mol_i, mol_j):
-            """
-            Finds the minimum distance between atoms in two different molecules
-            """
-            distances = []
-            for atom_i in mol_i:
-                for atom_j in mol_j:
-                    distances.append(atom_i.distance_to(atom_j))
-            return min(distances)
-
-        def distances():
-            """
-            Returns a list of lists of [i, j, min_dist(i, j)] for each
-            combination of atoms in the system
-            """
-            dist_list = []
-            # here, decide if bonded!
-            # for every combination of atoms in the list, find their distance
-            for i, j in itertools.combinations(self.mol_dict.keys(), 2):
-                minimum_dist = min_dist(self.mol_dict[i], self.mol_dict[j])
-                dist_list.append([i, j, minimum_dist])
-            return dist_list
-
-        def collect_atoms():
-            # modify the molecule dictionary, and drop keys when the atoms are assigned to a new molecule
-            if self.nfrags is None:
-                done = False
-                while not done:
-                    try:
-                        self.nfrags = int(input('Number of fragments: '))
-                        done = True
-                    except ValueError:
-                        print('Must give an integer number of fragments!')
-            while len(set(self.mol_dict.keys())) > self.nfrags:
-                dist = distances()
-                dist.sort(key = lambda item: item[2]) # sort on distance                                 
-                mol1, mol2 = dist[0][:2] # dist = [[i,j,dist], [i,j,dist], [i,j,dist]...]
-                # adding all atoms in 'mol2' to the list of atoms of the first molecule
-                for index, atom in enumerate(self.mol_dict[mol2]):
-                    self.mol_dict[mol1].coords.append(atom)
-                # remove the index of the molecule that has been added to the first list
-                self.mol_dict.pop(mol2)   
-
-        collect_atoms()
-        # assign a number to each molecule
-        for key, value in self.mol_dict.items():
-            val = key
-            for atom in value:
-                atom.mol = val
-
 
     def check_db(self):
         """
@@ -601,39 +534,40 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
         
-    @classmethod
-    def create_complex_properties_dict(self):
-        """
-        Checks system for overall charge and multiplicity, and returns
-        properties in a dictionary
-        """
-        def check_charge_and_mult(atoms):
-            """
-            Must check charge of overall complex, may not be zero.
-            This function achieves this by creating a copy of the molecule, 
-            fragmenting the copy and then summing the charges of each fragment.
-            The reason being that the user may not want to have each fragment
-            written to a file- which would happen if fragmenting self??? Test it
-            Modify the self.complex dictionary
-            """
-            mol = Molecule(atoms = atoms)
-            mol.separate()
-            charge = Molecule.get_charge(mol.fragments)
-            multiplicity = Molecule.get_multiplicity(mol.fragments)
-            print(charge, multiplicity)
-            return charge, multiplicity
+    # @classmethod
+    # def create_complex_properties_dict(self):
+    #     """
+    #     Checks system for overall charge and multiplicity, and returns
+    #     properties in a dictionary
+    #     """
+    #     def check_charge_and_mult(atoms):
+    #         """
+    #         Must check charge of overall complex, may not be zero.
+    #         This function achieves this by creating a copy of the molecule, 
+    #         fragmenting the copy and then summing the charges of each fragment.
+    #         The reason being that the user may not want to have each fragment
+    #         written to a file- which would happen if fragmenting self??? Test it
+    #         Modify the self.complex dictionary
+    #         """
+    #         mol = Molecule(atoms = atoms)
+    #         if not hasattr(mol, 'fragments'):
+    #             mol.separate()
+    #         charge = Molecule.get_charge(mol.fragments)
+    #         multiplicity = Molecule.get_multiplicity(mol.fragments)
+    #         print(charge, multiplicity)
+    #         return charge, multiplicity
 
-        charge, mult = check_charge_and_mult(atoms)
-        # self.complex used in input files
-        # assuming a neutral closed shell system
-        return {
-            "type": "complex",
-            "name": "complex",
-            "atoms": atoms,
-            "charge": charge,
-            "mult": mult,
-            "elements": sort_elements(atoms)
-        }
+    #     charge, mult = check_charge_and_mult(atoms)
+    #     # self.complex used in input files
+    #     # assuming a neutral closed shell system
+    #     return {
+    #         "type": "complex",
+    #         "name": "complex",
+    #         "atoms": atoms,
+    #         "charge": charge,
+    #         "mult": mult,
+    #         "elements": sort_elements(atoms)
+    #     }
 
 
     def find_h_bonds(self):
