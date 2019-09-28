@@ -14,6 +14,7 @@ s.....
 xyz_to_tree(settings = s) 
 """
 from ..interfaces.gamess import GamessJob
+from ..interfaces.gaussian import GaussJob
 from ..interfaces.psi import PsiJob
 # Add user inputs- packages? fmo? 
 
@@ -37,7 +38,7 @@ def ask_package():
     print("""\
 1. GAMESS
 2. PSI4
-3. LAMMPS""")
+3. GAUSSIAN""")
     done = False
     while not done:
         choice = int(input('Choice [1,2,3]: '))
@@ -77,7 +78,7 @@ def ask_package():
     options = {
         1: "gamess",
         2: "psi4",
-        3: "lammps",
+        3: "gauss",
         4: "gamess_fmo",
         5: "gamess_no_frags",
         6: "psi4_no_frags",
@@ -101,8 +102,8 @@ def job_type(package, xyz, s):
         return GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s, is_complex = True)
     elif package == "psi4":
         return PsiJob(using = xyz, frags_in_subdir = True, settings = s, is_complex = True)
-    elif package == "lammps":
-        return 'LAMMPS INP HERE'
+    elif package == "gauss":
+        return GaussJob(using = xyz, settings = s)
     elif package == "gamess_no_frags":
         return GamessJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
     elif package == "psi4_no_frags":
@@ -241,7 +242,7 @@ def make_job_subdirs(base_dir):
     parent = os.getcwd()
     for path, dirs, files in os.walk(base_dir):    
         for file in files:
-            if file.endswith('.inp'):
+            if file.endswith('.inp') or file.endswith('.job'):
                 os.chdir(path)
                 file_type = file[:-4] # opt, spec, freq...
                 os.mkdir(file_type)

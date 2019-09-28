@@ -15,6 +15,9 @@ from ..core.atom import Atom
 from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template)
 from ..core.job import Job
+from os import (mkdir, chdir, getcwd)
+from os.path import (exists, join)
+from shutil import (copyfile, move)
 
 __all__ = ['GaussJob']
 
@@ -46,9 +49,9 @@ class GaussJob(Job):
             self.merged = self.defaults.merge(settings)
             self.meta = self.merged.meta
             self.input = self.merged.input
-            self.job = self.merged.job
         else:
             self.input = self.defaults.input
+        self.input = self.input.remove_none_values()
         if '/' in using:
             self.title = using.split('/')[-1][:-4]
         else:
@@ -79,7 +82,26 @@ class GaussJob(Job):
                 self.base_name = 'opt'
             else:
                 self.base_name = 'freq'
+
+    # def move_to_subdir(self):
+    #     """
+    #     Makes a subdirectory based on either the filename passed in, 
+    #     or the xyz file used to create the input file.
+    #     The xyz file is then copied over and the input file is copied
+    #     to the new directory.
+    #     As a result, this method must be called after making the input file.
+    #     """ 
+    #     if self.filename is not None:
+    #         newdir = join(getcwd(), self.filename)
+    #     else:
+    #         newdir = join(getcwd(), self.title)
+    #     if not exists(newdir):
+    #         mkdir(newdir)
+    #     copyfile(self.xyz, newdir)
+    #     move(f'{self.base_name}.job', newdir)
         
+
+    
     @property
     def job_data(self):
         return self.get_job_template().replace('name', self.base_name)

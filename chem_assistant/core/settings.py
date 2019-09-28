@@ -109,7 +109,8 @@ class Settings(dict):
     
     def remove_none_values(self):
         """
-        Return a new |Settings| object with any none value removed
+        Return a new |Settings| object with any none 
+        value removed
         """
         old = self.as_dict()
         new = remove_nones_from_dict(old)
