@@ -84,6 +84,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
         if settings is not None:
+            self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings) # merges inp, job data 
             self.input = self.merged.input
             self.job = self.merged.job
@@ -150,12 +151,27 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
         self.header = "".join(self.header)
 
+    def change_charge_and_mult(self):
+        """
+        Changes charge and multiplicity unless user defines values. 
+        In that case, the user-defined charge and multiplicity are used.
+        """
+        user_assigned_charge = hasattr(self.user_settings, 'input.contrl.icharg')
+        user_assigned_mult = hasattr(self.user_settings, 'input.contrl.mult')
+        if self.mol.overall_charge != 0 and not user_assigned_charge:
+            self.input.contrl.icharg = self.mol.overall_charge
+        if self.mol.overall_mult != 1 and not user_assigned_mult:
+            self.input.contrl.mult = self.mol.overall_mult
+
     def make_automatic_changes(self):
         """
         Common scenarios are implemented to remove the commands needed to be called by the user.
         For example, this sets the opposite spin parameter for SRS-MP2 for commonly used correlation
         consistent basis sets without the need to define it in the user code.
         """
+
+        self.change_charge_and_mult()
+
         opp_spin_params = {'cct': 1.64,
                            'ccq': 1.689,
                            'accd': 1.372,
@@ -295,12 +311,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         else:
             options = {'optimize': 'opt', 'energy': 'spec', 'hessian': 'hess', 'fmohess': 'hess'}
             self.base_name = options.get(self.input.contrl.runtyp, 'file') #default name = file
-
-    def write_file(self, data, filetype):
-        """Writes the generated GAMESS input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
-        NOTE: Must pass data as a string, not a list!""" 
-        with open(f"{self.base_name}.{filetype}", "w") as f:
-            f.write(data)
 
     def create_inp(self):
         self.input = self.input.remove_none_values()

@@ -1,4 +1,5 @@
 from .check_frags import *
+from .fluorescence import *
 from .free_energy_interactions import *
 from .grep_results import *
 from .int_energies import *
@@ -9,6 +10,7 @@ from .structures import *
 
 __all__ = []
 __all__ += check_frags.__all__
+__all__ += fluorescence.__all__
 __all__ += free_energy_interactions.__all__
 __all__ += grep_results.__all__
 __all__ += int_energies.__all__

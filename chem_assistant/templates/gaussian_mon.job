@@ -1,0 +1,15 @@
+#!/bin/sh
+#SBATCH --tasks-per-node=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=32GB
+#SBATCH --time=10:00:00
+#SBATCH --partition=comp,short
+#SBATCH --qos=partner
+#SBATCH --error=name.err
+#SBATCH --output=name.log
+
+export PROJECT="p2015120004"
+
+module load gaussian/g16a03
+time G16 << END
