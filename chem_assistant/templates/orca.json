@@ -1,0 +1,7 @@
+{
+  "input" : {
+    "basis": "cc-pVTZ",
+    "method": "HF",
+    "density_fitting": "RIJK"
+  }
+}

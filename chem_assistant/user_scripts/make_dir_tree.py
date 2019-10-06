@@ -15,8 +15,8 @@ xyz_to_tree(settings = s)
 """
 from ..interfaces.gamess import GamessJob
 from ..interfaces.gaussian import GaussJob
+from ..interfaces.orca import OrcaJob
 from ..interfaces.psi import PsiJob
-# Add user inputs- packages? fmo? 
 
 import os
 import glob
@@ -38,14 +38,15 @@ def ask_package():
     print("""\
 1. GAMESS
 2. PSI4
-3. GAUSSIAN""")
+3. GAUSSIAN
+4. ORCA""")
     done = False
     while not done:
-        choice = int(input('Choice [1,2,3]: '))
-        if choice in (1,2,3):
+        choice = int(input('Choice [1,2,3,4]: '))
+        if choice in (1,2,3,4):
             done = True
         else:
-            print('Please choose 1-3')
+            print('Please choose 1-4')
     fmo = False
     if choice == 1:
         done_with_fmo = False
@@ -56,33 +57,35 @@ def ask_package():
             else:
                 print('Please choose "y" or "n"')
         if run_fmo == "y":
-            choice = 4
+            choice = 5
     # TODO: REFACTOR CODE BELOW- DEFINITELY A BETTER WAY TO DO THIS THAN TO MAKE NEW OPTIONS, ALL IT IS
     # ACHIEVING IS SETTINGS FRAGS_IN_SUBDIR TO FALSE
     done_with_frags = False
-    if choice != 3: # no frags in LAMMPS!
-        while not done_with_frags:
-            frags = input('Place inputs of fragments in subdirectories? [y/n] ')
-            if frags.lower() in ('y', 'n'):
-                done_with_frags =  True
-            else:
-                print('Please choose "y" or "n"')
-        if frags == 'n':
-            if choice == 1:
-                choice = 5
-            elif choice == 2:
-                choice = 6
-            elif choice == 4:
-                choice = 7
-        
+    while not done_with_frags:
+        frags = input('Place inputs of fragments in subdirectories? [y/n] ')
+        if frags.lower() in ('y', 'n'):
+            done_with_frags =  True
+        else:
+            print('Please choose "y" or "n"')
+    if frags == 'n':
+        if choice == 1:
+            choice = 6
+        elif choice == 2:
+            choice = 7
+        elif choice == 4:
+            choice = 9
+        elif choice == 5:
+            choice = 8
     options = {
         1: "gamess",
         2: "psi4",
         3: "gauss",
-        4: "gamess_fmo",
-        5: "gamess_no_frags",
-        6: "psi4_no_frags",
-        7: "gamess_fmo_no_frags"
+        4: "orca",
+        5: "gamess_fmo",
+        6: "gamess_no_frags",
+        7: "psi4_no_frags",
+        8: "gamess_fmo_no_frags",
+        9: "orca_no_frags"
     }
     return options[choice]   
 
@@ -104,12 +107,16 @@ def job_type(package, xyz, s):
         return PsiJob(using = xyz, frags_in_subdir = True, settings = s, is_complex = True)
     elif package == "gauss":
         return GaussJob(using = xyz, settings = s)
+    elif package == "orca":
+        return OrcaJob(using = xyz, settings = s, frags_in_subdir = True)
     elif package == "gamess_no_frags":
         return GamessJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
     elif package == "psi4_no_frags":
         return PsiJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
     elif package == "gamess_fmo_no_frags":
         return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s, is_complex = True)
+    elif package == "orca_no_frags":
+        return OrcaJob(using = xyz, settings = s, frags_in_subdir = False, is_complex=True)
 
 # def make_parent_dir():
 #     calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
