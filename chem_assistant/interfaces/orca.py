@@ -331,7 +331,6 @@ class OrcaJob(Job):
     @property
     def coord_info(self):
         self.find_charge_and_mult()
-        info = [f'{self.input.charge} {self.input.mult}']
-        return f'*xyzfile {self.input.charge} {self.input.mult} {self.xyzfile}'
+        return f'*xyzfile {self.input.charge} {self.input.mult} {self.xyzfile}\n'
 
         
