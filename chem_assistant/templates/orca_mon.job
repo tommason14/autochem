@@ -7,7 +7,7 @@
 #SBATCH --mem=64G
 #SBATCH -t 10:00:00
 #SBATCH -p comp,short
-#SBATCH --qos=partner
+#SBATCH -q partner
 
 export PROJECT="p2015120004"
 
