@@ -118,13 +118,6 @@ def job_type(package, xyz, s):
     elif package == "orca_no_frags":
         return OrcaJob(using = xyz, settings = s, frags_in_subdir = False, is_complex=True)
 
-# def make_parent_dir():
-#     calc_dir = os.path.join(os.path.dirname(os.getcwd()), 'calcs')
-#     if not os.path.exists(calc_dir):
-#         os.mkdir(calc_dir)
-#     os.chdir(calc_dir)
-#     return os.getcwd()
-
 def make_dir_list(file):
     filename = file[:-4] # rm .xyz 
     new_dirs = []
@@ -228,24 +221,12 @@ def make_job_files(base_dir, chem_package, settings):
             else:
                 print('-'*60)
             os.chdir(base_dir)
-    # for path, dirs, files in os.walk(base_dir):
-    #     for file in files:
-    #         if file.endswith('.xyz'):
-    #             print(file)
-    #             print(path)
-    #             os.chdir(path)
-    #             print(f"Creating inputs for {file}...")
-    #             job_type(chem_package, file, settings)
-    #             if 'no_frags' in chem_package and 'fmo' not in chem_package:
-    #                 pass
-    #             else:
-    #                 print('-'*60)
-    #             # print()
-    #             os.chdir(parent)
 
 def make_job_subdirs(base_dir):
-    """Look for input files in any subdirectory of ``calcs``, then creates a directory of that type
-(i.e. opt, spec, freq), then moves the inp and job into that folder.""" 
+    """
+    Look for input files in any subdirectory of ``calcs``, then creates a directory of that type
+    (i.e. opt, spec, freq), then moves the inp and job into that folder.
+    """ 
     parent = os.getcwd()
     for path, dirs, files in os.walk(base_dir):    
         for file in files:
@@ -257,59 +238,61 @@ def make_job_subdirs(base_dir):
                 os.chdir(parent)
 
 def xyz_to_tree(settings):
-    """Takes a directory containing xyz files and creates a directory tree based on the filenames of
-the xyz files present. Uses underscores as delimiters for new subdirectories i.e. every time an
-underscore is seen, a new subdirectory is created.
+    """
+    Takes a directory containing xyz files and creates a directory tree based on the filenames of
+    the xyz files present. Uses underscores as delimiters for new subdirectories i.e. every time an
+    underscore is seen, a new subdirectory is created.
 
-This function looks for a directory called ``files``, containing the xyz files, and outputs into
-``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings should be created and then passed into the function. 
+    This function looks for a directory called ``files``, containing the xyz files, and outputs into
+    ``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings 
+    should be created and then passed into the function. 
 
-Another desirable feature is to separate optimisations from single point calculations. As a result,
-when the function runs, it creates jobs in a new subdirectory of the molecule directory. When the
-results are looked for, an option is available to automatically create single point files from
-completed optimisations.
+    Another desirable feature is to separate optimisations from single point calculations. As a   
+    result, when the function runs, it creates jobs in a new subdirectory of the molecule 
+    directory. When the results are looked for, an option is available to automatically create single 
+    point files from completed optimisations.
 
     >>> s = Settings()
     >>> s.input.basis.gbasis = 'ccd' # gamess input (this is actually the default setting)
     >>> xyz_to_tree(s)
 
-Gives the following directory structure:
-.
-├── calcs
-│   └── c1mim
-│       └── nh3
-│           ├── c1mim_nh3.xyz
-│           ├── frags
-│           │   ├── c1mim_0
-│           │   │   ├── c1mim_0.xyz
-│           │   │   └── opt
-│           │   │       ├── opt.inp
-│           │   │       └── opt.job
-│           │   ├── nh3_1
-│           │   │   ├── nh3_1.xyz
-│           │   │   └── opt
-│           │   │       ├── opt.inp
-│           │   │       └── opt.job
-│           │   ├── nh3_2
-│           │   │   ├── nh3_2.xyz
-│           │   │   └── opt
-│           │   │       ├── opt.inp
-│           │   │       └── opt.job
-│           │   └── nh3_3
-│           │       ├── nh3_3.xyz
-│           │       └── opt
-│           │           ├── opt.inp
-│           │           └── opt.job
-│           └── opt
-│               ├── opt.inp
-│               └── opt.job
-└── files
-    └── c1mim_nh3.xyz
+    Gives the following directory structure:
+    .
+    ├── calcs
+    │   └── c1mim
+    │       └── nh3
+    │           ├── c1mim_nh3.xyz
+    │           ├── frags
+    │           │   ├── c1mim_0
+    │           │   │   ├── c1mim_0.xyz
+    │           │   │   └── opt
+    │           │   │       ├── opt.inp
+    │           │   │       └── opt.job
+    │           │   ├── nh3_1
+    │           │   │   ├── nh3_1.xyz
+    │           │   │   └── opt
+    │           │   │       ├── opt.inp
+    │           │   │       └── opt.job
+    │           │   ├── nh3_2
+    │           │   │   ├── nh3_2.xyz
+    │           │   │   └── opt
+    │           │   │       ├── opt.inp
+    │           │   │       └── opt.job
+    │           │   └── nh3_3
+    │           │       ├── nh3_3.xyz
+    │           │       └── opt
+    │           │           ├── opt.inp
+    │           │           └── opt.job
+    │           └── opt
+    │               ├── opt.inp
+    │               └── opt.job
+    └── files
+        └── c1mim_nh3.xyz
 
-Note: If a directory named ``calcs`` is already present, nonsensical results will be returned- any
-directory containing an xyz file will be acted upon. To run smoothly, remove or rename an existing
-``calcs`` directory.
-"""
+    Note: If a directory named ``calcs`` is already present, nonsensical results will be returned- any
+    directory containing an xyz file will be acted upon. To run smoothly, remove or rename an existing
+    ``calcs`` directory.
+    """
     package = ask_package()
     # xyz_directory = check_dir()
     xyz_directory = os.getcwd()
