@@ -91,9 +91,9 @@ class PsiResults(Results):
     def scf_data(self):
         """
         Return data for scf calculations. 
-        Note the NAs returned are because of no MP2 spin parameters.
+        Note the NAs returned are because of no MP2 data.
         """
-        return self.file, self.path, self.basis, self.total_energy, 'NA', 'NA'
+        return self.file, self.path, self.basis, self.total_energy, 'NA', 'NA', 'NA'
 
     @property
     def hf_energy_for_mp2(self):
@@ -132,7 +132,9 @@ class PsiResults(Results):
         """
         Returns data for MP2 calculations: filename, filepath, 
         basis set, hf energy, opp spin energy, same spin energy.
+        No MP2 data is returned, but is calculated instead from the 
+        HF and MP2 correlation energies.
         """
         
         return (self.file, self.path, self.basis, 
-        self.hf_energy_for_mp2, self.mp2_opp, self.mp2_same)
+        self.hf_energy_for_mp2, 'NA', self.mp2_opp, self.mp2_same)

@@ -241,17 +241,7 @@ def results_table(dir, file_name, string_to_find):
         return {k: v for k, v in data.items() if not all(val is 'NA' for val in v)}
 
     for result in output:
-        if result['type'] == 'psi':
-            f, p, b, hf, mp2_opp, mp2_same = result['data']
-            mp2 = 'NA'
-            vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
-            data = add_data(data, vals)
-        elif result['type'] == 'gamess':
-            f, p, b, hf, mp2, mp2_opp, mp2_same = result['data']
-            vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
-            data = add_data(data, vals)
-        elif result['type'] == 'orca':
-            data = add_data(data, result['data'])
+        data = add_data(data, result['data'])
 
     keys = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
     

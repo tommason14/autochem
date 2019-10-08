@@ -10,9 +10,8 @@ import subprocess
 __all__ = ['GaussianResults']
 
 class GaussianResults(Results):
-    """Class for obtaining results from Gaussian simulations. This class requires a log file to be read.
-
-    MORE TO COME
+    """
+    Class for obtaining results from Gaussian simulations. This class requires a log file to be read.
     """
 
     def __init__(self, log):
