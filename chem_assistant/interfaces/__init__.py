@@ -5,6 +5,7 @@ from .gamess_results import *
 from .gaussian import *
 from .gaussian_results import *
 from .orca import *
+from .orca_results import *
 from .psi import *
 from .psi_results import *
 
@@ -15,4 +16,5 @@ __all__ += orca.__all__
 __all__ += psi.__all__
 __all__ += gamess_results.__all__
 __all__ += gaussian_results.__all__
+__all__ += orca_results.__all__
 __all__ += psi_results.__all__

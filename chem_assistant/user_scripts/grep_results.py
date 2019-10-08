@@ -16,6 +16,7 @@ from ..core.utils import (read_file,
                           write_csv_from_nested,
                           responsive_table)
 from ..interfaces.gamess_results import GamessResults
+from ..interfaces.orca_results import OrcaResults
 from ..interfaces.psi_results import PsiResults
 from ..interfaces.gaussian_results import GaussianResults
 from .make_files_meta import make_files_from_meta
@@ -177,6 +178,7 @@ def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
+            'orca': OrcaResults(log),
             'psi': PsiResults(log),
             'gaussian': GaussianResults(log)}
     return logs.get(log_type, None)
@@ -186,18 +188,15 @@ def get_type(filepath):
     """
     Read in file, determine calculation type
     """
-    calc = ''
     for line in read_file(filepath):
         if 'GAMESS' in line:
-            calc = 'gamess'
-            break
+            return 'gamess'
         elif 'Psi4' in line or 'PSI4' in line:
-            calc = 'psi'
-            break
+            return 'psi'
         elif 'Gaussian' in line:
-            calc = 'gaussian'
-            break
-    return calc
+            return 'gaussian'
+        elif 'O   R   C   A' in line:
+            return 'orca'
 
 
 def parse_results(dir, filepath_includes):
@@ -251,6 +250,8 @@ def results_table(dir, file_name, string_to_find):
             f, p, b, hf, mp2, mp2_opp, mp2_same = result['data']
             vals = (f, p, b, hf, mp2, mp2_opp, mp2_same)
             data = add_data(data, vals)
+        elif result['type'] == 'orca':
+            data = add_data(data, result['data'])
 
     keys = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
     
