@@ -31,9 +31,11 @@ action='store_true')
 args = parser.parse_args()
 
 def imported_settings():
-    from importlib import import_module
-    file_to_import = args.settings[:-3] #lose the .py extension
-    imported = import_module(file_to_import)
+    # from importlib import import_module
+    # file_to_import = args.settings[:-3] #lose the .py extension
+    # imported = import_module(file_to_import)
+    # importlib not working on stampede for some reason
+    imported = __import__(args.settings[:-3])
     return imported.sett
 
 
