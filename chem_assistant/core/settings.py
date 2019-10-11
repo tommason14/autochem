@@ -5,8 +5,11 @@ from .utils import remove_nones_from_dict
 __all__ = ['Settings', 'read_template', 'dict_to_settings']
 
 class Settings(dict):
-    """Provides a means of updating settings for input and job files. Inherits from a python dictionary, and allows for nesting of dictionaries as values.
-    See PLAMS documentation for info."""
+    """
+    Provides a means of updating settings for input and job files. Inherits from a python dictionary, 
+    and allows for nesting of dictionaries as values.
+    See PLAMS documentation for info- inspiration for this code came from that package.
+    """
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         for k, v in self.items():
@@ -122,7 +125,10 @@ class Settings(dict):
 
 
 def read_template(template):
-    """Obtains default parameters for input files of different packages, and returns them as a |Settings| object. Currently GAMESS and PSI4 are supported"""
+    """
+    Obtains default parameters for input files of different packages, and returns them as a |Settings| object. 
+    Currently GAMESS and PSI4 are supported
+    """
     path = join(dirname(__file__), '..', 'templates')
     file = join(path, template)
     with open(file, "r") as f:

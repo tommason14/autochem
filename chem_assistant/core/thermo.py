@@ -6,7 +6,6 @@ import subprocess
 import sys
 
 __all__ = ['thermo_data']
-# __all__ = ['thermo_data', 'make_ir_spectra']
 
 def get_filetype(file):
     """
@@ -18,42 +17,64 @@ def get_filetype(file):
         if 'gaussian' in line.lower():
             return 'gauss'   
 
+def write_geom_input(atoms):
+    """
+    Writes 'geom.input' from the list of |Atom| objects passed in.
+    """
+    with open('geom.input', 'w') as new:
+        for atom in atoms:
+            new.write(f"{atom.symbol:5s} {int(atom.atnum):3} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
+
 def thermo_initial_geom_gamess(file):
-    """Parses GAMESS hessian calculation log file for the initial geometry"""
+    """Parses GAMESS hessians for the initial geometry"""
     atoms = []
     regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
     inp = file[:-3] + 'inp'
-    with open(inp, "r") as f:
-        for line in f.readlines():
-            if re.search(regex, line):
-                sym, _, x, y, z = line.split()
-                x, y, z = map(float, (x, y, z))
-                atoms.append(Atom(symbol = sym, coords = (x, y, z)))
-    with open('geom.input', 'w') as new:
-        for atom in atoms:
-            new.write(f"{atom.symbol:5s} {str(atom.atnum):3s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
+    for line in read_file(inp):
+        if re.search(regex, line):
+            sym, _, x, y, z = line.split()
+            x, y, z = map(float, (x, y, z))
+            atoms.append(Atom(symbol = sym, coords = (x, y, z)))
+    write_geom_input(atoms)
+
+def gauss_num_atoms(file):
+    """
+    Returns number of atoms in Gaussian calc
+    """
+    for line in read_file(file):
+        if 'NAtoms=' in line:
+            return int(line.split()[1])
 
 def thermo_initial_geom_gauss(file):
-    """Parses Gaussian frequency calculation log file for the initial geometry. Note that
-    coordinates here are stored in .job files by default. If not found, then looks for .inp.
-    Only works with xyz coordinates, not z-matrices!!!!"""
+    """
+    Parses Gaussian frequency calculation log file for the initial geometry. Note that
+    coordinates here are stored in .job files by default.
+    Only works with xyz coordinates, not z-matrices.
+    Also accounts for the fact that an optimisation might occur before the frequency job,
+    so if 'Input orientation:' is found and atoms is not empty, the original atoms list is deleted."""
     atoms = []
-    regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){3}"
-    inp = file[:-3] + 'job'
-    if inp not in os.listdir('.'):
-        inp = file[:-3] + 'inp'
-    with open(inp, "r") as f:
-        for line in f.readlines():
-            if re.search(regex, line):
-                sym, x, y, z = line.split()
-                x, y, z = map(float, (x, y, z))
-                atoms.append(Atom(symbol = sym, coords = (x, y, z)))
-    with open('geom.input', 'w') as new:
-        for atom in atoms:
-            new.write(f"{atom.symbol:5s} {str(atom.atnum):3s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
+    num_atoms = gauss_num_atoms(file)
+    regex = "(\s+[0-9]+){3}(\s+-?[0-9]+\.[0-9]+){3}"
+    found_freq = False
+    found_coords = False
+    for line in read_file(file):
+        # deal with opt-freq or just freq
+        if re.search('Freq$', line) or \
+            'freq' in line.lower() and \
+            'opt' not in line.lower():
+            found_freq = True
+        if 'Input orientation:' in line:
+            found_coords = True
+        if 'Distance matrix' in line:
+            found_coords = False
+        if found_freq and found_coords and re.search(regex, line):
+            _, atnum, _, x, y, z = line.split()
+            atnum, x, y, z = map(float, (atnum, x, y, z))
+            atoms.append(Atom(atnum = atnum, coords = (x, y, z)))
+    write_geom_input(atoms)
 
 def freq_data_gamess(file, write_freqs_to_file = False):
-    """Parses GAMESS hessian calculation log file for the frequency data"""
+    """Parses GAMESS hessian log files for frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     found_region = False
     modes = []
@@ -88,7 +109,7 @@ def freq_data_gamess(file, write_freqs_to_file = False):
     return results
     
 def freq_data_gauss(file, write_freqs_to_file = False):
-    """Parses Gaussian hessian calculation log file for the frequency data"""
+    """Parses Gaussian frequency log files for frequency data"""
     # regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     found_region = False
     freqs = []
@@ -118,28 +139,20 @@ def freq_data_gauss(file, write_freqs_to_file = False):
 
 
 
-def run(file, filetype):
+def run(file, mult, temp):
     """
-    Calls either thermo-gamess.exe or thermo-gauss.exe depending on which filetype is passed in
+    Calls thermo.exe with geom.input and freq.out written to the same directory.
     """
-    if filetype not in ('gamess', 'gauss'):
-        sys.exit("Pass in 'gamess' or 'gauss' to `run`")
-
-    thermo_exe = os.path.join(os.path.dirname(os.path.realpath(__file__)), f'thermo-{filetype}.exe')
-    command=f"{thermo_exe}" # file mult temp geom
-    if filetype == 'gauss':
-        multiplicity=int(input('multiplicity: '))
-        temp=float(input('temp (K): '))
-    p = subprocess.Popen(command, shell=True, 
+    thermo_exe = os.path.join(os.path.dirname(os.path.realpath(__file__)), f'thermo.exe')
+    p = subprocess.Popen(thermo_exe, shell=True, 
     stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True) 
     newline = os.linesep
-    commands = ['y', 'y', 'y', '1', '298.15']
+    commands = ['y', 'y', 'y', mult, temp]
     p.communicate(newline.join(commands))
 
 def read_fort():
     with open('fort.10', 'r') as f:
         fort = [line for line in f.readlines()]
-
     return fort
 
 def grep_data(fort):
@@ -166,39 +179,29 @@ def grep_data(fort):
 def cleanup():
     os.system('rm fort.10 moments geom.input freq.out')
 
-def thermo_data(file):
-    """Uses a fortran script to produce thermochemical data for GAMESS Hessian calculations and
-    GAUSSIAN frequency calculations- the results produced in the log file have been shown to be 
-    inaccurate. At < 300 cm⁻¹, rigid rotor fails, and the fortran code implements hindered rotor."""
+def setup_and_run_fortran_script(file, mult, temp):
+    """
+    Runs fortran script to produce 'fort.10' files etc...
+    """
     filetype=get_filetype(file)
     if filetype == 'gamess': 
         thermo_initial_geom_gamess(file)
         freq_data_gamess(file, write_freqs_to_file = True)
-        run(file, 'gamess')
+        run(file, mult, temp)
     if filetype == 'gauss':
         thermo_initial_geom_gauss(file)
         freq_data_gauss(file, write_freqs_to_file = True)
-        run(file, 'gauss')
+        run(file, mult, temp)
+
+def thermo_data(file, mult, temp):
+    """
+    Uses a fortran script to produce thermochemical data for GAMESS Hessian calculations and
+    GAUSSIAN frequency calculations- the results produced in the log file have been shown to be 
+    inaccurate. At < 300 cm⁻¹, rigid rotor fails, and the fortran code implements hindered rotor.
+    """
+    setup_and_run_fortran_script(file, mult, temp)
     fort = read_fort()    
     data = grep_data(fort)
     cleanup()
     return data
 
-# def make_ir_spectra(file):
-#     """Plot of wavenumber against intensities for vibrations found by diagonalisation of a computed
-# hessian matrix"""
-#
-#     import warnings
-#     warnings.filterwarnings("ignore")
-#     import matplotlib.pyplot as plt
-#     import seaborn as sns
-#
-#     res = freq_data(file)
-#     # now add gaussians... interesting project
-#     sns.set_style('darkgrid')
-#     sns.lineplot(x = "Frequencies [cm-1]", y = "Intensities [Debye^2/(amu Å^2)]", data = res)
-#     plt.xlabel('Wavenumber (cm$^{-1}$)')
-#     plt.ylabel('Intensity')
-#     plt.show()
-#     write_csv_from_dict(res, filename = 'freq.data')
-#     

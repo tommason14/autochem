@@ -4,36 +4,40 @@ import argparse
 import sys
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--meta', help='Make files using a meta.py file in each subdirectory', action='store_true')
-parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory', action='store_true')
-parser.add_argument('-f', '--free-energies', help='Calculates free energies from a csv produced by running `chem_assist -t`.\
- Also asks for a csv containing the interaction energies from single point energy calculations,\
- written using `chem_assist -c`, preferably in the same :directory as the thermo data csv', action='store')
-parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
-parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
-parser.add_argument('-e', '--equil-coords', help='Searches for equilibrium coordinates recursively', action='store_true')
-parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
-parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
-parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action='store')
+parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
+parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
+parser.add_argument('--group', help="""\
+Pandas command to apply groups to the csv passed into --weight.
+Refer to the dataframe as df.
+Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`.
+Can also be used to group fragments together when printing out molecules with the -p/--print-frags flag.
+ie. `chem_assist -p -g 'lithium-sacchrinate'`""", action='store', type=str)
+parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
+parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
 parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every xyz in the current directory', action='store_true')
 parser.add_argument('-c', '--interaction-energies', help='Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script', action='store')
-parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action='store_true')
-parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p, or prints formatted table if used with --interaction-energies', action='store_true')
-parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
-parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
-parser.add_argument('-o', '--output', help='Use with --interaction-energies to give filename of csv to save data to.', action='store')
-parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups', action='store')
-parser.add_argument('--group', help="Pandas command to apply groups to the csv passed into --weight. Refer to the dataframe as df. Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`", action='store', type=str)
-parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
+parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
+parser.add_argument('-e', '--equil-coords', help='Searches for equilibrium coordinates recursively', action='store_true')
+parser.add_argument('-f', '--free-energies', help='Calculates free energies from a csv produced by running `chem_assist -t`. Also asks for a csv containing the interaction energies from single point energy calculations, written using `chem_assist -c`, preferably in the same directory as the thermo data csv', action='store')
+parser.add_argument('-g', '--graph', help='Plot a graph of energies against iterations for geometry optimisations', action='store')
+parser.add_argument('-i', '--ir', help='Give a hessian log file as an argument, plots IR spectra', action='store')
 parser.add_argument('-l', '--select', help='Use with -r or -t to select certain files, or limit the selection i.e, use `-l spec` to limit the output to only include files with spec in their path')
-parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files',
-action='store_true')
+parser.add_argument('-m', '--mult', help='Multiplicity used with --thermochem', action='store')
+parser.add_argument('-o', '--output', help='Use with --interaction-energies to give filename of csv to save data to.', action='store')
+parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action='store_true')
+parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
+parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
+parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory. The value passed in is temperature in Kelvin.', action='store')
+parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p, or prints formatted table if used with --interaction-energies', action='store_true')
+parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups', action='store')
 args = parser.parse_args()
 
 def imported_settings():
-    from importlib import import_module
-    file_to_import = args.settings[:-3] #lose the .py extension
-    imported = import_module(file_to_import)
+    # from importlib import import_module
+    # file_to_import = args.settings[:-3] #lose the .py extension
+    # imported = import_module(file_to_import)
+    # importlib not working on stampede for some reason
+    imported = __import__(args.settings[:-3])
     return imported.sett
 
 
@@ -41,13 +45,11 @@ def imported_settings():
 if len(sys.argv) == 1:
     parser.print_help()
 
-if args.meta:
-    from chem_assistant.user_scripts.make_files_meta import make_files_from_meta
-    make_files_from_meta('.') 
-
 if args.thermochem:
+    if args.mult is None:
+        args.mult = '1'
     from chem_assistant.user_scripts.grep_results import thermochemistry
-    thermochemistry('.', string_to_find=args.select)
+    thermochemistry('.', string_to_find=args.select, mult=args.mult, temp=args.thermochem)
     
 if args.free_energies:
     from chem_assistant.user_scripts.free_energy_interactions import calculate_free_energy_interactions

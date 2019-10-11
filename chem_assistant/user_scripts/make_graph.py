@@ -14,6 +14,7 @@ Author: Tom Mason
 Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: Graph of energy vs iteration of geom opt in GAMESS 
+#### DEPRECATED NOW, NO LONGER INCORPORATED INTO CHEM_ASSIST ####
 """
 
 def get_data(file):

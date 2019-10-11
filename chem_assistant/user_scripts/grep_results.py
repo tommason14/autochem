@@ -255,7 +255,7 @@ def results_table(dir, file_name, string_to_find):
     write_csv_from_dict(table_data, filename=file_name)
 
 
-def thermochemistry(dir, string_to_find):
+def thermochemistry(dir, string_to_find, mult, temp):
     """
     Returns thermochemical data for all the relevant hessian log files in the given directory and
     subdirectories. Saves to csv file.
@@ -278,7 +278,7 @@ def thermochemistry(dir, string_to_find):
         try:
             if r.completed():
                 if r.is_hessian():
-                    res = thermo_data(r.log)  # run fortran script
+                    res = thermo_data(r.log, mult, temp)
                     res['File'] = r.log
                     for k, v in res.items():
                         collected[k].append(v)

@@ -84,7 +84,7 @@ class Molecule:
     Radicals = {}
 
 
-    def __init__(self, using = None, atoms = None, nfrags = None, user_created = False):
+    def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
             self.coords = self.read_xyz(using)
         if atoms is not None and using is None:
@@ -99,10 +99,12 @@ class Molecule:
             else: 
                 self.coords = atoms
     
+        self.frags_grouped_if_desired = False    
+        if group is not None:
+            self.group_together = group    
+
         for index, atom in enumerate(self.coords):
             atom.index = index + 1
-
-        self.nfrags = nfrags
 
         if hasattr(self, 'coords'):
         # self.complex used in input files
@@ -452,6 +454,41 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             if atom.mol is None:
                 return False
         return True
+
+    def group_frags_together(self):
+        """
+        If the |Molecule| instance has an attribute `group_together`, i.e.
+        self.group_together = 'lithium-saccharinate',
+        then fragments of lithium and saccharinate are combined into one.
+        If more than one of each molecule exists, only one is combined into
+        a new fragment at a time- the idea is to combine fragments to run
+        jobs on multiple nodes, so that a node doesn't have just one atom
+        assigned to it.
+        """
+        print(self.fragments)
+        groups = self.group_together.split('-')
+        print(groups)
+        frags = [frag['name'] for frag in self.fragments.values()]
+        # merge the first instances- may change this in future
+        # frags=set(frags)
+        print(frags)
+        merge_keys = []
+        for f in frags:
+            for k, v in self.fragments.items():
+                if v['name'] == f and f in groups:
+                    merge_keys.append(k)
+        print(merge_keys)
+        new_key = max(self.fragments.keys()) + 1
+        print(new_key)
+        
+        self.fragments[new_key] = {'type': ,
+                                   'name': self.group_together,
+                                   'atoms':,
+                                   'charge':,
+                                   'multiplicity':,
+                                   'elements':,
+                                   'frag_type': 'frag'}
+        self.frags_grouped_if_desired = True
    
     def separate(self):
         """
@@ -461,6 +498,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         """
         self.split()
         self.check_db()
+        if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
+            self.group_frags_together()
         self.renumber_molecules()
         self.sort_fragments_by_index()
         if not self.all_atoms_assigned():
