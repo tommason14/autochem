@@ -216,10 +216,6 @@ def make_job_files(base_dir, chem_package, settings):
             os.chdir(subdir)
             print(f"Creating inputs for {file}...")
             job_type(chem_package, subdir + '/' + f, settings)
-            if 'no_frags' in chem_package and 'fmo' not in chem_package:
-                pass
-            else:
-                print('-'*60)
             os.chdir(base_dir)
 
 def make_job_subdirs(base_dir):

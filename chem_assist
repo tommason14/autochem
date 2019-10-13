@@ -4,6 +4,7 @@ import argparse
 import sys
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the current directory to the relative path given here', action='store')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
 parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
 parser.add_argument('-g', '--group', help="""\
@@ -63,19 +64,16 @@ if args.results:
 if args.settings:
     settings = imported_settings()
 
-if args.dir_tree_from_files and args.settings:
+if args.dir_tree_from_files:
     from chem_assistant.user_scripts.make_dir_tree import xyz_to_tree
-    settings = imported_settings()
-    xyz_to_tree(settings)
-
-if args.dir_tree_from_files and not args.settings:
-    from chem_assistant.user_scripts.make_dir_tree import xyz_to_tree
-    from chem_assistant.core.settings import Settings
-    settings = Settings()
-    # default options- Settings object required even 
-    # if empty
-    xyz_to_tree(settings)
-
+    if args.settings:
+        settings = imported_settings()
+        xyz_to_tree(settings)
+    else:
+        from chem_assistant.core.settings import Settings
+        settings = Settings() # Settings instance required
+        xyz_to_tree(settings)
+        
 if args.equil_coords:
     from chem_assistant.user_scripts.grep_results import search_for_coords
     search_for_coords('.')
@@ -111,3 +109,7 @@ if args.geodesics:
 if args.fluorescence:
     from chem_assistant.user_scripts.fluorescence import fluorescence_data
     fluorescence_data('.')
+
+if args.copy_xyz:
+    from chem_assistant.user_scripts.structures import copy_xyz_tree
+    copy_xyz_tree('.', args.copy_xyz)
