@@ -16,7 +16,7 @@ def change_to_subdir(subdirectory):
     new_dir = os.path.join(os.getcwd(), subdirectory)
     if os.path.isdir(new_dir):
         os.chdir(new_dir)
-    elif not os.path.isdir(new_dir):
+    else: 
         os.mkdir(new_dir)
         os.chdir(new_dir)
 
@@ -27,8 +27,10 @@ def make_dir_list(file):
     return new_dirs
 
 def copy_tree(xyzlist, base_dir, new_dir):
-    """Copies the directory structure from the base directory downwards, and then when the final
-subdirectory has been created, files are copied over"""
+    """
+    Copies the directory structure from the base directory downwards, and then when the final
+    subdirectory has been created, files are copied over
+    """
     base = os.path.abspath(base_dir)
     new = os.path.join(base, new_dir)
     if not os.path.exists(new):
@@ -49,8 +51,10 @@ subdirectory has been created, files are copied over"""
     
 
 def copy_xyz_tree(base_dir, new_dir):
-    """Copy all xyz files recursively to a new directory, maintaining the original directory
-structure. Give the new directory as a relative path to the base directory that you are copying
-from."""
+    """
+    Copy all xyz files recursively to a new directory, maintaining the original 
+    directory structure. Give the new directory as a relative path to the 
+    base directory that you are copying from.
+    """
     structures = get_structures(base_dir)
     copy_tree(structures, base_dir, new_dir)
