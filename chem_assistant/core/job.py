@@ -22,7 +22,10 @@ molecular dynamics. This class also creates job files in the same directory as t
         # allows for fmo=True, even if nothing done with the arguments
         if using is not None:
             self.molecule_name = using
-            self.mol = Molecule(using, group = user_settings.grouped)
+            if 'grouped' in user_settings.keys():
+                self.mol = Molecule(using, group = user_settings.grouped)
+            else:
+                self.mol = Molecule(using)
 
     def get_sc(self):
         if hasattr(self, 'merged'):

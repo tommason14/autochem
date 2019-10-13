@@ -395,6 +395,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 mkdir(complex_dir)
         #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
             system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
+            print(self.xyz)
             system(f'cp {self.xyz} complex/complex.xyz')
 
     def ionic_mol_has_two_or_more_frags(self):
