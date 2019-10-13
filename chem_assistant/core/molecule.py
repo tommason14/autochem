@@ -525,7 +525,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 if self.all_atoms_assigned():
                     all_assigned = True
         if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
-            print(self.group_together)
+            print('self.group_together', self.group_together)
             self.group_frags_together()
         self.add_ionic_network()
         if hasattr(self, 'fragments_after_merge'):
