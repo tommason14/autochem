@@ -33,11 +33,12 @@ parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according
 args = parser.parse_args()
 
 def imported_settings():
-    # from importlib import import_module
-    # file_to_import = args.settings[:-3] #lose the .py extension
-    # imported = import_module(file_to_import)
-    # importlib not working on stampede for some reason
-    imported = __import__(args.settings[:-3])
+    import os
+    from importlib import import_module
+    # imports from cwd not working on stampede for some reason
+    sys.path.append(os.getcwd())
+    file_to_import = args.settings[:-3] 
+    imported = import_module(file_to_import)
     return imported.sett
 
 # if no arguments passed
