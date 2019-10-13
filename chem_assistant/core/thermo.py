@@ -26,7 +26,7 @@ def write_geom_input(atoms):
             new.write(f"{atom.symbol:5s} {int(atom.atnum):3} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
 
 def thermo_initial_geom_gamess(file):
-    """Parses GAMESS hessians for the initial geometry"""
+    """Parses GAMESS inputs for the initial geometry"""
     atoms = []
     regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
     inp = file[:-3] + 'inp'
@@ -37,23 +37,33 @@ def thermo_initial_geom_gamess(file):
             atoms.append(Atom(symbol = sym, coords = (x, y, z)))
     write_geom_input(atoms)
 
-def gauss_num_atoms(file):
+def write_freq_out_file(results):
     """
-    Returns number of atoms in Gaussian calc
+    Writes freq.out using the frequencies of the `results` dictionary.
+    Note all of the list is written to the file, so any removal of 
+    rotations and translations must occur before using this function.
     """
-    for line in read_file(file):
-        if 'NAtoms=' in line:
-            return int(line.split()[1])
+    with open("freq.out", "w") as output:
+        for i in results['Frequencies [cm-1]']:
+            output.write(f"{i:.3f}\n")
+
+def rm_additional_rots_and_trans(results):
+    """
+    Removes the first 6 rotations and translations, to leave
+    the required 3N vibrations.
+    """
+    for key, value in results.items():
+        results[key] = value[6:] 
+    return results
 
 def thermo_initial_geom_gauss(file):
     """
-    Parses Gaussian frequency calculation log file for the initial geometry. Note that
-    coordinates here are stored in .job files by default.
-    Only works with xyz coordinates, not z-matrices.
-    Also accounts for the fact that an optimisation might occur before the frequency job,
-    so if 'Input orientation:' is found and atoms is not empty, the original atoms list is deleted."""
+    Parses Gaussian frequency calculation log file for the initial 
+    geometry. Note that coordinates here are stored in .job files by     
+    default. Only works with xyz coordinates, not z-matrices.
+    Also accounts for the fact that an optimisation might occur before the 
+    frequency job."""
     atoms = []
-    num_atoms = gauss_num_atoms(file)
     regex = "(\s+[0-9]+){3}(\s+-?[0-9]+\.[0-9]+){3}"
     found_freq = False
     found_coords = False
@@ -73,7 +83,7 @@ def thermo_initial_geom_gauss(file):
             atoms.append(Atom(atnum = atnum, coords = (x, y, z)))
     write_geom_input(atoms)
 
-def freq_data_gamess(file, write_freqs_to_file = False):
+def freq_data_gamess(file):
     """Parses GAMESS hessian log files for frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     found_region = False
@@ -99,19 +109,12 @@ def freq_data_gamess(file, write_freqs_to_file = False):
                'Frequencies [cm-1]'             : freqs, 
                'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
-    for key, value in results.items():
-        results[key] = value[6:] #3N-6, with the 6 at the start = trans or rot modes.
-
-    if write_freqs_to_file:
-        with open("freq.out", "w") as output:
-            for i in results['Frequencies [cm-1]']:
-                output.write(f"{i:.3f}\n")
+    results = rm_additional_rots_and_trans(results)
+    write_freq_out_file(results)
     return results
     
 def freq_data_gauss(file, write_freqs_to_file = False):
     """Parses Gaussian frequency log files for frequency data"""
-    # regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-    found_region = False
     freqs = []
     ints  = []
     with open(file, "r") as f:
@@ -128,20 +131,15 @@ def freq_data_gauss(file, write_freqs_to_file = False):
                'Frequencies [cm-1]'             : freqs, 
                'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
-    for key, value in results.items():
-        results[key] = value[6:] #3N-6, with the 6 at the start = trans or rot modes.
-    
-    if write_freqs_to_file:
-        with open("freq.out", "w") as output:
-            for i in results['Frequencies [cm-1]']:
-                output.write(f"{i:.3f}\n")
+    results = rm_additional_rots_and_trans(results)
+    write_freq_out_file(results)
+
     return results
-
-
 
 def run(file, mult, temp):
     """
-    Calls thermo.exe with geom.input and freq.out written to the same directory.
+    Calls thermo.exe with geom.input and freq.out written to the same 
+    directory.
     """
     thermo_exe = os.path.join(os.path.dirname(os.path.realpath(__file__)), f'thermo.exe')
     p = subprocess.Popen(thermo_exe, shell=True, 
@@ -195,13 +193,14 @@ def setup_and_run_fortran_script(file, mult, temp):
 
 def thermo_data(file, mult, temp):
     """
-    Uses a fortran script to produce thermochemical data for GAMESS Hessian calculations and
-    GAUSSIAN frequency calculations- the results produced in the log file have been shown to be 
-    inaccurate. At < 300 cm⁻¹, rigid rotor fails, and the fortran code implements hindered rotor.
+    Uses a fortran script to produce thermochemical data for GAMESS 
+    Hessian calculations and GAUSSIAN frequency calculations- the results 
+    produced in the GAMESS files have been shown to be 
+    inaccurate. At < 300 cm⁻¹, rigid rotor fails, and the fortran code 
+    implements hindered rotor.
     """
     setup_and_run_fortran_script(file, mult, temp)
     fort = read_fort()    
     data = grep_data(fort)
     cleanup()
     return data
-
