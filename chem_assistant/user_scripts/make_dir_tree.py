@@ -59,7 +59,7 @@ def ask_package():
         if run_fmo == "y":
             choice = 5
     # TODO: REFACTOR CODE BELOW- DEFINITELY A BETTER WAY TO DO THIS THAN TO MAKE NEW OPTIONS, ALL IT IS
-    # ACHIEVING IS SETTINGS FRAGS_IN_SUBDIR TO FALSE
+    # ACHIEVING IS SETTING FRAGS_IN_SUBDIR TO FALSE
     done_with_frags = False
     while not done_with_frags:
         frags = input('Place inputs of fragments in subdirectories? [y/n] ')
@@ -201,7 +201,7 @@ def make_tree_and_copy(xyz_dir, files):
         new_dirs = make_dir_list(file)
         for idx, d in enumerate(new_dirs):
             change_to_subdir(d)
-            if idx + 1  == len(new_dirs): #when at maximum depth
+            if idx + 1  == len(new_dirs): # when at maximum depth
                 copy_xyz(xyz_dir, file)
         os.chdir(cwd)
     # return calc_dir

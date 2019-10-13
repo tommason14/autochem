@@ -411,6 +411,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             ionic_mol = Molecule(atoms = coords)
             # causing errors here I think, when separating and using for input
             ionic_mol.separate()
+            # instead, just use the mol assignments from the original coords list
             ionic_frags = ionic_mol.fragments
             charge = sum(frag['charge'] for frag in ionic_frags.values())
             multiplicity = Molecule.get_multiplicity(ionic_frags)
@@ -465,31 +466,47 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         jobs on multiple nodes, so that a node doesn't have just one atom
         assigned to it.
         """
-        print(self.fragments)
+        def merged_type(charge):
+            if charge == 1:
+                return 'cation'
+            elif charge == 0:
+                return 'neutral'
+            elif charge == -1:
+                return 'anion'
+            else:
+                return f'charge: {charge}'
+    
         groups = self.group_together.split('-')
-        print(groups)
         frags = [frag['name'] for frag in self.fragments.values()]
-        # merge the first instances- may change this in future
-        # frags=set(frags)
-        print(frags)
         merge_keys = []
         for f in frags:
             for k, v in self.fragments.items():
                 if v['name'] == f and f in groups:
                     merge_keys.append(k)
-        print(merge_keys)
         new_key = max(self.fragments.keys()) + 1
-        print(new_key)
-        
-        self.fragments[new_key] = {'type': ,
+        merged_atoms = []
+        merged_charge = 0
+        merged_elements = []
+        for key in merge_keys:
+            merged_atoms += self.fragments[key]['atoms']
+            merged_charge += self.fragments[key]['charge'] 
+            merged_elements += self.fragments[key]['elements']
+        merged_elements = set(merged_elements)
+        merged_mult = 2 if any(frag['multiplicity'] == 2 
+        for frag in self.fragments.values()) else 1
+        merged_mol_type = merged_type(merged_charge) 
+        self.fragments[new_key] = {'type': 'merged', # was merged_mol_type
                                    'name': self.group_together,
-                                   'atoms':,
-                                   'charge':,
-                                   'multiplicity':,
-                                   'elements':,
+                                   'atoms': merged_atoms,
+                                   'charge': merged_charge,
+                                   'multiplicity': merged_mult,
+                                   'elements': merged_elements,
                                    'frag_type': 'frag'}
+        for key in merge_keys:
+            del self.fragments[key]
+        self.fragments_after_merge = self.fragments
         self.frags_grouped_if_desired = True
-   
+
     def separate(self):
         """
         Separates coordinates into specific fragments using the intermolecular 
@@ -498,8 +515,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         """
         self.split()
         self.check_db()
-        if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
-            self.group_frags_together()
         self.renumber_molecules()
         self.sort_fragments_by_index()
         if not self.all_atoms_assigned():
@@ -509,7 +524,11 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 self.reassign_frags_manually()
                 if self.all_atoms_assigned():
                     all_assigned = True
+        if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
+            self.group_frags_together()
         self.add_ionic_network()
+        if hasattr(self, 'fragments_after_merge'):
+            self.fragments = self.fragments_after_merge
 
 
     def distance_matrix(self):

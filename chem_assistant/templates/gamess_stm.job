@@ -3,8 +3,8 @@
 #SBATCH -o name.log
 #SBATCH -e name.e%j
 #SBATCH -p skx-normal
-#SBATCH -N 3
-#SBATCH -n 66
+#SBATCH -N 1
+#SBATCH -n 22
 #SBATCH -c 1
 #SBATCH -t 24:00:00
 

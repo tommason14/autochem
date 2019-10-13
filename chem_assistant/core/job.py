@@ -18,10 +18,11 @@ molecular dynamics. This class also creates job files in the same directory as t
     * ``using`` -- coordinates of chemical system, in xyz format
 
     """
-    def __init__(self, using = None, run_dir = None, frags_in_subdir = False, **kwargs): # allows for fmo=True, even if nothing done with the arguments
+    def __init__(self, using = None, run_dir = None, frags_in_subdir = False, user_settings=None, **kwargs): 
+        # allows for fmo=True, even if nothing done with the arguments
         if using is not None:
             self.molecule_name = using
-            self.mol = Molecule(using)
+            self.mol = Molecule(using, group = user_settings.grouped)
 
     def get_sc(self):
         if hasattr(self, 'merged'):

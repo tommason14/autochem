@@ -77,9 +77,18 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         └── opt
             ├── opt.inp
             └── opt.job
+
+    To group fragments together, just pass in a `grouped` argument in the settings file:
+
+        >>> sett = Settings()
+        >>> sett.grouped = 'water-chloride'
+
+    This will group water and chloride fragments together, to avoid having lots of nodes with a
+    small number of atoms assigned to them. 
+    
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None):
-        super().__init__(using)
+        super().__init__(using, user_settings=settings)
         self.fmo = fmo # Boolean
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
@@ -344,6 +353,15 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace('jobfs=150gb', f'jobfs={4 * 16 * num_frags + 20}gb')
             return jobfile
         return job
+
+    def change_stm_job(self, job):
+        jobfile = job.replace('name', f'{self.base_name}') 
+        if hasattr(self.mol, 'fragments') and len(self.mol.fragments) != 0:
+            num_frags = len(self.mol.fragments)
+            jobfile = jobfile.replace('-N 1', f'-N {num_frags}')
+            jobfile = jobfile.replace('-n 22', f'-n {22 * num_frags}') 
+            return jobfile
+        return job
     
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
@@ -359,7 +377,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         elif self.sc == 'mas':
             jobfile = jobfile.replace('base_name', f'{self.base_name}') 
         elif self.sc == 'stm':
-            jobfile = jobfile.replace('name', f'{self.base_name}') 
+            jobfile = self.change_stm_job(jobfile)
         self.write_file(jobfile, filetype='job')
 
     def make_run_dir(self):
