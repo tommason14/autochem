@@ -110,13 +110,13 @@ def job_type(package, xyz, s):
     elif package == "orca":
         return OrcaJob(using = xyz, settings = s, frags_in_subdir = True)
     elif package == "gamess_no_frags":
-        return GamessJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
+        return GamessJob(using = xyz, frags_in_subdir = False, settings = s) # no need for is_complex here
     elif package == "psi4_no_frags":
-        return PsiJob(using = xyz, frags_in_subdir = False, settings = s, is_complex = True)
+        return PsiJob(using = xyz, frags_in_subdir = False, settings = s)
     elif package == "gamess_fmo_no_frags":
-        return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s, is_complex = True)
+        return GamessJob(using = xyz, fmo = True, frags_in_subdir = False, settings = s)
     elif package == "orca_no_frags":
-        return OrcaJob(using = xyz, settings = s, frags_in_subdir = False, is_complex=True)
+        return OrcaJob(using = xyz, settings = s, frags_in_subdir = False)
 
 def make_dir_list(file):
     filename = file[:-4] # rm .xyz 
