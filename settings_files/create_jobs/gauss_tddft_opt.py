@@ -1,5 +1,5 @@
 from chem_assistant import Settings, GaussJob
-impory glob
+import glob
 
 xyz=glob.glob('.xyz')[0]
 

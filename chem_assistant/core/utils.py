@@ -281,7 +281,7 @@ def responsive_table(data, strings, min_width = 13):
         for k, v in data.items():
             max_sizes[k] = len(max([str(val) for val in v], key = len))
     except ValueError:
-        sys.exit('>>> Error: No data is passed into chem_assistant.core.utils.responsive_table')   
+        sys.exit('Error: No data is passed into chem_assistant.core.utils.responsive_table')   
 
     # create the thing to pass into .format()- can't have brackets like zip gives
     formatting = [] 

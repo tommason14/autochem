@@ -21,7 +21,7 @@ def is_fluorescence(file):
     Returns True if yes
     """
     for line in read_file(file):
-        if 'TD=' in line:
+        if 'TD=' in line.upper():
             return True
     return False
 
@@ -201,7 +201,7 @@ def one_level_dict(res):
     output['Intensity (au)'] = ints
     return output
 
-def fluorescence_data(dir):
+def fluorescence_data(dir, output):
     cutoff = user_choice()
     files = get_fluorescence_logs(dir)
     if len(files) > 0:
@@ -209,6 +209,10 @@ def fluorescence_data(dir):
         onelevel = one_level_dict(data)
         data = transform(data)
         responsive_table(onelevel, strings = [1, 2, 3], min_width=2)
-        write_csv_from_nested(data, col_names = ['Config', 'Root', 'Iteration', 'Oscillator Strength (eV)', 'Wavelength (nm)', 'Intensity (au)'])
+        write_csv_from_nested(data, 
+            col_names = ['Config', 'Root', 'Iteration', 
+                         'Oscillator Strength (eV)', 
+                         'Wavelength (nm)', 'Intensity (au)'], 
+            filename=output)
     else:
         print('No relevant log files')

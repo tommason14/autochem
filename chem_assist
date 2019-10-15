@@ -108,7 +108,9 @@ if args.geodesics:
 
 if args.fluorescence:
     from chem_assistant.user_scripts.fluorescence import fluorescence_data
-    fluorescence_data('.')
+    if not args.output:
+        args.output = 'fluorescence.csv'
+    fluorescence_data('.', output=args.output)
 
 if args.copy_xyz:
     from chem_assistant.user_scripts.structures import copy_xyz_tree
