@@ -360,8 +360,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             num_frags = len(self.mol.fragments)
             jobfile = jobfile.replace('-N 1', f'-N {num_frags}')
             jobfile = jobfile.replace('-n 22', f'-n {22 * num_frags}') 
-            return jobfile
-        return job
+        return jobfile
     
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
