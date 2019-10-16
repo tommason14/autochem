@@ -236,6 +236,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret = format_line_if_too_long(ret)
             return ret
     
+        # hack for now
+        del self.input['charge']
+        del self.input['mult']
 
         inp = [parse(item, self.input[item])
             for item in self.input]
