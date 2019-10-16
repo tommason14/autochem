@@ -163,7 +163,7 @@ class GaussJob(Job):
         a basis set, method or run type.
         """
         addn = ''
-        ignore=('opt', 'freq', 'method', 'basis', 'meta')
+        ignore=('opt', 'freq', 'method', 'basis', 'meta', 'charge', 'mult')
         for arg in self.input:
             if arg not in ignore:
                 addn += gauss_print(self.input, arg) + ' '
@@ -194,8 +194,15 @@ class GaussJob(Job):
         Changes charge and multiplicity unless user defines values. 
         In that case, the user-defined charge and multiplicity are used.
         """
-        user_assigned_charge = hasattr(self.user_settings, 'input.charge')
-        user_assigned_mult = hasattr(self.user_settings, 'input.mult')
+        user_assigned_charge=False
+        user_assigned_mult=False
+        if hasattr(self, 'user_settings'):
+            if 'charge' in self.user_settings['input'].keys():
+                user_assigned_charge=True
+            if 'mult' in self.user_settings['input'].keys():
+                user_assigned_mult=True
+        # user_assigned_charge = hasattr(self.user_settings, 'input.charge')
+        # user_assigned_mult = hasattr(self.user_settings, 'input.mult')
         if not user_assigned_charge:
             self.input.charge = self.mol.overall_charge
         if not user_assigned_mult:
