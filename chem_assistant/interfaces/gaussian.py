@@ -36,8 +36,6 @@ class GaussJob(Job):
     This command produces 'benzene.job', containing both input data and 
     job scheduler information.
 
-    To define parameters for the job
-    
     """
 
     def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):
@@ -218,9 +216,11 @@ def gauss_print(d, value):
     For example, sett.input.freq=True in the script would
     produce 'freq', sett.input.scf='tight' would produce
     'scf=tight', and sett.input.opt='ts,noeigentest,calcfc' 
-    produces 'opt=(ts,noeigentest,calcfc)'.
+    produces 'opt=(ts,noeigentest,calcfc)'. Note: doesn't
+    work with lists or dict values, but unlikely that they would
+    be passed in as settings values.
     """
-    if isinstance(d[f'{value}'], bool):
+    if isinstance(d[f'{value}'], bool) or isinstance(d[f'{value}'], int):
         return value
     elif len(d[f'{value}'].split(',')) > 1 or '=' in d[f'{value}']:
         return f"{value}=({d[f'{value}']})"
