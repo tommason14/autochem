@@ -54,13 +54,16 @@ class GaussianResults(Results):
             return 'spec'
 
     def completed(self):
-        # found = False
-        # for line in self.read():
-        #     if 'Normal termination' in line:
-        #         found = True
-        return True # need a new parameter- Normal termination not printed if max time elapsed
+        found = False
+        for line in self.eof(0.01):
+            if 'Normal termination' in line:
+                return True
+        return False
 
     def get_equil_coords(self, output = None):
+        """
+        Returns either the equilibrium coordinates or coordinates for the rerun.
+        """
         found_equil = False
         found_some = False
         regex = "^(\s*[0-9]*){3}(\s*-?[0-9]{1,3}.[0-9]*){3}$"
@@ -85,14 +88,12 @@ class GaussianResults(Results):
                 if re.search(regex, line):
                     _, atnum, _, x, y, z = line.split()
                     atnum, x, y, z = map(float, (atnum, x, y, z))
-                    sym = PT.get_symbol(atnum)
-                    coords.append(Atom(sym, coords = (x, y, z)))
+                    coords.append(Atom(atnum=atnum, coords = (x, y, z)))
             if found_some:
                 if re.search(regex, line):
                     _, atnum, _, x, y, z = line.split()
                     atnum, x, y, z = map(float, (atnum, x, y, z))
-                    sym = PT.get_symbol(atnum)
-                    some_coords.append(Atom(sym, coords = (x, y, z)))
+                    some_coords.append(Atom(atnum=atnum, coords = (x, y, z)))
             if 'Rotational constants' in line:
                 found_some = False
             if 'Distance matrix (angstroms)' in line:
