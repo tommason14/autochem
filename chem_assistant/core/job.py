@@ -65,8 +65,26 @@ molecular dynamics. This class also creates job files in the same directory as t
         job_file = join(templates, job)
         return job_file
 
+    def find_charge_and_mult(self):
+        """
+        Changes charge and multiplicity unless user defines values in a
+        settings file. In that case, the user-defined charge and 
+        multiplicity are used.
+        """
+        user_assigned_charge=False
+        user_assigned_mult=False
+        if hasattr(self, 'user_settings'):
+            if 'charge' in self.user_settings['input'].keys():
+                user_assigned_charge=True
+            if 'mult' in self.user_settings['input'].keys():
+                user_assigned_mult=True
+        if not user_assigned_charge:
+            self.input.charge = self.mol.overall_charge
+        if not user_assigned_mult:
+            self.input.mult = self.mol.overall_mult        
+
     def write_file(self, data, filetype):
-        """Writes the generated PSI4 input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+        """Writes the generated input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
 
         NOTE: Must pass data as a string, not a list!""" 
         with open(f"{self.base_name}.{filetype}", "w") as f:

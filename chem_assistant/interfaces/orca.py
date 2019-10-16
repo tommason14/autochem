@@ -316,18 +316,6 @@ class OrcaJob(Job):
                 f'{self.input.basis} {self.input.density_fitting} '
                 f'{self.solvation} {self.additional_params}')
 
-    def find_charge_and_mult(self):
-        """
-        Changes charge and multiplicity unless user defines values. 
-        In that case, the user-defined charge and multiplicity are used.
-        """
-        user_assigned_charge = hasattr(self.user_settings, 'input.charge')
-        user_assigned_mult = hasattr(self.user_settings, 'input.mult')
-        if not user_assigned_charge:
-            self.input.charge = self.mol.overall_charge
-        if not user_assigned_mult:
-            self.input.mult = self.mol.overall_mult        
-    
     @property
     def coord_info(self):
         self.find_charge_and_mult()

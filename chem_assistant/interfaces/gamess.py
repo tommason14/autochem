@@ -179,7 +179,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         consistent basis sets without the need to define it in the user code.
         """
 
-        self.change_charge_and_mult()
+        self.find_charge_and_mult()
 
         opp_spin_params = {'cct': 1.64,
                            'ccq': 1.689,
