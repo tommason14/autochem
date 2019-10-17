@@ -53,14 +53,18 @@ molecular dynamics. This class also creates job files in the same directory as t
         else:
             self.sc = Supercomp().supercomp 
 
-    def find_job(self):
-        """Returns the relevant job template"""
+    def find_job(self, dft=False):
+        """
+        Returns the relevant job template. If a GAMESS job is for a dft 
+        calculation, gamess_{self.sc}_dft.job will be called"""
         self.get_sc()
         package = sys.modules[self.__class__.__module__].__file__.split('/')[-1][:-3]
-        # package is the basename of the file containing the class GamessJob or PsiJob, which
-        # inherit from Job- so we're only using this in inherited classes - returns gamess or psi
-        job = f"{package}_{self.sc}.job"
-        dir_name = dirname(__file__) #  (dir of job.py = core)
+        # Returns gamess from GamessJob, psi from PsiJob etc...
+        if dft:
+            job = f"{package}_{self.sc}_dft.job"
+        else:
+            job = f"{package}_{self.sc}.job"
+        dir_name = dirname(__file__) 
         templates = join(dir_name, '..', 'templates')
         job_file = join(templates, job)
         return job_file
@@ -90,8 +94,8 @@ molecular dynamics. This class also creates job files in the same directory as t
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
 
-    def get_job_template(self):
-        job_file = self.find_job()
+    def get_job_template(self, dft=False):
+        job_file = self.find_job(dft=dft)
         with open(job_file) as f:
             job = f.read()       
             return job

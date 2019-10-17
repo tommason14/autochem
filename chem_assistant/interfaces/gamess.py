@@ -316,7 +316,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (hess). This method creates an attribute ``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), 
+        or a hessian matrix calculation for vibrational frequencies (hess). 
+        This method creates an attribute ``base_name``, used in creating the input and job files."""
 
         if self.filename is not None:
             self.base_name = self.filename
@@ -335,7 +337,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.write_file(inp, filetype = 'inp')
    
     def get_job_template(self):
-        job_file = self.find_job()
+        if 'dfttyp' in self.input.contrl.keys():
+            job_file = self.find_job(dft=True)
+        else:
+            job_file = self.find_job()
         with open(job_file) as f:
             job = f.read()       
             return job
@@ -409,7 +414,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         return len(ionic_mol.fragments) > 2
 
     def create_inputs_for_fragments(self, complex_is_fmo = False):
-        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
+        """Very useful to generate files for each fragment automatically, 
+        for single point and frequency calculations, generating free energy changes. 
+        Called if ``frags_in_subdir`` is set to True, as each fragment is given a 
+        subdirectory in an overall subdirectory, creating the following directory 
+        structure (here for a 5-molecule system):
             .
             ├── frags
             │   ├── acetate0

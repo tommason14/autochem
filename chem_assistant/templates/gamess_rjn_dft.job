@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -P k96
+#PBS -l mem=125gb
+#PBS -l ncpus=32
+#PBS -l jobfs=150gb
+#PBS -l walltime=24:00:00
+#PBS -l wd
+
+module load gamess/2018-09-R3
+rungms name.inp $PBS_NCPUS > name.log

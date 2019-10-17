@@ -1,0 +1,16 @@
+#!/bin/env bash
+#SBATCH --job-name=base_name
+#SBATCH --time=04:00:00
+#SBATCH --mem=32G
+#SBATCH --tasks-per-node=16
+#SBATCH --ntasks=16
+#SBATCH --cpus-per-task=1
+#SBATCH --mail-type=all
+#SBATCH --mail-user=thomas.mason1+monarch@monash.edu
+#SBATCH --partition=comp,short
+#SBATCH --qos=partner
+
+export PROJECT="p2015120004"
+module load gamess/2018r3
+
+rungms base_name.inp 00 $SLURM_NTASKS > base_name.log

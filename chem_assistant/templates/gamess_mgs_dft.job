@@ -1,0 +1,16 @@
+#!/bin/bash --login
+#SBATCH --nodes=1
+#SBATCH --account=pawsey0197
+#SBATCH --time=24:00:00
+#SBATCH --export=NONE
+#SBATCH --error=%j.err
+#SBATCH --output=name.log
+
+# ulimit -s unlimited
+# ulimit -l unlimited
+
+export OMP_NUM_THREADS=1
+
+module load gamess/2018
+
+rungms name.inp 00 24 24
