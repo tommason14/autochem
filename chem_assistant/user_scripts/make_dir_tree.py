@@ -199,17 +199,14 @@ def make_tree_and_copy(xyz_dir, files):
     cwd = os.getcwd()
     for file in files:
         new_dirs = make_dir_list(file)
-        # print(new_dirs)
         for idx, d in enumerate(new_dirs):
-            if d != 'rerun': 
-                change_to_subdir(d)
-                if idx + 1  == len(new_dirs): # when at maximum depth
-                    copy_xyz(xyz_dir, file)
+            change_to_subdir(d)
+            if idx + 1  == len(new_dirs): # when at maximum depth
+                copy_xyz(xyz_dir, file)
         os.chdir(cwd)
 
 def xyz_is_rerun(file):
-    return file == 'rerun.xyz'
-       
+    return file == 'rerun.xyz'       
 
 def make_job_files(base_dir, chem_package, settings):
     # find all xyz files in subdir to work on
