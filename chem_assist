@@ -5,6 +5,7 @@ import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the current directory to the relative path given here', action='store')
+parser.add_argument('--freqs', help='Print frequencies and intensities for GAMESS hessian/Gaussian frequency jobs', action='store_true')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
 parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
 parser.add_argument('-g', '--group', help="""\
@@ -44,6 +45,10 @@ def imported_settings():
 # if no arguments passed
 if len(sys.argv) == 1:
     parser.print_help()
+
+if args.freqs:
+    from chem_assistant.user_scripts.grep_results import print_freqs
+    print_freqs('.')
 
 if args.thermochem:
     if args.mult is None:

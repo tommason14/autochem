@@ -1,15 +1,17 @@
-__all__ = ['create_extra_jobs',
-           'geodesics',
+__all__ = ['geodesics',
            'get_h_bonds',
            'get_results_class',
            'parse_results',
+           'print_freqs',
            'results_table',
            'search_for_coords',
            'thermochemistry']
 
 from ..core.atom import Atom
 from ..core.molecule import Molecule
-from ..core.thermo import thermo_data
+from ..core.thermo import (thermo_data,
+                           freq_data_gamess,
+                           freq_data_gauss)
 from ..core.utils import (read_file,
                           get_files,
                           write_csv_from_dict,
@@ -45,133 +47,6 @@ def search_for_coords(dir):
                   end=" ")
             r.get_equil_coords()
             print()
-
-
-def create_extra_jobs(dir):
-    """
-    Using `equil.xyz` files found from a previous search, create
-    additional files
-    """
-
-    def is_complex():
-        complex = False
-        while not complex:
-            try:
-                user_choice = input(
-                    ("Are these systems made of ",
-                     "more than one molecule? [Y/N] "))
-            except ValueError:
-                print("Please enter 'Y' or 'N'")
-            if user_choice.upper() not in ('Y', 'N'):
-                print("Please enter 'Y' or 'N'")
-            else:
-                complex = True
-        return complex
-
-    def add_to_meta(scomp, complexes):
-        with open('meta.py', "r") as f:
-            lines = [line for line in f]
-        lines.insert(-1, f"s.supercomp = '{scomp}'\n")
-        if complexes:
-            lines[-1] = lines[-1][:-1] + ', is_complex = True)'
-        with open('meta.py', "w") as writer:
-            for line in lines:
-                writer.write(line)
-
-    def copy_meta(file_to_copy, scomp):
-        """
-        Give the path and filename of meta.py file to copy over to any
-        directory containing an `equil.xyz` file
-        """
-        complex = is_complex()
-        parent = os.getcwd()
-        for path, _, files in os.walk('.'):
-            for file in files:
-                if file == 'equil.xyz':
-                    os.chdir(path)
-                    os.system(f'cp {file_to_copy} .')
-                    add_to_meta(scomp, complex)
-                    os.chdir(parent)
-
-    def get_supercomp():
-        sc = False
-        while not sc:
-            try:
-                sc_choice = int(input(
-                    """Which supercomputer do you want to use?
-
-1. Raijin
-2. Magnus
-3. Massive
-
-Choice: """))
-            except ValueError:
-                print('Please enter a number between 1 and 3')
-            if sc_choice not in range(1, 4):
-                print('Please enter a number between 1 and 3')
-            else:
-                sc = True
-
-        supercomps = {1: 'rjn', 2: 'mgs', 3: 'mas'}
-        scomp = supercomps[sc_choice]
-        return scomp
-
-    template_dir = os.path.join(os.path.dirname(__file__),
-                                os.pardir,
-                                'templates/meta_files')
-    predefined = {
-        1: os.path.join(template_dir, 'gamess/spec/meta.py'),
-        2: os.path.join(template_dir, 'gamess/freq/meta.py'),
-        3: os.path.join(template_dir, 'psi/spec/meta.py')
-    }
-    good = False
-    while not good:
-        try:
-            user_choice = int(input(
-                """Use a predefined file or one of your own:
-
-1. Predefined
-2. Own meta.py
-
-Choice: """))
-        except ValueError:
-            print('Please choose 1 or 2')
-        if user_choice in (1, 2):
-            good = True
-        else:
-            print('Please choose a number, 1 or 2')
-    if user_choice == 1:
-        done = False
-        while not done:
-            try:
-                choice = int(input(
-                    """Which type of file do you want to make?
-
-1. Gamess single point energy
-2. Gamess hessian
-3. Psi4 single point energy
-
-Choice: """))
-            except ValueError:
-                print('Please enter a number between 1 and 3')
-            if choice not in range(1, 4):
-                print('Please enter a number between 1 and 3')
-            else:
-                done = True
-
-        # add desired meta.py
-        meta_file = predefined[choice]
-        scomp = get_supercomp()
-        copy_meta(meta_file, scomp)
-    else:
-        user_path = input(("Give path to your own meta.py ",
-                           "(relative from the directory you are running ",
-                           "this script from)"))
-        user_given = os.path.join(os.getcwd(), user_path)
-        scomp = get_supercomp()
-        copy_meta(user_path, scomp)
-    make_files_from_meta('.')
-
 
 def get_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
@@ -304,6 +179,21 @@ def thermochemistry(dir, string_to_find, mult, temp):
                       k in ['File','S tot [J/(mol K)]']}, 
                       strings=[1], min_width=10)
     name = write_csv_from_dict(collected, filename='thermo.csv')
+
+def print_freqs(dir):
+    """
+    Prints frequencies and intensities for jobs in the directory
+    passed in. Works for GAMESS/Gaussian jobs.
+    """
+    for f in os.listdir(dir):
+        if f.endswith('log') or f.endswith('out'):
+            calc = get_results_class(f)
+            if calc.is_hessian():
+                if get_type(f) == 'gamess':
+                    freq_data_gamess(f, called_by_thermo_code=False) 
+                else:
+                    freq_data_gauss(f, called_by_thermo_code=False) 
+            
 
 
 def get_h_bonds(dir):
