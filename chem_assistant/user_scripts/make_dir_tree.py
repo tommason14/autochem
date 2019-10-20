@@ -22,14 +22,6 @@ import os
 import glob
 from shutil import copyfile
 
-# def check_dir():
-#     """If in files directory, do nothing. If a subdir is called files, then move into that"""
-#     if os.getcwd().split('/')[-1] == 'files':
-#         return os.getcwd()
-#     elif os.path.isdir('files'):
-#         os.chdir(os.path.join(os.getcwd(), 'files'))
-#         return os.getcwd()
-
 def get_xyz():
     return [file for file in os.listdir('.') if file.endswith('.xyz')]
 
@@ -213,10 +205,13 @@ def make_job_files(base_dir, chem_package, settings):
     files = glob.glob('**/*xyz', recursive = True)
     for file in files:
         path, f = os.path.split(file)
-        if path is not '' or xyz_is_rerun(f):
+        if path is not '': #or xyz_is_rerun(f):
             subdir = base_dir + '/' + path
             print(f"Creating inputs for {file}...")
-            job_type(chem_package, subdir + '/' + f, settings)
+            # move to dir, make file, then move out
+            os.chdir(subdir)
+            # job_type(chem_package, subdir + '/' + f, settings)
+            job_type(chem_package, f, settings)
             os.chdir(base_dir)
 
 def make_job_subdirs(base_dir):
@@ -246,8 +241,7 @@ def xyz_to_tree(settings):
 
     Another desirable feature is to separate optimisations from single point calculations. As a   
     result, when the function runs, it creates jobs in a new subdirectory of the molecule 
-    directory. When the results are looked for, an option is available to automatically create single 
-    point files from completed optimisations.
+    directory.
 
     >>> s = Settings()
     >>> s.input.basis.gbasis = 'ccd' # gamess input (this is actually the default setting)
