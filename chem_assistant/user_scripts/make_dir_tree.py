@@ -290,5 +290,5 @@ def xyz_to_tree(settings):
     files = get_xyz()
     make_tree_and_copy(xyz_directory, files)
     make_job_files(xyz_directory, package, settings) # xyz directory is base dir
-    #make_job_subdirs(calc_dir)
+    # make_job_subdirs(calc_dir)
     os.chdir(xyz_directory)
