@@ -36,14 +36,11 @@ class GaussianResults(Results):
         """
         opt = False
         freq = False
-        for line in self.read():
-            if '#P' in line.upper():
-                parts = line.split()
-                for p in parts:
-                    if 'opt' in p:
-                        opt = True
-                    if 'freq' in p:
-                        freq = True
+        for p in self.user_commands.split():
+            if 'opt' in p:
+                opt = True
+            if 'freq' in p:
+                freq = True
         if opt and not freq:
             return 'opt'
         if opt and freq: 
@@ -70,7 +67,6 @@ class GaussianResults(Results):
         coords = []
         some_coords = []
         par_dir = []
-        # print(self.log)
         for part in self.path.split('/'):
             if part not in ('opt', 'spec', 'hess'):
                 par_dir.append(part)
@@ -105,14 +101,39 @@ class GaussianResults(Results):
             if len(some_coords) > 0:
                 print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun.xyz')
                 write_xyz(some_coords, os.path.join(MOLECULE_PARENT_DIR, 'rerun.xyz'))
-                # rerun_dir = os.path.join(self.path, 'rerun')
-                # if not os.path.exists(rerun_dir):
-                # # if already exists, then simulation already re-run- skip this log, move to next
-                #     os.mkdir(rerun_dir)
-                #     write_xyz(some_coords, os.path.join(rerun_dir, 'rerun.xyz'))
             else:
                 print('No iterations were cycled through!')
 
+    @property
+    def user_commands(self):
+        """
+        Returns the #P line of the input file.
+        """
+        for line in self.read():
+            if re.search('^\s*?#P', line):
+                return line.lower()
+
+    @property
+    def energy_type(self):
+        """
+        Returns energy type. For example, for HF/cc-pVTZ, returns hf. 
+        For wB97xD/aug-cc-pVDZ, returns wb97xd.
+        """
+        return self.user_commands.split('/')[0].split()[-1]
+
+    @property
+    def basis(self):
+        """
+        Returns basis set. For example, for HF/cc-pVTZ, returns cc-pvtz. 
+        For wB97xD/aug-cc-pVDZ, returns aug-cc-pVDZ.
+        """
+        basis = self.user_commands.split('/')[1].split()[0]
+        # turn cc-pvtz into cc-pVTZ
+        if 'cc' in basis:
+            *rest, last = basis.split('-')
+            last = last[:-3] + last[-3:].upper()
+            basis = '-'.join(rest + [last])
+        return basis
 
     def is_optimisation(self):
         return 'opt' in self.get_runtype()
@@ -123,19 +144,45 @@ class GaussianResults(Results):
     def is_hessian(self):
         return 'freq' in self.get_runtype()
 
+    @property
+    def hf_energy(self):
+        """
+        Returns last occurrence of Hartree-Fock energy.
+        """
+        HF = ''
+        for line in self.read():
+            if re.search('^\sE=\s*-?[0-9]*.[0-9]*', line):
+                HF = line.split()[1]
+        return float(HF)
+    
+    @property
+    def mp2_energy(self):
+        """
+        Returns last occurrence of MP2 energy.
+        """
+        # needs filling
+        return 0.0
+
+    @property
+    def dft_energy(self):
+        """
+        Returns last occurrence of DFT energy.
+        """
+        dft = ''
+        for line in self.read():
+            if 'SCF Done' in line:
+                dft = line.split()[4]
+        return float(dft)
+
     def get_data(self):
         """
-        Returns the last occurrence of printed energies.
-        Currently implemented for DFT only.
+        Returns the last occurrence of printed energies. Negate energy types, and if the energy type
+        is not found, assumed to be DFT.
         """
-        basis = ''
-        HF = 0.0
-        MP2 = 0.0
-
-        for line in self.read():
-            if re.search('^\s*?#P', line):
-                basis = line.split()[1].rsplit('/')[1]
-            if re.search('^\sE=\s*-?[0-9]*.[0-9]*', line):
-                HF = float(line.split()[1])
-
-        return self.file, self.path, basis, HF, MP2
+        if self.energy_type == 'hf':
+            return self.file, self.path, self.basis, self.hf_energy
+        elif self.energy_type == 'mp2':
+            return self.file, self.path, self.basis, self.hf_energy, self.mp2_energy
+        else:
+            return self.file, self.path, self.basis, self.dft_energy
+        

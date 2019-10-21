@@ -72,6 +72,14 @@ def get_type(filepath):
         elif 'O   R   C   A' in line:
             return 'orca'
 
+def need_gauss_energy(calc):
+    """
+    Returns True is there is an energy to be pulled from a Gaussian file. 
+    Required as Gaussian hessian calculations can be preceeded by optimisations,
+    so the calc.is_hessian() call is irrelevant.
+    """
+    return (isinstance(calc, GaussianResults) and 
+            calc.is_optimisation() or calc.is_spec()) 
 
 def parse_results(dir, filepath_includes):
     """
@@ -83,14 +91,13 @@ def parse_results(dir, filepath_includes):
         filetype = get_type(log)
         try:
             if calc.completed():  # add provision for energies of opts only if equilibrium found
-                if not calc.is_hessian():
+                if not calc.is_hessian() or need_gauss_energy(calc):
                     print(log)
                     data = calc.get_data()
                     output.append({'data': data, 'type': filetype})
         except AttributeError:  # if log/out files are not logs of calculations
             continue
     return output
-
 
 def results_table(dir, file_name, string_to_find):
     """
@@ -118,7 +125,6 @@ def results_table(dir, file_name, string_to_find):
         data = add_data(data, result['data'])
 
     keys = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
-    
     table_data = {}
     for key, val in zip(keys, data):
         table_data[key] = val 
@@ -127,7 +133,6 @@ def results_table(dir, file_name, string_to_find):
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
     write_csv_from_dict(table_data, filename=file_name)
-
 
 def thermochemistry(dir, string_to_find, mult, temp):
     """
@@ -193,8 +198,6 @@ def print_freqs(dir):
                     freq_data_gamess(f, called_by_thermo_code=False) 
                 else:
                     freq_data_gauss(f, called_by_thermo_code=False) 
-            
-
 
 def get_h_bonds(dir):
     """

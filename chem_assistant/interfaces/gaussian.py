@@ -35,7 +35,7 @@ class GaussJob(Job):
     
     This command produces 'benzene.job', containing both input data and 
     job scheduler information.
-
+    For meta data, number of processors (nproc), memory (mem) etc, use sett.meta.nproc=46.
     """
 
     def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):

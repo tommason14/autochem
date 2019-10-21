@@ -71,6 +71,8 @@ class Molecule:
     Cations['lithium'] = ['Li']
     Cations['sodium'] = ['Na']
     Cations['potassium'] = ['K']
+    Cations['styrene-trimethylammonium'] = ['H','C','H','C','H','C','C','H','C','H','C','C','H',
+                                            'C','H','C','H','H','N','C','H','H','H','C','H','H','H','C','H','H','H']
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['water'] = ['H', 'H', 'O']
@@ -80,8 +82,27 @@ class Molecule:
     Neutrals['benzene'] = ['C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'] 
     Neutrals['acetone'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'O']
     Neutrals['dmso'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O']
-    
-    Radicals = {}
+    Neutrals['amps'] = ['H','C','H','C','H','C','O','N','H','C','C','H','H','H',
+                        'C','H','H','H','C','H','H','S','O','H','O','O']
+    Neutrals['maotmac'] = ['C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H','H','N',
+                           'C','H','H','H','C','H','H','H','C','H','H','H','Cl']    
+    Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C','H','C','C','H','C','H','S','O','H','O','O']
+
+    Radicals = {'amps-dimer': ['H','O','S','O','O','C','H','H','C','C','H','H','H','C','H','H','H','N',
+                               'H','C','O','C','H','H','C','H','H','C','H','H','C','H','C','O','N','H',
+                               'C','C','H','H','H','C','H','H','C','H','H','H','S','O','O','O','H']}
+    Radicals['divinyl-benzene'] = ['C','C','H','H','H','H','C','C','H','C','H','C','H','C','H','C','C','H','C','H','H']
+    Radicals['ethylene-glycol-dimethacrylate'] = ['C','C','C','H','H','H','H','H','H','C','O','O','C','H','H','C','H',
+                                                 'H','O','C','O','C','C','H','H','C','H','H','H']
+    Radicals['glycerol-dimethacrylate'] = ['H','C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H',
+                                           'O','H','C','H','H','O','C','O','C','C','H','H','C','H','H','H']    
+    Radicals['sty-sulf-dimer-hydrogenated'] = ['H','O','S','O','O','C','C','H','C','H','C','H','C','H','C','C','H',
+                                  'C','H','H','C','H','H','C','H','C','C','H','C','H','C','H','C','H',
+                                  'C','S','O','H','O','O','H']
+    Dications = {'maotmac-dimer' : ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H','C',
+                                 'H','H','O','C','O','C','C','H','H','H','C','H','H','C','C','H','H',
+                                 'H','C','H','H','H','C','O','O','C','H','H','C','H','H','N','C','H',
+                                 'H','H','C','H','H','H','C','H','H','H']}
 
 
     def __init__(self, using = None, atoms = None, group = None):
@@ -269,7 +290,8 @@ class Molecule:
             return molecules_dict
 
         self.fragments = {}
-        for db in (Molecule.Anions, Molecule.Cations, Molecule.Neutrals, Molecule.Radicals):
+        for db in (Molecule.Anions, Molecule.Cations, 
+                   Molecule.Neutrals, Molecule.Radicals, Molecules.Dications):
             self.fragments = check_dict(self.fragments, symbols, db)
 
         #sort order of atoms
