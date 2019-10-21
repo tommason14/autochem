@@ -272,7 +272,11 @@ class Molecule:
                 charge = 0
                 mult = 2
                 mol_type = 'radical'
-            ## create more clauses for biradicals
+            elif db == Molecule.Dications:
+                charge = 2
+                mult = 0
+                mol_type = 'dication'
+
 
             for name, atom_list in db.items():
                 for sym, molecule in symbols_dict.items():
