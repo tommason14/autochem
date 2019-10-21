@@ -99,11 +99,12 @@ class Molecule:
     Radicals['sty-sulf-dimer-hydrogenated'] = ['H','O','S','O','O','C','C','H','C','H','C','H','C','H','C','C','H',
                                   'C','H','H','C','H','H','C','H','C','C','H','C','H','C','H','C','H',
                                   'C','S','O','H','O','O','H']
-    Dications = {'maotmac-dimer' : ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H','C',
+    Dications = {}
+                                                   
+    Dication_radicals = {'maotmac-dimer' : ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H','C',
                                  'H','H','O','C','O','C','C','H','H','H','C','H','H','C','C','H','H',
                                  'H','C','H','H','H','C','O','O','C','H','H','C','H','H','N','C','H',
                                  'H','H','C','H','H','H','C','H','H','H']}
-
 
     def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
@@ -276,6 +277,10 @@ class Molecule:
                 charge = 2
                 mult = 0
                 mol_type = 'dication'
+            elif db == Molecule.Dication_radicals:
+                charge = 2
+                mult = 2
+                mol_type = 'dication-radical'
 
 
             for name, atom_list in db.items():
