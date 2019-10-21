@@ -73,6 +73,8 @@ class Molecule:
     Cations['potassium'] = ['K']
     Cations['styrene-trimethylammonium'] = ['H','C','H','C','H','C','C','H','C','H','C','C','H',
                                             'C','H','C','H','H','N','C','H','H','H','C','H','H','H','C','H','H','H']
+    Cations['maotmac'] = ['C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H','H','N',
+                           'C','H','H','H','C','H','H','H','C','H','H','H']    
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['water'] = ['H', 'H', 'O']
@@ -84,8 +86,6 @@ class Molecule:
     Neutrals['dmso'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O']
     Neutrals['amps'] = ['H','C','H','C','H','C','O','N','H','C','C','H','H','H',
                         'C','H','H','H','C','H','H','S','O','H','O','O']
-    Neutrals['maotmac'] = ['C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H','H','N',
-                           'C','H','H','H','C','H','H','H','C','H','H','H','Cl']    
     Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C','H','C','C','H','C','H','S','O','H','O','O']
 
     Radicals = {'amps-dimer': ['H','O','S','O','O','C','H','H','C','C','H','H','H','C','H','H','H','N',
