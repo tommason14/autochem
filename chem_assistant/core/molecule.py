@@ -99,12 +99,12 @@ class Molecule:
     Radicals['sty-sulf-dimer-hydrogenated'] = ['H','O','S','O','O','C','C','H','C','H','C','H','C','H','C','C','H',
                                   'C','H','H','C','H','H','C','H','C','C','H','C','H','C','H','C','H',
                                   'C','S','O','H','O','O','H']
-    Dications = {}
+    Dications = dict()
                                                    
     Dication_radicals = {'maotmac-dimer' : ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H','C',
-                                 'H','H','O','C','O','C','C','H','H','H','C','H','H','C','C','H','H',
-                                 'H','C','H','H','H','C','O','O','C','H','H','C','H','H','N','C','H',
-                                 'H','H','C','H','H','H','C','H','H','H']}
+                                            'H','H','O','C','O','C','C','H','H','H','C','H','H','C','C','H','H',
+                                            'H','C','H','H','H','C','O','O','C','H','H','C','H','H','N','C','H',
+                                            'H','H','C','H','H','H','C','H','H','H']}
 
     def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
@@ -256,7 +256,10 @@ class Molecule:
             symbols[frag] = [atom.symbol for atom in atoms]
  
         def check_dict(molecules_dict, symbols_dict, db):
-            """Checking molecule database for a match, and returning the required attributes- name, atoms in molecule, type of molecule, charge, multiplicity, and elements present in the molecule"""
+            """
+            Checking molecule database for a match, and returning the required attributes- 
+            name, atoms in molecule, type of molecule, charge, multiplicity, 
+            and elements present in the molecule"""
             if db == Molecule.Anions:
                 charge = -1
                 mult = 1
@@ -619,7 +622,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         nums = set([atom.mol for atom in self.coords])
         self.mol_dict = {val: [atom for atom in self.coords if atom.mol == val] for val in nums}
-        
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
         
