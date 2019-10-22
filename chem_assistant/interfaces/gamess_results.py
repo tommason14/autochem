@@ -175,22 +175,6 @@ store the iteration number.
     ################################
 
     
-    def calc_type(self):
-        fmo = False
-        mp2 = False
-        scs = False
-        # fmo, mp2/srs, hf, dft?
-        for line in self.read():
-            if 'FMO' in line:
-                fmo = True
-            elif 'MPLEVL' in line:
-                mp2 = True
-            elif 'SCS' in line:
-                scs = True
-            elif 'RUN TITLE' in line:
-                break # by this point, all data required is specified
-        return fmo, mp2, scs
-
     def mp2_data(self, mp2_type):
         """
         Returns Hartree Fock and MP2 data. Returns the last instance of both.
@@ -204,35 +188,36 @@ store the iteration number.
                 MP2 = float(line.split()[-1])
 
         return HF, MP2
-    
-    def raw_basis(self):
-        """
-        Returns basis set as defined in the input file.
-        """
-        for line in self.read():
-            if 'INPUT CARD> $BASIS' in line:
-                self.basis = line.split()[-2].split('=')[1]
-                break
 
-    def redefine_basis(self):
+    @property
+    def total_energy(self):
         """
-        Changes basis set to give a more readable representation.
+        Returns last occurrence of total energy.
         """
+        total = ''
+        for line in self.read():
+            if 'TOTAL ENERGY =' in line:
+                total = line.split()[-1]
+        return float(total)
+
+    @property 
+    def basis(self):
+        """
+        Returns basis set.
+        """
+        def raw_basis():
+            for line in self.read():
+                if 'INPUT CARD> $BASIS' in line:
+                    return line.split()[-2].split('=')[1]
+        
+        basis = raw_basis()
         change_basis = {'CCD'  : 'cc-pVDZ',
                         'CCT'  : 'cc-pVTZ',
                         'CCQ'  : 'cc-pVQZ',
                         'aCCD' : 'aug-cc-pVDZ',
                         'aCCT' : 'aug-cc-pVTZ',
                         'aCCQ' : 'aug-cc-pVQZ'}
-        self.basis = change_basis.get(self.basis, self.basis) # if self.basis not in dict, return self.basis
-    
-    def basis(self):
-        """
-        Uses both raw_basis() and redefine_basis() to return the basis set
-        in a readable form.
-        """
-        self.raw_basis()
-        self.redefine_basis()
+        return change_basis.get(self.basis, self.basis) # if self.basis not in dict, return self.basis
     
     def non_fmo_mp2_data(self):
         """
@@ -254,6 +239,41 @@ store the iteration number.
         HF, MP2_opp, MP2_same = map(float, (HF, MP2_opp, MP2_same))
         return HF, MP2_opp, MP2_same
 
+    @property
+    def energy_type(self):
+        """
+        Returns energy type, i.e. HF, DFT, MP2
+        """
+        dft = False
+        fmo = False
+        mp2 = False
+        scs = False
+        for line in self.read():
+            if 'FMO' in line:
+                fmo = True
+            if 'MPLEVL' in line:
+                mp2 = True
+            if 'SCS' in line:
+                scs = True
+            if 'DFT' in line:
+                dft = True
+            if 'RUN TITLE' in line:
+                break # by this point, all data required is specified
+        types = {
+                 'fmo_scs': (fmo, scs),
+                 'fmo_mp2': (fmo, mp2),
+                 'fmo_dft': (fmo, dft),
+                 'fmo_hf': (fmo,),
+                 'scs': (scs,),
+                 'mp2': (mp2,),
+                 'dft': (dft,)
+                }
+        for run, possible_runs in types.items():
+            if all(r for r in possible_runs):
+                return run
+        else:
+            return 'hf'  
+
     def get_data(self):
         """
         Returns the last occurrence of FMO energies 
@@ -262,26 +282,24 @@ store the iteration number.
         after FMO2, and the function returns the last 
         value printed.
         """
-        self.basis()
-        fmo, mp2, scs = self.calc_type()
-        if fmo and scs:
+        print('type', self.energy_type)
+        if self.energy_type == 'fmo_scs':
             HF, MP2 = self.mp2_data('SCS')
             MP2_opp = 'NA'
             MP2_same = 'NA'
-        elif fmo and mp2 and not scs:
+        elif self.energy_type == 'fmo_mp2':
             HF, MP2 = self.mp2_data('MP2')
             MP2_opp = 'NA'
             MP2_same = 'NA'
-        elif not fmo:
+        elif self.energy_type in ('mp2', 'scs'):
             HF, MP2_opp, MP2_same = self.non_fmo_mp2_data()
             MP2 = 'NA'
-        # may need another function for just HF?
-        ## DFT
-        if fmo and not mp2 and not scs:
-            pass
-        if all(val is False for val in (fmo, mp2, scs)):
-            pass
-
+        elif 'dft' in self.energy_type or 'hf' in self.energy_type:
+            HF = self.total_energy
+            MP2 = 'NA'
+            MP2_opp = 'NA'
+            MP2_same = 'NA'
+            
         return self.file, self.path, self.basis, HF, MP2, MP2_opp, MP2_same    
 
     @property
