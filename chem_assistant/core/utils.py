@@ -1,7 +1,22 @@
-__all__ = ['read_file', 'get_type', 'read_xyz', 'write_xyz', 'get_files', 'module_exists', 'sort_elements',
-'write_csv_from_dict', 'write_csv_from_nested', 'check_user_input', 'sort_data',
-'assign_molecules_from_dict_keys', 'search_dict_recursively', 'responsive_table', 'eof',
-'remove_nones_from_dict']
+__all__ = [
+'assign_molecules_from_dict_keys',
+'check_user_input',
+'eof',
+'get_files', 
+'get_type', 
+'list_of_dicts_to_one_level_dict',
+'module_exists', 
+'read_file', 
+'read_xyz', 
+'remove_nones_from_dict',
+'responsive_table', 
+'search_dict_recursively', 
+'sort_data',
+'sort_elements',
+'write_csv_from_dict', 
+'write_csv_from_nested', 
+'write_xyz'
+]
 
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
@@ -128,6 +143,38 @@ def sort_elements(lst):
     sorted_els = sorted(els, key = lambda val: val[1])
     return sorted_els
 
+def list_of_dicts_to_one_level_dict(lst):
+    """
+    Convert
+    [ 
+      {'one': one,
+       'two': two},
+      {'one': three,
+       'two': four}
+    ]
+    into
+    {
+      'one': [one, three],
+      'two': [two, four] 
+    }
+    Note that all dictionaries must have the same keys. Values can be ints, floats, strings or lists.
+    Will break if values of the dicts of each list item are dicts.
+    """
+    def add_to_dict(lst_item, dictionary):
+        for k, v in lst_item.items():
+            if k not in dictionary:
+                dictionary[k] = []
+            if isinstance(v, list):
+                dictionary[k] += v
+            else:
+                dictionary[k].append(v)
+        return dictionary
+
+    output = add_to_dict(lst[0], dict()) # initialise
+    for d in lst[1:]:
+        output = add_to_dict(d, output)
+    return output
+    
 def write_csv_from_dict(data, filename = None):
     """Write to file from dictionary"""
 

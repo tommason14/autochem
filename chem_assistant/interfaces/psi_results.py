@@ -56,6 +56,90 @@ class PsiResults(Results):
 
     def is_hessian(self):
         return self.get_runtype() == 'frequency'
+    
+    @property
+    def multiplicity(self):
+        for line in self.read():
+            if 'Geometry (in Angstrom)' in line:
+                return int(line.split()[-1].replace(':', ''))
+
+    def _neutral_homo_lumo(self):
+        """
+        Finds HOMO-LUMO gap for jobs of singlet multiplicity
+        """
+        found_region=False 
+        energies=[]
+        for line in self.read():
+            if 'Orbital Energies' in line:
+                found_region=True
+            if 'Final Occupation' in line:
+                found_region=False
+            if found_region and line.strip() is not '':
+                energies.append(line)
+        for index, line in enumerate(energies):
+            if 'Virtual' in line:
+                homo_lumo = energies[index-1:index+2]
+
+        homo = float(homo_lumo[0].split()[-1])
+        lumo = float(homo_lumo[-1].split()[1])
+        return homo, lumo
+
+    def _reduced_homo_lumo(self):
+        """
+        Finds SOMO-LUMO gap for jobs of doublet multiplicity
+        """
+        found_singly_occupied=False 
+        found_virtual=False
+        singly = []
+        virtual=[]
+        for line in self.read():
+            if 'Singly Occupied' in line:
+                found_singly_occupied=True
+            if 'Virtual' in line:
+                found_singly_occupied=False
+                found_virtual=True
+            if 'Final Occupation' in line:
+                found_virtual=False
+            if found_singly_occupied and line.strip() is not '':
+                singly.append(line)
+            if found_virtual and line.strip() is not '':
+                virtual.append(line)
+                # save time
+                if len(virtual) > 3:
+                    break    
+        somo = float(singly[-1].split()[-1])
+        lumo = float(virtual[1].split()[1])
+        return somo, lumo
+
+    @property
+    def homo_lumo_gap(self):
+        """
+        Prints the HOMO-LUMO gap for. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (Eh), LUMO (Eh) and the gap (eV).
+        """
+        hartrees_to_eV = 27.21 # I'm assuming that a.u. are Hartrees
+        def calculate_gap(homo, lumo):
+            gap_in_hartrees = lumo - homo
+            gap_in_eV = gap_in_hartrees * hartrees_to_eV
+            return gap_in_hartrees, gap_in_eV
+
+        if self.multiplicity == 1:
+            homo, lumo = self._neutral_homo_lumo()
+            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            transition = 'HOMO-LUMO'
+        elif self.multiplicity == 2:
+            homo, lumo = self._reduced_homo_lumo() # here homo is somo
+            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            transition = 'SOMO-LUMO'
+        else:
+            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+        return {'File': self.file,
+                'Path': self.path,
+                'Multiplicity': self.multiplicity, 
+                'Transition': transition, 
+                'HOMO/SOMO (Eh)': homo, 
+                'LUMO (Eh)': lumo, 
+                'Gap (eV)': gap_in_eV}
 
     def get_data(self):
         """
@@ -63,10 +147,10 @@ class PsiResults(Results):
         and same spin parameters if relevant.
         """  
         if self.energy_type == 'scf':
-            return self.scf_data()
+            return self._scf_data()
         
         elif self.energy_type == 'mp2':
-            return self.mp2_data() 
+            return self._mp2_data() 
 
     @property
     def basis(self):
@@ -88,7 +172,7 @@ class PsiResults(Results):
                 total = float(line.split('=')[1].strip())
         return total
 
-    def scf_data(self):
+    def _scf_data(self):
         """
         Return data for scf calculations. 
         Note the NAs returned are because of no MP2 data.
@@ -128,12 +212,13 @@ class PsiResults(Results):
                 same = float(line.split('=')[1].split()[0].strip())
         return same
     
-    def mp2_data(self):
+    def _mp2_data(self):
         """
         Returns data for MP2 calculations: filename, filepath, 
         basis set, hf energy, opp spin energy, same spin energy.
-        No MP2 data is returned, but is calculated instead from the 
-        HF and MP2 correlation energies.
+        No MP2 data is returned, but should be calculated instead from the 
+        HF and MP2 correlation energies by the user, as coefficients of 
+        each spin component will vary depending on the basis set.
         """
         
         return (self.file, self.path, self.basis, 

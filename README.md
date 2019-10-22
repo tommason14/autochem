@@ -8,6 +8,6 @@ Use this code for:
 
 - Automatic input and job file creation
 - Scraping log files for relevant results: energies, coordinates, vibrations,
-  fluorescence data, geodesic charges
+  fluorescence data, geodesic charges, homo-lumo gaps
 - Automatic analysis of results
   - Interaction and free energies

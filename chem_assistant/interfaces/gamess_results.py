@@ -180,8 +180,6 @@ store the iteration number.
         mp2 = False
         scs = False
         # fmo, mp2/srs, hf, dft?
-        # with open(filepath, "r") as f:
-        #     for line in f.readlines():
         for line in self.read():
             if 'FMO' in line:
                 fmo = True
@@ -286,6 +284,79 @@ store the iteration number.
 
         return self.file, self.path, self.basis, HF, MP2, MP2_opp, MP2_same    
 
+    @property
+    def multiplicity(self):
+        for line in self.read():
+            if 'SPIN MULTIPLICITY' in line:
+                return int(line.split()[-1])
+
+    #################
+    ### HOMO-LUMO ###
+    #################
+
+    @property
+    def num_orbitals_occupied(self):
+        for line in self.read():
+            if 'ORBITALS ARE OCCUPIED' in line:
+                return int(line.split()[0])
+
+    def _neutral_homo_lumo(self):
+        """
+        Finds HOMO-LUMO gap for jobs of singlet multiplicity
+        """
+        found = False
+        orbital_energies = []
+        for line in self.read():
+            if 'EIGENVECTORS' in line:
+                found = True
+            if 'CPU' in line:
+                found = False
+            if found:
+                if re.search('^(\s+-?[0-9]+.[0-9]+){1,5}$', line):
+                    orbital_energies += [float(i) for i in line.split()]
+                    # save time
+                    if len(orbital_energies) > self.num_orbitals_occupied + 1:
+                        break
+        homo = orbital_energies[self.num_orbitals_occupied - 1]
+        lumo = orbital_energies[self.num_orbitals_occupied]
+        return homo, lumo
+
+    def _reduced_homo_lumo(self):
+        """
+        Finds SOMO-LUMO gap for jobs of doublet multiplicity.
+        """
+        # TODO
+        return 0,0 
+
+    @property
+    def homo_lumo_gap(self):
+        """
+        Prints the HOMO-LUMO gap for. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (Eh), LUMO (Eh) and the gap (eV).
+        """
+        hartrees_to_eV = 27.21 # I'm assuming that a.u. are Hartrees
+        def calculate_gap(homo, lumo):
+            gap_in_hartrees = lumo - homo
+            gap_in_eV = gap_in_hartrees * hartrees_to_eV
+            return gap_in_hartrees, gap_in_eV
+
+        if self.multiplicity == 1:
+            homo, lumo = self._neutral_homo_lumo()
+            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            transition = 'HOMO-LUMO'
+        elif self.multiplicity == 2:
+            homo, lumo = self._reduced_homo_lumo() # here homo is somo
+            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            transition = 'SOMO-LUMO'
+        else:
+            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+        return {'File': self.file,
+                'Path': self.path,
+                'Multiplicity': self.multiplicity, 
+                'Transition': transition, 
+                'HOMO/SOMO (Eh)': homo, 
+                'LUMO (Eh)': lumo, 
+                'Gap (eV)': gap_in_eV}
 
             
     ################################

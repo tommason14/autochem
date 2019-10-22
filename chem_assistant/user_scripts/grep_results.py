@@ -1,6 +1,7 @@
 __all__ = ['geodesics',
            'get_h_bonds',
            'get_results_class',
+           'homo_lumo_gaps',
            'parse_results',
            'print_freqs',
            'results_table',
@@ -14,6 +15,7 @@ from ..core.thermo import (thermo_data,
                            freq_data_gauss)
 from ..core.utils import (read_file,
                           get_files,
+                          list_of_dicts_to_one_level_dict,
                           write_csv_from_dict,
                           write_csv_from_nested,
                           responsive_table)
@@ -21,9 +23,9 @@ from ..interfaces.gamess_results import GamessResults
 from ..interfaces.orca_results import OrcaResults
 from ..interfaces.psi_results import PsiResults
 from ..interfaces.gaussian_results import GaussianResults
-from .make_files_meta import make_files_from_meta
 import os
 import re
+import sys
 
 """
 File: grep_results.py
@@ -133,6 +135,31 @@ def results_table(dir, file_name, string_to_find):
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
     write_csv_from_dict(table_data, filename=file_name)
+
+def homo_lumo_gaps(dir, output):
+    """
+    Returns HOMO-LUMO or SOMO-LUMO gaps for each single point calculation
+    found in any subdirectory. Currently restricted to single points for
+    simplicity, but can probably be extended to optimisations if needed- 
+    would have to check the log files first.
+    """
+    info = []
+    for log in get_files(dir, ('.out', '.log')):
+        calc = get_results_class(log)
+        filetype = get_type(log)
+        try:
+            if calc.completed() and calc.is_spec():
+                data = calc.homo_lumo_gap
+                # file, path, mult, transition_type, homo, lumo, gap
+                info.append(data)
+        except AttributeError:  # if log/out files are not logs of calculations
+            continue
+    if len(info) == 0:
+        sys.exit('Error: No single points found')
+    info = list_of_dicts_to_one_level_dict(info)
+    responsive_table(info, strings=[1,2,4])
+    write_csv_from_dict(info, filename=output)
+    return info
 
 def thermochemistry(dir, string_to_find, mult, temp):
     """

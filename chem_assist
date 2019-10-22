@@ -5,6 +5,10 @@ import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the current directory to the relative path given here', action='store')
+# TODO- need to re-write pretty much all functions in library to accept a depth parameter! 
+parser.add_argument('--depth', 
+                    help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
+                    action='store', type=int) 
 parser.add_argument('--freqs', help='Print frequencies and intensities for GAMESS hessian/Gaussian frequency jobs', action='store_true')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
 parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
@@ -14,6 +18,9 @@ Refer to the dataframe as df.
 Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`.
 Can also be used to group fragments together when printing out molecules with the -p/--print-frags flag.
 ie. `chem_assist -p -g 'lithium-sacchrinate'`""", action='store', type=str)
+parser.add_argument('--homo-lumo', 
+                    help='Returns homo-lumo gaps for single points recursively. Can give csv filename with -o',
+                    action='store_true')
 parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
 parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
 parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every xyz in the current directory', action='store_true')
@@ -49,6 +56,12 @@ if len(sys.argv) == 1:
 if args.freqs:
     from chem_assistant.user_scripts.grep_results import print_freqs
     print_freqs('.')
+
+if args.homo_lumo:
+    from chem_assistant.user_scripts.grep_results import homo_lumo_gaps
+    if not args.output:
+        args.output = 'homo_lumo.csv'
+    homo_lumo_gaps('.', output=args.output)
 
 if args.thermochem:
     if args.mult is None:
