@@ -217,7 +217,7 @@ store the iteration number.
                         'aCCD' : 'aug-cc-pVDZ',
                         'aCCT' : 'aug-cc-pVTZ',
                         'aCCQ' : 'aug-cc-pVQZ'}
-        return change_basis.get(self.basis, self.basis) # if self.basis not in dict, return self.basis
+        return change_basis.get(basis, basis) # if self.basis not in dict, return self.basis
     
     def non_fmo_mp2_data(self):
         """
@@ -282,7 +282,6 @@ store the iteration number.
         after FMO2, and the function returns the last 
         value printed.
         """
-        print('type', self.energy_type)
         if self.energy_type == 'fmo_scs':
             HF, MP2 = self.mp2_data('SCS')
             MP2_opp = 'NA'
