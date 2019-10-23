@@ -169,6 +169,8 @@ def thermochemistry(dir, string_to_find, mult, temp):
     collected = \
         {
             'File': [],
+            'Temperature [K]': [],
+            'Multiplicity given': [],
             'ZPVE': [],
             'TC': [],
             'S elec': [],
@@ -186,6 +188,8 @@ def thermochemistry(dir, string_to_find, mult, temp):
                 if r.is_hessian():
                     res = thermo_data(r.log, mult, temp)
                     res['File'] = r.log
+                    res['Temperature [K]'] = temp
+                    res['Multiplicity given'] = mult
                     for k, v in res.items():
                         collected[k].append(v)
         except AttributeError:
@@ -208,7 +212,7 @@ def thermochemistry(dir, string_to_find, mult, temp):
         else:
             collected[k] = v
     responsive_table({k:v for k,v in collected.items() if
-                      k in ['File','S tot [J/(mol K)]']}, 
+                      k in ('File', 'Temperature [K]', 'Multiplicity given', 'S tot [J/(mol K)]')}, 
                       strings=[1], min_width=10)
     name = write_csv_from_dict(collected, filename='thermo.csv')
 

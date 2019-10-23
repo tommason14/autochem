@@ -78,7 +78,7 @@ def thermo_initial_geom_gauss(file):
     Also accounts for the fact that an optimisation might occur before the 
     frequency job."""
     atoms = []
-    regex = "(\s+[0-9]+){3}(\s+-?[0-9]+\.[0-9]+){3}"
+    regex = '\s+[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}'
     found_freq = False
     found_coords = False
     for line in read_file(file):
@@ -87,14 +87,18 @@ def thermo_initial_geom_gauss(file):
             'freq' in line.lower() and \
             'opt' not in line.lower():
             found_freq = True
-        if 'Input orientation:' in line:
-            found_coords = True
-        if 'Distance matrix' in line:
-            found_coords = False
+        # sometimes doesn't print input orientation
+        # instead read from the 'symbolic z matrix section'
+        # that is actually just the xyz coordinates passed in.
+        if 'Symbolic Z-matrix:' in line:
+            found_coords=True
+        if line is '\n':
+            found_coords=False
         if found_freq and found_coords and re.search(regex, line):
-            _, atnum, _, x, y, z = line.split()
-            atnum, x, y, z = map(float, (atnum, x, y, z))
-            atoms.append(Atom(atnum = atnum, coords = (x, y, z)))
+            sym, x, y, z = line.split()
+            x, y, z = map(float, (x,y,z))
+            atoms.append(Atom(symbol=sym, coords=(x,y,z)))
+        
     write_geom_input(atoms)
 
 def freq_data_gamess(file, called_by_thermo_code=True): 
