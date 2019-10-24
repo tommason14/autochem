@@ -177,12 +177,14 @@ class GaussianResults(Results):
     def get_data(self):
         """
         Returns the last occurrence of printed energies. Negate energy types, and if the energy type
-        is not found, assumed to be DFT.
+        is not found, assumed to be DFT. 
+        Must return file, path, basis, hf/dft, mp2/srs, mp2_opp, mp2_same
+        in the order, so 'NA' values are there to satisfy that criteria.
         """
         if self.energy_type == 'hf':
-            return self.file, self.path, self.basis, self.hf_energy
+            return self.file, self.path, self.basis, self.hf_energy, 'NA', 'NA', 'NA'
         elif self.energy_type == 'mp2':
-            return self.file, self.path, self.basis, self.hf_energy, self.mp2_energy
+            return self.file, self.path, self.basis, self.hf_energy, self.mp2_energy, 'NA', 'NA'
         else:
-            return self.file, self.path, self.basis, self.dft_energy
+            return self.file, self.path, self.basis, self.dft_energy, 'NA', 'NA', 'NA'
         

@@ -57,10 +57,6 @@ store the iteration number.
         # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
         # ARE NOT RETURNED, EVEN IF THERE
 
-    # call like this:
-    # if not self.completed():
-    #     self.get_error() 
-    # cutoff in middle of run with no explanation- memory error
     def memory_error(self):
         print('Memory Error- check allocation before resubmitting')
 
@@ -92,7 +88,6 @@ store the iteration number.
                 for p in parts:
                     if 'RUNTYP=' in p:
                         return p.split('=')[1].lower()
-        # finds the first instance then breaks out of loop
     
     def get_fmo_level(self):
         """Returns level of FMO calculation ran"""
@@ -175,18 +170,26 @@ store the iteration number.
     ################################
 
     
-    def mp2_data(self, mp2_type):
+    def fmo_mp2_data(self, mp2_type):
         """
-        Returns Hartree Fock and MP2 data. Returns the last instance of both.
+        Returns Hartree Fock and MP2 data.
+        Returns the last occurrence of FMO energies 
+        (FMO3 given if available, else FMO2), MP2 correlation energies
+        and HF energies. Works because FMO3 values are printed 
+        after FMO2, and the function returns the last 
+        value printed. `mp2_type` should be either 'SCS' or 'MP2', 
+        to return the correlated SCS energy, 'E corr SCS', or correlated
+        MP2 energies, 'E corr MP2'.
         """
         HF = ''
         MP2 = ''
         for line in eof(self.log, 0.2): # last values only
             if 'Euncorr HF' in line:
-                HF = float(line.split()[-1])
+                HF = line.split()[-1]
             if f'E corr {mp2_type}' in line:
-                MP2 = float(line.split()[-1])
+                MP2 = line.split()[-1]
 
+        HF, MP2 = map(float, (HF, MP2))
         return HF, MP2
 
     @property
@@ -219,7 +222,7 @@ store the iteration number.
                         'aCCQ' : 'aug-cc-pVQZ'}
         return change_basis.get(basis, basis) # if self.basis not in dict, return self.basis
     
-    def non_fmo_mp2_data(self):
+    def non_fmo_mp2_data_gas(self):
         """
         Returns value of E(0) as HF, E(2S) as the opposite spin energy and
         E(2T) as same spin energy. Then user can scale energies accordingly.
@@ -229,6 +232,7 @@ store the iteration number.
         MP2_same = ''
         for line in eof(self.log, 0.2):
             line = line.split()
+            # print(line)
             if 'E(0)=' in line:
                 HF = line[-1]
             if 'E(2S)=' in line:
@@ -238,6 +242,27 @@ store the iteration number.
 
         HF, MP2_opp, MP2_same = map(float, (HF, MP2_opp, MP2_same))
         return HF, MP2_opp, MP2_same
+
+    def non_fmo_mp2_data_solvent(self):
+        """
+        Returns value of E(0) as HF, E(MP2) as the MP2 energy. 
+        When solvent is added, GAMESS doesn't print the individual correlation
+        energy for each spin. Also these energy are for the molecule itself and
+        not with the addition of the energy of the solvent. In order to find
+        that, search for 'THE P(2) CORRECTED MP2-CPCM ENERGY'.
+        """
+        HF = ''
+        MP2 = ''
+        for line in eof(self.log, 0.2):
+            line = line.split()
+            if 'E(0)=' in line:
+                HF = line[-1]
+            if 'E(MP2)=' in line:
+                MP2 = line[1]
+
+        HF, MP2 = map(float, (HF, MP2))
+        return HF, MP2
+
 
     @property
     def energy_type(self):
@@ -274,25 +299,41 @@ store the iteration number.
         else:
             return 'hf'  
 
+    @property
+    def solvent_calc(self):
+        """
+        Returns True if the user inputs a $PCM section in the input file.
+        No guarantees that the $PCM line will be shown in the copy of the 
+        input file at the top though, so instead has to check when the 
+        log file reports it.
+        """
+        for line in self.read():
+            if 'INPUT FOR PCM SOLVATION CALCULATION' in line:
+                return True
+            if 'BEGINNING GEOMETRY SEARCH' in line:
+                break
+        return False
+
     def get_data(self):
         """
-        Returns the last occurrence of FMO energies 
-        (FMO3 given if available, else FMO2), MP2 correlation energies
-        and HF energies. Works because FMO3 values are printed 
-        after FMO2, and the function returns the last 
-        value printed.
+        Returns HF, DFT, MP2 (non-FMO and FMO) values.
         """
         if self.energy_type == 'fmo_scs':
-            HF, MP2 = self.mp2_data('SCS')
+            HF, MP2 = self.fmo_mp2_data('SCS')
             MP2_opp = 'NA'
             MP2_same = 'NA'
         elif self.energy_type == 'fmo_mp2':
-            HF, MP2 = self.mp2_data('MP2')
+            HF, MP2 = self.fmo_mp2_data('MP2')
             MP2_opp = 'NA'
             MP2_same = 'NA'
         elif self.energy_type in ('mp2', 'scs'):
-            HF, MP2_opp, MP2_same = self.non_fmo_mp2_data()
-            MP2 = 'NA'
+            if not self.solvent_calc:
+                HF, MP2_opp, MP2_same = self.non_fmo_mp2_data_gas()
+                MP2 = 'NA'
+            else:
+                HF, MP2 = self.non_fmo_mp2_data_solvent()
+                MP2_opp = 'NA'
+                MP2_same = 'NA'
         elif 'dft' in self.energy_type or 'hf' in self.energy_type:
             HF = self.total_energy
             MP2 = 'NA'
@@ -304,7 +345,7 @@ store the iteration number.
     @property
     def multiplicity(self):
         for line in self.read():
-            if 'SPIN MULTIPLICITY' in line:
+            if 'SPIN MULTIPLICITY' in line.upper(): # sometimes prints lower case
                 return int(line.split()[-1])
 
     #################
@@ -317,9 +358,9 @@ store the iteration number.
             if 'ORBITALS ARE OCCUPIED' in line:
                 return int(line.split()[0])
 
-    def _neutral_homo_lumo(self):
+    def _homo_lumo(self):
         """
-        Finds HOMO-LUMO gap for jobs of singlet multiplicity
+        Finds HOMO/LUMO orbitals.
         """
         found = False
         orbital_energies = []
@@ -338,42 +379,38 @@ store the iteration number.
         lumo = orbital_energies[self.num_orbitals_occupied]
         return homo, lumo
 
-    def _reduced_homo_lumo(self):
-        """
-        Finds SOMO-LUMO gap for jobs of doublet multiplicity.
-        """
-        # TODO
-        return 0,0 
+    def _homo_lumo_gap(self):
+        hartrees_to_eV = 27.21
+        homo, lumo = self._homo_lumo()
+        homo, lumo = map(lambda x: x * hartrees_to_eV, (homo, lumo))
+        gap = lumo - homo
+        return homo, lumo, gap
 
     @property
-    def homo_lumo_gap(self):
+    def homo_lumo_info(self):
         """
-        Prints the HOMO-LUMO gap for. Finds SOMO-LUMO if multiplicity is 2.
-        Returns `self.multiplicity`, SOMO/HOMO (Eh), LUMO (Eh) and the gap (eV).
+        Prints the HOMO-LUMO gap. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (eV), LUMO (eV) and the gap (eV).
+        Note that ⍺ orbitals are selected, and the ⍺ and β electrons give
+        different homo-lumo gaps.
         """
-        hartrees_to_eV = 27.21 # I'm assuming that a.u. are Hartrees
-        def calculate_gap(homo, lumo):
-            gap_in_hartrees = lumo - homo
-            gap_in_eV = gap_in_hartrees * hartrees_to_eV
-            return gap_in_hartrees, gap_in_eV
 
         if self.multiplicity == 1:
-            homo, lumo = self._neutral_homo_lumo()
-            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            homo, lumo, gap = self._homo_lumo_gap()
             transition = 'HOMO-LUMO'
         elif self.multiplicity == 2:
-            homo, lumo = self._reduced_homo_lumo() # here homo is somo
-            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
             transition = 'SOMO-LUMO'
         else:
             print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+            
         return {'File': self.file,
                 'Path': self.path,
                 'Multiplicity': self.multiplicity, 
                 'Transition': transition, 
-                'HOMO/SOMO (Eh)': homo, 
-                'LUMO (Eh)': lumo, 
-                'Gap (eV)': gap_in_eV}
+                'HOMO/SOMO (eV)': homo, 
+                'LUMO (eV)': lumo, 
+                'Gap (eV)': gap}
 
             
     ################################
@@ -382,7 +419,10 @@ store the iteration number.
     #                              #
     ################################
 
-    # create and visualise freq modes/ IR spectra    
+    # create and visualise freq modes/ IR spectra.
+    # If I ever fit multiple lorentzians to the peaks, won't need molden
+    # anymore!
+    # Then this will become useful and could replace the gamess_to_molden script.
 
     def vib_get_geom(self):
         pass

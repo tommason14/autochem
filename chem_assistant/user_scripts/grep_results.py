@@ -108,6 +108,7 @@ def results_table(dir, file_name, string_to_find):
     # lists are faster to fill than dict values
     # order: files, paths, basis, hf, mp2, mp2_opp, mp2_same
     data = [[], [], [], [], [], [], []]
+    # at some point, will make this a dictionary, loads clearer that way.
 
     output = parse_results(dir, filepath_includes=string_to_find)
 
@@ -149,7 +150,7 @@ def homo_lumo_gaps(dir, output):
         filetype = get_type(log)
         try:
             if calc.completed() and calc.is_spec():
-                data = calc.homo_lumo_gap
+                data = calc.homo_lumo_info
                 # file, path, mult, transition_type, homo, lumo, gap
                 info.append(data)
         except AttributeError:  # if log/out files are not logs of calculations

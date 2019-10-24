@@ -111,35 +111,39 @@ class PsiResults(Results):
         lumo = float(virtual[1].split()[1])
         return somo, lumo
 
-    @property
-    def homo_lumo_gap(self):
-        """
-        Prints the HOMO-LUMO gap for. Finds SOMO-LUMO if multiplicity is 2.
-        Returns `self.multiplicity`, SOMO/HOMO (Eh), LUMO (Eh) and the gap (eV).
-        """
-        hartrees_to_eV = 27.21 # I'm assuming that a.u. are Hartrees
-        def calculate_gap(homo, lumo):
-            gap_in_hartrees = lumo - homo
-            gap_in_eV = gap_in_hartrees * hartrees_to_eV
-            return gap_in_hartrees, gap_in_eV
-
+    def _homo_lumo_gap(self):
+        hartrees_to_eV = 27.21
         if self.multiplicity == 1:
             homo, lumo = self._neutral_homo_lumo()
-            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+        else:
+            homo, lumo = self._reduced_homo_lumo()
+        homo, lumo = map(lambda x: x * hartrees_to_eV, (homo, lumo))
+        gap = lumo - homo
+        return homo, lumo, gap
+
+    @property
+    def homo_lumo_info(self):
+        """
+        Prints the HOMO-LUMO gap. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (eV), LUMO (eV) and the gap (eV).
+        """
+
+        if self.multiplicity == 1:
+            homo, lumo, gap = self._homo_lumo_gap()
             transition = 'HOMO-LUMO'
         elif self.multiplicity == 2:
-            homo, lumo = self._reduced_homo_lumo() # here homo is somo
-            gap_in_hartrees, gap_in_eV = calculate_gap(homo, lumo)
+            homo, lumo = self._homo_lumo_gap() # here homo is somo
             transition = 'SOMO-LUMO'
         else:
             print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+            
         return {'File': self.file,
                 'Path': self.path,
                 'Multiplicity': self.multiplicity, 
                 'Transition': transition, 
-                'HOMO/SOMO (Eh)': homo, 
-                'LUMO (Eh)': lumo, 
-                'Gap (eV)': gap_in_eV}
+                'HOMO/SOMO (eV)': homo, 
+                'LUMO (eV)': lumo, 
+                'Gap (eV)': gap}
 
     def get_data(self):
         """
