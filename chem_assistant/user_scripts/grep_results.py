@@ -133,7 +133,7 @@ def results_table(dir, file_name, string_to_find):
         table_data[key] = val 
 
     table_data = remove_column_if_all_na(table_data)
-
+    table_data = sort_dictionary(key='Path')
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
     write_csv_from_dict(table_data, filename=file_name)
 
