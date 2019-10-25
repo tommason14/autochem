@@ -482,6 +482,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 "frag_type": "ionic"
             }
 
+    @property
     def all_atoms_assigned(self):
         """
         Checks self.coords to see if all atoms have a molecule assigned
@@ -490,6 +491,37 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             if atom.mol is None:
                 return False
         return True
+
+    @property
+    def all_fragments_known(self):
+        """
+        Check that all fragments are in the database
+        """
+
+        if not hasattr(self, 'fragments'):
+            self.separate()
+
+        molecules = {
+            **Molecule.Cations,
+            **Molecule.Anions,
+            **Molecule.Neutrals,
+            **Molecule.Radicals,
+            **Molecule.Dications,
+            **Molecule.Dication_radicals
+        }
+
+        for atom in self.coords:
+            try:
+                name_given = self.fragments[atom.mol]['name']
+                if name_given not in molecules:
+                    return False
+            except KeyError:
+                # means that fragments haven't been renumbered, so
+                # must be something not right
+                return False
+        return True
+
+        # return all( in molecules for frag in self.fragments.values())
 
     def group_frags_together(self):
         """
@@ -552,12 +584,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         self.check_db()
         self.renumber_molecules()
         self.sort_fragments_by_index()
-        if not self.all_atoms_assigned():
+        if not self.all_atoms_assigned: #or not self.all_fragments_known: # fix for stampede check_hf_v_mp2 geodesics
             print(f"{len(self.fragments)} fragments found, some atoms unaccounted for...")
             all_assigned = False
             while not all_assigned:
                 self.reassign_frags_manually()
-                if self.all_atoms_assigned():
+                if self.all_atoms_assigned:
                     all_assigned = True
         if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
             self.group_frags_together()
