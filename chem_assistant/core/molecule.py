@@ -77,6 +77,7 @@ class Molecule:
                            'C','H','H','H','C','H','H','H','C','H','H','H']    
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
+    Neutrals['hf'] = ['H', 'F']
     Neutrals['water'] = ['H', 'H', 'O']
     Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H']
     Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H']
