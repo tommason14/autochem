@@ -5,8 +5,8 @@
     "chk": "name.chk"
   },
   "input":{
-    "method": "m06-2x",
-    "basis": "cc-pvdz",
+    "method": "M062X",
+    "basis": "cc-pVDZ",
     "scrf": "SMD,solvent=water",
     "int": "grid=ultrafine"
   }

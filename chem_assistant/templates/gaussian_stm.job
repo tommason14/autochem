@@ -2,7 +2,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 46
-#SBATCH -t 03:00:00
+#SBATCH -t 24:00:00
 #SBATCH -p skx-normal
 #SBATCH -o name.log
 #SBATCH -e name.err

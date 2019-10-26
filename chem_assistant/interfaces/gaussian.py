@@ -80,29 +80,13 @@ class GaussJob(Job):
                 self.base_name = 'opt'
             else:
                 self.base_name = 'freq'
-
-    # def move_to_subdir(self):
-    #     """
-    #     Makes a subdirectory based on either the filename passed in, 
-    #     or the xyz file used to create the input file.
-    #     The xyz file is then copied over and the input file is copied
-    #     to the new directory.
-    #     As a result, this method must be called after making the input file.
-    #     """ 
-    #     if self.filename is not None:
-    #         newdir = join(getcwd(), self.filename)
-    #     else:
-    #         newdir = join(getcwd(), self.title)
-    #     if not exists(newdir):
-    #         mkdir(newdir)
-    #     copyfile(self.xyz, newdir)
-    #     move(f'{self.base_name}.job', newdir)
-        
-
     
     @property
     def job_data(self):
-        return self.get_job_template().replace('name', self.base_name)
+        job=self.get_job_template().replace('name', self.base_name)
+        if 'time' in self.meta:
+            job=job.replace('24:00:00', self.meta.time)
+        return job
             
     @property
     def inp(self):
@@ -133,8 +117,13 @@ class GaussJob(Job):
         Include data such as memory and number of cpus in the Gaussian file.
         """
         meta = []
+        if self.sc == 'stm':
+            self.meta.mem='160gb'
+            self.meta.nproc=46
         for k, v in self.meta.items():
-            meta.append(f'%{k}={v}')
+            if k is not 'time':
+                meta.append(f'%{k}={v}')
+
         return '\n'.join(meta).replace('name', self.base_name)
 
     @property
@@ -193,7 +182,8 @@ class GaussJob(Job):
     def coord_info(self):
         self.find_charge_and_mult()
         info = [f'{self.input.charge} {self.input.mult}']
-        info += [f'{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}' for atom in self.mol.coords]
+        info += [f'{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}' 
+                 for atom in self.mol.coords]
         return '\n'.join(info)
 
 def gauss_print(d, value):
@@ -206,7 +196,7 @@ def gauss_print(d, value):
     'scf=tight', and sett.input.opt='ts,noeigentest,calcfc' 
     produces 'opt=(ts,noeigentest,calcfc)'. Note: doesn't
     work with lists or dict values, but unlikely that they would
-    be passed in as settings values.
+    be passed in as settings values anyway.
     """
     if isinstance(d[f'{value}'], bool) or isinstance(d[f'{value}'], int):
         return value
