@@ -1,5 +1,3 @@
-__all__ = ['plot_opt']
-
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 from ..interfaces.gaussian_results import GaussianResults
@@ -8,14 +6,9 @@ from .grep_results import get_results_class
 import os
 import re
 
-"""
-File: make_graph.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Graph of energy vs iteration of geom opt in GAMESS 
+__all__ = ['plot_opt']
+
 #### DEPRECATED NOW, NO LONGER INCORPORATED INTO CHEM_ASSIST ####
-"""
 
 def get_data(file):
     r = get_results_class(file)

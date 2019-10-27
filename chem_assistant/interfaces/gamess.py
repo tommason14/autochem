@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-File: gamess.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Interface between Python and creating GAMESS input files 
-"""
-
 from ..core.atom import Atom
 from ..core.molecule import Molecule
 from ..core.settings import (Settings, read_template, dict_to_settings)

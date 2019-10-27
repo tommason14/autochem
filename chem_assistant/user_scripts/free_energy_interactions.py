@@ -1,3 +1,9 @@
+import csv
+import re
+import math
+from ..core.molecule import Molecule
+from ..core.utils import check_user_input, sort_data
+
 __all__ = ['calculate_free_energy_interactions']
 
 # Free energy of interaction between:
@@ -17,13 +23,6 @@ __all__ = ['calculate_free_energy_interactions']
 # Stot(complex) - sum(Stot(ions))
 
 # give ratio of free energies between water and cluster to the free energy between cluster and ions
-
-import csv
-import re
-import math
-from ..core.molecule import Molecule
-from ..core.utils import check_user_input, sort_data
-# pandas is slow, maybe try something different?
 
 def group_files(csv, header = True):
     """

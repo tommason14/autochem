@@ -1,13 +1,3 @@
-__all__ = ['geodesics',
-           'get_h_bonds',
-           'get_results_class',
-           'homo_lumo_gaps',
-           'parse_results',
-           'print_freqs',
-           'results_table',
-           'search_for_coords',
-           'thermochemistry']
-
 from ..core.atom import Atom
 from ..core.molecule import Molecule
 from ..core.thermo import (thermo_data,
@@ -27,13 +17,15 @@ import os
 import re
 import sys
 
-"""
-File: grep_results.py
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Searches all sub dirs for results
-"""
+__all__ = ['geodesics',
+           'get_h_bonds',
+           'get_results_class',
+           'homo_lumo_gaps',
+           'parse_results',
+           'print_freqs',
+           'results_table',
+           'search_for_coords',
+           'thermochemistry']
 
 def search_for_coords(dir):
     """
@@ -151,7 +143,6 @@ def homo_lumo_gaps(dir, output):
         try:
             if calc.completed() and calc.is_spec():
                 data = calc.homo_lumo_info
-                # file, path, mult, transition_type, homo, lumo, gap
                 info.append(data)
         except AttributeError:  # if log/out files are not logs of calculations
             continue

@@ -1,14 +1,6 @@
-__all__ = ['make_files_from_meta']
-
-"""
-File: make_files_meta.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Make inputs using a meta.py file in a directory with xyz files 
-"""
-
 import os
+
+__all__ = ['make_files_from_meta']
 
 def make_files_from_meta(base_dir, filename = None):
     """This function looks for ``meta.py`` in any subdirectory below the directory passed as an argument. ``meta.py`` is then run as a python file, with the idea of including data for a job. As long as there is an xyz file in the same directory as ``meta.py``,  the desired result is passed. 

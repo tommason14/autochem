@@ -1,8 +1,7 @@
-__all__ = ['print_frags']
-
 from ..core.molecule import Molecule
 import os
 
+__all__ = ['print_frags']
 
 def print_frags(directory, verbose = False, grouping = None):
     """

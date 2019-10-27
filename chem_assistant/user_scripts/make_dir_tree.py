@@ -1,18 +1,3 @@
-__all__ = ['xyz_to_tree']
-
-"""
-File: xyz_to_tree.py 
-Author: Tom Mason
-Email: tommason14@gmail.com
-Github: https:github.com/tommason14
-Description: Script to take a directory of xyz files and create a directory structure with input and
-job files. To use, need to import module, and add settings:
-import xyz_to_tree
-s = Settings()
-s.....
-
-xyz_to_tree(settings = s) 
-"""
 from ..interfaces.gamess import GamessJob
 from ..interfaces.gaussian import GaussJob
 from ..interfaces.orca import OrcaJob
@@ -21,6 +6,8 @@ from ..interfaces.psi import PsiJob
 import os
 import glob
 from shutil import copyfile
+
+__all__ = ['xyz_to_tree']
 
 def get_xyz():
     return [file for file in os.listdir('.') if file.endswith('.xyz')]

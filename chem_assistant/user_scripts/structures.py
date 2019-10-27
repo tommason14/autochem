@@ -1,6 +1,6 @@
-__all__ = ['copy_xyz_tree']
-
 import os
+
+__all__ = ['copy_xyz_tree']
 
 def get_structures(base_dir):
     """Returns a copy of the directory tree without the runtype folders for each chemical system- no need to know if the file was ran as an optimisation or hessian etc... the files with a chemical name are initial coordinates, and equil.xyz are equilibrium coordinates found after geometry optimisation."""

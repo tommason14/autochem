@@ -1,11 +1,10 @@
-__all__ = ['fluorescence_data']
-
-
 from ..core.utils import (get_files, 
                    read_file, 
                    write_csv_from_nested,
                    search_dict_recursively,
                    responsive_table)
+
+__all__ = ['fluorescence_data']
 
 def is_gaussian(file):
     """Returns True if file is a Gaussian output"""
@@ -13,7 +12,6 @@ def is_gaussian(file):
         if 'Gaussian' in line:
             return True
     return False
-
 
 def is_fluorescence(file):
     """
@@ -25,7 +23,6 @@ def is_fluorescence(file):
             return True
     return False
 
-
 def get_fluorescence_logs(dir):
     files = get_files(dir, ['log', 'out'])
     # remove f- files from qcp results output
@@ -33,7 +30,6 @@ def get_fluorescence_logs(dir):
         if 'f-' in file:
             files.remove(file)
     return files
-
 
 def user_choice():
     print('Return all peaks or only intense peaks?')

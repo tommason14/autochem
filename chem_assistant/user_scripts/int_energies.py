@@ -1,9 +1,9 @@
-__all__ = ['calculate_interaction_energies', 'apply_boltzmann_weightings']
-
 import pandas as pd
 from dfply import *
 import numpy as np
 from ..core.utils import responsive_table
+
+__all__ = ['calculate_interaction_energies', 'apply_boltzmann_weightings']
 
 def all_values_are_not_na(column):
     """

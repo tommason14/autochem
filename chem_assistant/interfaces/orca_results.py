@@ -177,3 +177,64 @@ class OrcaResults(Results):
         # elif self.energy_type == 'mp2':
             # return self.mp2_data()
     
+    @property
+    def multiplicity(self):
+        """
+        Return multiplicity.
+        """
+        for line in self.read():
+            if 'Multiplicity' in line:
+                return int(line.split()[-1])    
+
+    def _homo_lumo(self):
+        """
+        Finds HOMO/LUMO orbitals, and ORCA prints the
+        energies in eV, so no need for conversion.
+        """
+        homo = ''
+        lumo = ''
+        regex=r'^\s+[0-9]+(\s+-?[0-9]+.[0-9]+){3}'
+        found = False
+        for line in self.read():
+            if 'ORBITAL ENERGIES' in line:
+                found = True
+            if found:
+                if re.search(regex, line):
+                    line = line.split()
+                    if line[1] != '0.0000': # occupancy
+                        homo = line[-1]
+                    else:
+                        lumo = line[-1]
+                        break
+        homo, lumo = map(float, (homo, lumo))
+        return homo, lumo
+
+    def _homo_lumo_gap(self):
+        homo, lumo = self._homo_lumo()
+        gap = lumo - homo
+        return homo, lumo, gap
+
+    @property
+    def homo_lumo_info(self):
+        """
+        Prints the HOMO-LUMO gap. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (eV), LUMO (eV) and the gap (eV).
+        """
+
+        if self.multiplicity == 1:
+            homo, lumo, gap = self._homo_lumo_gap()
+            transition = 'HOMO-LUMO'
+        elif self.multiplicity == 2:
+            homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
+            transition = 'SOMO-LUMO'
+        else:
+            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+    
+        return {'File': self.file,
+                'Path': self.path,
+                'Multiplicity': self.multiplicity, 
+                'Transition': transition, 
+                'HOMO/SOMO (eV)': homo, 
+                'LUMO (eV)': lumo, 
+                'Gap (eV)': gap}
+

@@ -187,4 +187,62 @@ class GaussianResults(Results):
             return self.file, self.path, self.basis, self.hf_energy, self.mp2_energy, 'NA', 'NA'
         else:
             return self.file, self.path, self.basis, self.dft_energy, 'NA', 'NA', 'NA'
-        
+
+    @property
+    def multiplicity(self):
+        """
+        Returns multiplicity from the symbolic z-matrix section.
+        """
+        for line in self.read():
+            if 'Charge' in line and 'Multiplicity' in line:
+                return int(line.split()[-1])
+    
+    def _homo_lumo(self):
+        """
+        Finds HOMO/LUMO orbitals.
+        """
+        occupied = []
+        lumo = ''
+        for line in self.read():
+            if 'Alpha  occ. eigenvalues' in line:
+                occupied += line.split()[4:]
+            if 'Alpha virt. eigenvalues' in line:
+                lumo = line.split()[4] 
+                break
+        homo = occupied[-1]
+        homo, lumo = map(float, (homo, lumo))
+        return homo, lumo
+
+    def _homo_lumo_gap(self):
+        hartrees_to_eV = 27.21
+        homo, lumo = self._homo_lumo()
+        homo, lumo = map(lambda x: x * hartrees_to_eV, (homo, lumo))
+        gap = lumo - homo
+        return homo, lumo, gap
+
+    @property
+    def homo_lumo_info(self):
+        """
+        Prints the HOMO-LUMO gap. Finds SOMO-LUMO if multiplicity is 2.
+        Returns `self.multiplicity`, SOMO/HOMO (eV), LUMO (eV) and the gap (eV).
+        Note that ⍺ orbitals are selected, and the ⍺ and β electrons give
+        different homo-lumo gaps.
+        """
+
+        if self.multiplicity == 1:
+            homo, lumo, gap = self._homo_lumo_gap()
+            transition = 'HOMO-LUMO'
+        elif self.multiplicity == 2:
+            homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
+            transition = 'SOMO-LUMO'
+        else:
+            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
+            
+        return {'File': self.file,
+                'Path': self.path,
+                'Multiplicity': self.multiplicity, 
+                'Transition': transition, 
+                'HOMO/SOMO (eV)': homo, 
+                'LUMO (eV)': lumo, 
+                'Gap (eV)': gap}
+

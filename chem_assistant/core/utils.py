@@ -1,3 +1,9 @@
+from .atom import Atom
+from .periodic_table import PeriodicTable as PT
+import re
+import sys
+import time
+
 __all__ = [
 'assign_molecules_from_dict_keys',
 'check_user_input',
@@ -17,12 +23,6 @@ __all__ = [
 'write_csv_from_nested', 
 'write_xyz'
 ]
-
-from .atom import Atom
-from .periodic_table import PeriodicTable as PT
-import re
-import sys
-import time
 
 def timeit(method):
     def timed(*args, **kw):
