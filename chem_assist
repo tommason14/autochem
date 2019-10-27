@@ -64,10 +64,12 @@ if args.homo_lumo:
     homo_lumo_gaps('.', output=args.output)
 
 if args.thermochem:
-    if args.mult is None:
+    if not args.mult:
         args.mult = '1'
+    if not args.output:
+        args.output = 'thermo.csv'
     from chem_assistant.user_scripts.grep_results import thermochemistry
-    thermochemistry('.', string_to_find=args.select, mult=args.mult, temp=args.thermochem)
+    thermochemistry('.', string_to_find=args.select, mult=args.mult, temp=args.thermochem, output=args.output)
 
 if args.free_energies:
     from chem_assistant.user_scripts.free_energy_interactions import calculate_free_energy_interactions
