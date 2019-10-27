@@ -162,7 +162,7 @@ def homo_lumo_gaps(dir, output):
     write_csv_from_dict(info, filename=output)
     return info
 
-def thermochemistry(dir, string_to_find, mult, temp):
+def thermochemistry(dir, string_to_find, mult, temp, output):
     """
     Returns thermochemical data for all the relevant hessian log files in the given directory and
     subdirectories. Saves to csv file.
@@ -215,7 +215,7 @@ def thermochemistry(dir, string_to_find, mult, temp):
     responsive_table({k:v for k,v in collected.items() if
                       k in ('File', 'Temperature [K]', 'Multiplicity given', 'S tot [J/(mol K)]')}, 
                       strings=[1], min_width=10)
-    name = write_csv_from_dict(collected, filename='thermo.csv')
+    name = write_csv_from_dict(collected, filename=output)
 
 def print_freqs(dir):
     """
