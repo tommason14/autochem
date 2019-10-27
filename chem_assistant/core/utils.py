@@ -114,11 +114,11 @@ def get_files(directory, ext, filepath_includes=None):
                     # freq.out used for thermo calculations 
                     # with the fortran code
                     if filepath_includes is not None:
-                        if filepath_includes in path:
+                        if any(filepath_includes in string for string in (path, file)):
                             file_list.append(os.path.join(path, file))
                     else:
                         file_list.append(os.path.join(path, file))
-    return file_list
+    return sorted(file_list)
 
 def module_exists(module_name):
     try:
