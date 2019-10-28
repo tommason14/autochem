@@ -75,26 +75,17 @@ def thermo_initial_geom_gauss(file):
     Parses Gaussian frequency calculation log file for the initial 
     geometry. Note that coordinates here are stored in .job files by     
     default. Only works with xyz coordinates, not z-matrices.
-    Also accounts for the fact that an optimisation might occur before the 
-    frequency job."""
+    """
     atoms = []
     regex = '\s+[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}'
-    found_freq = False
+    # found_freq = False
     found_coords = False
     for line in read_file(file):
-        # deal with opt-freq or just freq
-        if re.search('Freq$', line) or \
-            'freq' in line.lower() and \
-            'opt' not in line.lower():
-            found_freq = True
-        # sometimes doesn't print input orientation
-        # instead read from the 'symbolic z matrix section'
-        # that is actually just the xyz coordinates passed in.
         if 'Symbolic Z-matrix:' in line:
             found_coords=True
         if line is '\n':
             found_coords=False
-        if found_freq and found_coords and re.search(regex, line):
+        if found_coords and re.search(regex, line):
             sym, x, y, z = line.split()
             x, y, z = map(float, (x,y,z))
             atoms.append(Atom(symbol=sym, coords=(x,y,z)))
