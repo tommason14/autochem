@@ -57,13 +57,47 @@ class GaussianResults(Results):
                 return True
         return False
 
+    def _calcall_equil_coords(self):
+        """
+        For opt=(...calcall), coords printed differently
+        """
+        regex = "^(\s+[0-9]+){3}(\s+-?[0-9]{1,3}.[0-9]+){3}$"
+        coords = []
+        found_some = False
+        found_equil = False
+        for line in self.read():
+            if 'Optimization completed' in line:
+                found_equil = True
+            if 'Standard orientation' in line:
+                found_some = True
+                if len(coords) > 0:
+                    coords = [] # after each iter
+            if 'Rotational constants' in line:
+                found_some = False
+            # check that opt has finished (if opt freq ran)
+            if re.search('Freq$', line):
+                break
+            if found_some:
+                if re.search(regex, line):
+                    _, atnum, _, x, y, z = line.split()
+                    atnum, x, y, z = map(float, (atnum, x, y, z))
+                    coords.append(Atom(atnum=atnum, coords = (x, y, z)))
+        if found_equil:
+            return coords, 'equil'
+        else:
+            return coords, 'rerun'
+
     def get_equil_coords(self, output = None):
         """
         Returns either the equilibrium coordinates or coordinates for the rerun.
         """
+        # with calcall, things are different, collect standard orientation
+        # and if optimization completed found, they are equil coords
+        # else rerun
+        calcall = True if 'calcall' else False in self.user_commands
         found_equil = False
         found_some = False
-        regex = "^(\s*[0-9]*){3}(\s*-?[0-9]{1,3}.[0-9]*){3}$"
+        regex = "^(\s+[0-9]+){3}(\s+-?[0-9]{1,3}.[0-9]+){3}$"
         coords = []
         some_coords = []
         par_dir = []
@@ -73,36 +107,67 @@ class GaussianResults(Results):
             else:
                 break
         MOLECULE_PARENT_DIR = '/'.join(par_dir)
-        for line in self.read():
-            if 'Optimization completed' in line:
-                found_equil = True
-            if 'Standard orientation' in line:
-                found_some = True
-                if len(some_coords) > 0: # from last run, remove those coords
-                    some_coords = []
-            if found_equil:
-                if re.search(regex, line):
-                    _, atnum, _, x, y, z = line.split()
-                    atnum, x, y, z = map(float, (atnum, x, y, z))
-                    coords.append(Atom(atnum=atnum, coords = (x, y, z)))
-            if found_some:
-                if re.search(regex, line):
-                    _, atnum, _, x, y, z = line.split()
-                    atnum, x, y, z = map(float, (atnum, x, y, z))
-                    some_coords.append(Atom(atnum=atnum, coords = (x, y, z)))
-            if 'Rotational constants' in line:
-                found_some = False
-            if 'Distance matrix (angstroms)' in line:
-                found_equil = False
+        if not calcall:
+            for line in self.read():
+                if 'Optimization completed' in line:
+                    found_equil = True
+                if 'Standard orientation' in line:
+                    found_some = True
+                    if len(some_coords) > 0: # from last run, remove those coords
+                        some_coords = []
+                if found_equil:
+                    if re.search(regex, line):
+                        _, atnum, _, x, y, z = line.split()
+                        atnum, x, y, z = map(float, (atnum, x, y, z))
+                        coords.append(Atom(atnum=atnum, coords = (x, y, z)))
+                if found_some:
+                    if re.search(regex, line):
+                        _, atnum, _, x, y, z = line.split()
+                        atnum, x, y, z = map(float, (atnum, x, y, z))
+                        some_coords.append(Atom(atnum=atnum, coords = (x, y, z)))
+                if 'Rotational constants' in line:
+                    found_some = False
+                if 'Distance matrix (angstroms)' in line:
+                    found_equil = False
+        
+        if calcall:
+            coords_found, coord_type = self._calcall_equil_coords()
+            if coord_type == 'equil':
+                coords = coords_found
+            else:
+                some_coords = coords_found
         if len(coords) > 0:
             print('found!')
-            write_xyz(coords, os.path.join(MOLECULE_PARENT_DIR, 'equil.xyz'))
+            write_xyz(coords, os.path.join(MOLECULE_PARENT_DIR, f'{self.title}_equil.xyz'))
         else:
             if len(some_coords) > 0:
                 print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun.xyz')
                 write_xyz(some_coords, os.path.join(MOLECULE_PARENT_DIR, 'rerun.xyz'))
             else:
                 print('No iterations were cycled through!')
+        
+    @property
+    def title(self):
+        """
+        Finds title of the job. Printed like so:
+        ...
+        -----
+        title
+        -----
+        Symbolic Z-matrix
+        ...
+        """
+        lines = []
+        found = False
+        for line in self.read():
+            if 'Leave Link' in line:
+                found = True
+                continue 
+            if 'Symbolic' in line:
+                break
+            if found:
+                lines.append(line)
+        return lines[-2].strip()
 
     @property
     def user_commands(self):
