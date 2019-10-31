@@ -35,12 +35,23 @@ class Atom:
         self.h_bonded_to = []
 
         if coords is None:
-            self.coords = (0, 0, 0)
+            self.coords = [0, 0, 0]
         elif len(coords) == 3:
-            self.coords = tuple(float(i) for i in coords)
+            self.coords = [float(i) for i in coords]
         else:
             raise TypeError('Atom: Invalid coordinates given')
-        self.x, self.y, self.z = self.coords
+
+    @property
+    def x(self):
+        return self.coords[0]
+
+    @property
+    def y(self):
+        return self.coords[1]
+
+    @property
+    def z(self):
+        return self.coords[2]
 
     def __repr__(self):
         """Unambiguous representation of an |Atom| instance"""
@@ -65,11 +76,11 @@ class Atom:
 
     def translate(self, vector):
         """Move atom in space by passing a vector in angstroms"""
-        self.coords = tuple(i + j for i,j in zip(self, vector))
+        self.coords = [i + j for i, j in zip(self, vector)]
 
     def move_to(self, vector):
         """Move atom in space to the values, in angstroms, given in this vector. The vector passed represents a point in euclidean space"""
-        self.coords = tuple(i for i in vector)
+        self.coords = [i for i in vector]
 
     def distance_to(self, vector):
         """Measure the distance between the atom and a point in space, given as a vector in angstroms"""
@@ -81,7 +92,7 @@ class Atom:
 
     def vector_to(self, point):
         """Returns a vector from the atom to a given point, in angstroms"""
-        return tuple((i - j) for i,j in zip(point, self))
+        return [(i - j) for i,j in zip(point, self)]
 
     def angle_between(self, pos1, pos2):
         """Returns an angle between positions 1 and 2 in degrees, with this atom lying at the centre"""

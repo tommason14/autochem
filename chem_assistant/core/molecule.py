@@ -109,7 +109,8 @@ class Molecule:
 
     def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
-            self.coords = self.read_xyz(using)
+            self.xyz = using
+            self.coords = self.read_xyz(self.xyz)
         if atoms is not None and using is None:
             if len(atoms) == 0:
                 sys.exit('Error: atoms argument passed into Molecule is empty')
@@ -165,6 +166,21 @@ class Molecule:
 
     def __iter__(self):
         return iter(self.coords)
+
+    def translate(self, vector, frag = None):
+        """
+        Apply the vector to every atom in the system.
+        Note that if fragmented, can specify which fragment to translate,
+        by specifying a key of self.fragments
+        """
+        for atom in self.coords:
+            atom.translate(vector)
+        
+        if frag is not None: 
+            if not hasattr(self, 'fragments'):
+                raise AttributeError('Must run self.separate() first')
+            for atom in self.fragments[frag]:
+                atom.translate(vector)
 
     def formula(self, as_dict = False, as_latex = False, as_html = False):
         """
