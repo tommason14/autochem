@@ -301,9 +301,14 @@ class OrcaJob(Job):
         ! opt HF aug-cc-pVTZ RIJK additional_params
         from data stored in self.input
         """
-        return (f'!{self.formatted_run}{self.input.method} '
-                f'{self.input.basis} {self.input.density_fitting} '
-                f'{self.solvation} {self.additional_params}')
+        if self.input.density_fitting is not None:
+            return (f'!{self.formatted_run}{self.input.method} '
+                    f'{self.input.basis} {self.input.density_fitting} '
+                    f'{self.solvation} {self.additional_params}')
+        else:
+            return (f'!{self.formatted_run}{self.input.method} '
+                    f'{self.input.basis} '
+                    f'{self.solvation} {self.additional_params}')
 
     @property
     def coord_info(self):
