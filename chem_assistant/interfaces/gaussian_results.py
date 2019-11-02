@@ -179,12 +179,12 @@ class GaussianResults(Results):
                 return line.lower()
 
     @property
-    def energy_type(self):
+    def method(self):
         """
         Returns energy type. For example, for HF/cc-pVTZ, returns hf. 
         For wB97xD/aug-cc-pVDZ, returns wb97xd.
         """
-        return self.user_commands.split('/')[0].split()[-1]
+        return self.user_commands.split('/')[0].split()[-1].upper()
 
     @property
     def basis(self):
@@ -243,15 +243,15 @@ class GaussianResults(Results):
         """
         Returns the last occurrence of printed energies. Negate energy types, and if the energy type
         is not found, assumed to be DFT. 
-        Must return file, path, basis, hf/dft, mp2/srs, mp2_opp, mp2_same
+        Must return file, path, method, basis, hf/dft, mp2/srs, mp2_opp, mp2_same
         in the order, so 'NA' values are there to satisfy that criteria.
         """
-        if self.energy_type == 'hf':
-            return self.file, self.path, self.basis, self.hf_energy, 'NA', 'NA', 'NA'
-        elif self.energy_type == 'mp2':
-            return self.file, self.path, self.basis, self.hf_energy, self.mp2_energy, 'NA', 'NA'
+        if self.method == 'hf':
+            return self.file, self.path, self.method, self.basis, self.hf_energy, 'NA', 'NA', 'NA'
+        elif self.method == 'mp2':
+            return self.file, self.path, self.method, self.basis, self.hf_energy, self.mp2_energy, 'NA', 'NA'
         else:
-            return self.file, self.path, self.basis, self.dft_energy, 'NA', 'NA', 'NA'
+            return self.file, self.path, self.method, self.basis, self.dft_energy, 'NA', 'NA', 'NA'
 
     @property
     def multiplicity(self):

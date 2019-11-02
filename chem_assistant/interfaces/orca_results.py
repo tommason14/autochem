@@ -122,17 +122,17 @@ class OrcaResults(Results):
                 return line.lower()
 
     @property
-    def energy_type(self):
+    def method(self):
         """
         Returns energy type.
         Currently parses the line of ! .... commands for specific values.
+        Note there is no order to this line, values can appear anywhere
         """
         types = ('hf', 'mp2', 'cc')
 
         for t in types:
             if t in self.user_commands:
                 return t
-        # return t for t in types if t in self.user_commands
 
     @property
     def basis(self):
@@ -157,7 +157,7 @@ class OrcaResults(Results):
         Return data for scf calculations.
         Note the NAs returned are because of no MP2 spin parameters.
         """
-        return self.file, self.path, self.basis, self.total_energy, 'NA', 'NA'
+        return self.file, self.path, self.method, self.basis, self.total_energy, 'NA', 'NA'
 
 
     def get_data(self):
@@ -171,10 +171,10 @@ class OrcaResults(Results):
         Returns job data: filename, filepath, basis set, HF/DFT energy, and MP2 opposite
         and same spin parameters if relevant.
         """
-        if self.energy_type == 'hf':
+        if self.method == 'hf':
             return self.scf_data()
 
-        # elif self.energy_type == 'mp2':
+        # elif self.method == 'mp2':
             # return self.mp2_data()
     
     @property

@@ -76,10 +76,10 @@ if args.free_energies:
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
-    from chem_assistant.user_scripts.grep_results import results_table
+    from chem_assistant.user_scripts.grep_results import energy_table
     if not args.output:
         args.output='energies.csv'
-    results_table('.', file_name=args.output, string_to_find=args.select)
+    energy_table('.', file_name=args.output, string_to_find=args.select)
 
 if args.settings:
     settings = imported_settings()

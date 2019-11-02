@@ -21,9 +21,9 @@ __all__ = ['geodesics',
            'get_h_bonds',
            'get_results_class',
            'homo_lumo_gaps',
-           'parse_results',
+           'energies',
            'print_freqs',
-           'results_table',
+           'energy_table',
            'search_for_coords',
            'thermochemistry']
 
@@ -75,7 +75,7 @@ def need_gauss_energy(calc):
     return (isinstance(calc, GaussianResults) and 
             calc.is_optimisation() or calc.is_spec()) 
 
-def parse_results(dir, filepath_includes):
+def energies(dir, filepath_includes):
     """
     Used internally to parse log files for energies
     """
@@ -93,16 +93,16 @@ def parse_results(dir, filepath_includes):
             continue
     return output
 
-def results_table(dir, file_name, string_to_find):
+def energy_table(dir, file_name, string_to_find):
     """
     Prints energies of all log/out files in current and any sub directories to the screen, with the option of saving to csv.
     """
     # lists are faster to fill than dict values
-    # order: files, paths, basis, hf, mp2, mp2_opp, mp2_same
-    data = [[], [], [], [], [], [], []]
+    # order: file, path, method, basis, hf, mp2, mp2_opp, mp2_same
+    data = [[], [], [], [], [], [], [], []]
     # at some point, will make this a dictionary, loads clearer that way.
 
-    output = parse_results(dir, filepath_includes=string_to_find)
+    output = energies(dir, filepath_includes=string_to_find)
 
     def add_data(data, vals):
         """
@@ -119,12 +119,15 @@ def results_table(dir, file_name, string_to_find):
     for result in output:
         data = add_data(data, result['data'])
 
-    keys = ('File', 'Path', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
+    keys = ('File', 'Path', 'Method', 'Basis', 'HF/DFT', 'MP2/SRS', 'MP2_opp', 'MP2_same')
     table_data = {}
     for key, val in zip(keys, data):
         table_data[key] = val 
 
     table_data = remove_column_if_all_na(table_data)
+
+    if len(table_data) == 0:
+        sys.exit('No optimisations or single points found')   
     
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
     write_csv_from_dict(table_data, filename=file_name)
@@ -161,6 +164,8 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
     collected = \
         {
             'File': [],
+            'Method': [],
+            'Basis': [],
             'Temperature [K]': [],
             'Multiplicity given': [],
             'ZPVE': [],
@@ -180,6 +185,8 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
                 if r.is_hessian():
                     res = thermo_data(r.log, mult, temp)
                     res['File'] = r.log
+                    res['Method'] = r.energy_type
+                    res['Basis'] = r.basis
                     res['Temperature [K]'] = temp
                     res['Multiplicity given'] = mult
                     for k, v in res.items():

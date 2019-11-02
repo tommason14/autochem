@@ -35,7 +35,7 @@ class PsiResults(Results):
                         return line.split('(')[0] #add to this later, using the collect additional data
 
     @property
-    def energy_type(self):
+    def method(self):
         """
         Returns energy type. For example, for MP2 single points, the line `energy('mp2')` is used. 
         This method returns the string 'mp2'.
@@ -150,10 +150,10 @@ class PsiResults(Results):
         Returns job data: filename, filepath, basis set, HF/DFT energy, and MP2 opposite
         and same spin parameters if relevant.
         """  
-        if self.energy_type == 'scf':
+        if self.method == 'scf':
             return self._scf_data()
         
-        elif self.energy_type == 'mp2':
+        elif self.method == 'mp2':
             return self._mp2_data() 
 
     @property
@@ -181,7 +181,7 @@ class PsiResults(Results):
         Return data for scf calculations. 
         Note the NAs returned are because of no MP2 data.
         """
-        return self.file, self.path, self.basis, self.total_energy, 'NA', 'NA', 'NA'
+        return self.file, self.path, self.method, self.basis, self.total_energy, 'NA', 'NA', 'NA'
 
     @property
     def hf_energy_for_mp2(self):
@@ -225,5 +225,5 @@ class PsiResults(Results):
         each spin component will vary depending on the basis set.
         """
         
-        return (self.file, self.path, self.basis, 
+        return (self.file, self.path, self.method, self.basis, 
         self.hf_energy_for_mp2, 'NA', self.mp2_opp, self.mp2_same)

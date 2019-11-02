@@ -263,9 +263,20 @@ store the iteration number.
         HF, MP2 = map(float, (HF, MP2))
         return HF, MP2
 
+    @property
+    def dft_type(self):
+        """
+        Returns DFT type (DFTTYP=...)
+        """
+        for line in self.read():
+            if 'DFTTYP' in line:
+                line = line.split()
+                for val in line:
+                    if 'DFTTYP' in val:
+                        return val.split('=')[1].upper()
 
     @property
-    def energy_type(self):
+    def _energy_type(self):
         """
         Returns energy type, i.e. HF, DFT, MP2
         """
@@ -300,6 +311,22 @@ store the iteration number.
             return 'hf'  
 
     @property
+    def method(self):
+        """
+        More usable version of self._energy_type.
+        i.e. instead of fmo_dft, this method actually returns the 
+        dft functional used.
+        """
+        if 'scs' in self._energy_type:
+            return 'Scaled MP2' # scs or srs
+        if 'mp2' in self._energy_type and 'scs' not in self._energy_type:
+            return 'MP2'
+        if 'dft' in self._energy_type:
+            return self.dft_type
+        if 'hf' in self._energy_type:
+            return 'HF'
+
+    @property
     def solvent_calc(self):
         """
         Returns True if the user inputs a $PCM section in the input file.
@@ -318,15 +345,15 @@ store the iteration number.
         """
         Returns HF, DFT, MP2 (non-FMO and FMO) values.
         """
-        if self.energy_type == 'fmo_scs':
+        if self._energy_type == 'fmo_scs':
             HF, MP2 = self.fmo_mp2_data('SCS')
             MP2_opp = 'NA'
             MP2_same = 'NA'
-        elif self.energy_type == 'fmo_mp2':
+        elif self._energy_type == 'fmo_mp2':
             HF, MP2 = self.fmo_mp2_data('MP2')
             MP2_opp = 'NA'
             MP2_same = 'NA'
-        elif self.energy_type in ('mp2', 'scs'):
+        elif self._energy_type in ('mp2', 'scs'):
             if not self.solvent_calc:
                 HF, MP2_opp, MP2_same = self.non_fmo_mp2_data_gas()
                 MP2 = 'NA'
@@ -334,13 +361,13 @@ store the iteration number.
                 HF, MP2 = self.non_fmo_mp2_data_solvent()
                 MP2_opp = 'NA'
                 MP2_same = 'NA'
-        elif 'dft' in self.energy_type or 'hf' in self.energy_type:
+        elif 'dft' in self._energy_type or 'hf' in self._energy_type:
             HF = self.total_energy
             MP2 = 'NA'
             MP2_opp = 'NA'
             MP2_same = 'NA'
             
-        return self.file, self.path, self.basis, HF, MP2, MP2_opp, MP2_same    
+        return self.file, self.path, self.method, self.basis, HF, MP2, MP2_opp, MP2_same    
 
     @property
     def multiplicity(self):
