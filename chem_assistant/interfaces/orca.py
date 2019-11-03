@@ -268,6 +268,7 @@ class OrcaJob(Job):
                 self.cpcm_opts='%cpcm\n'
                 for param in extra_params:
                     self.cpcm_opts += f'{param} {self.input.solvent[param]}\n'
+                self.cpcm_opts += 'end\n'
         else:
             self.solvation=''
 
