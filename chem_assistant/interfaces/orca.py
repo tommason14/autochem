@@ -263,7 +263,8 @@ class OrcaJob(Job):
             extra_params=self.input.solvent.keys()
             ignore=('model', 'molecule')
             for param in ignore:
-                extra_params.remove(param)
+                del extra_params[param]
+                # extra_params.remove(param)
             if len(extra_params) > 0:
                 self.cpcm_opts='%cpcm\n'
                 for param in extra_params:
