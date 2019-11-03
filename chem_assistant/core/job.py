@@ -77,7 +77,7 @@ molecular dynamics. This class also creates job files in the same directory as t
         """
         user_assigned_charge=False
         user_assigned_mult=False
-        if hasattr(self, 'user_settings'):
+        if hasattr(self, 'user_settings') and self.user_settings != {}:
             if 'charge' in self.user_settings['input'].keys():
                 user_assigned_charge=True
             if 'mult' in self.user_settings['input'].keys():
