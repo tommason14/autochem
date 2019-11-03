@@ -232,7 +232,7 @@ class OrcaJob(Job):
         frequency job.
         """
         params = self.input.keys()
-        runs = ('opt', 'freq')
+        runs = ('Opt', 'Freq', 'NumFreq')
         for run in runs:
             if run in params:
                 return run
@@ -289,7 +289,7 @@ class OrcaJob(Job):
         a basis set, method or run type.
         """
         addn = ''
-        ignore=('runtype', 'opt', 'freq', 'method', 'basis', 'density_fitting', 'charge', 'mult')
+        ignore=('runtype', 'opt', 'freq', 'numfreq', 'method', 'basis', 'density_fitting', 'charge', 'mult')
         for arg in self.input:
             if arg not in ignore:
                 addn += arg + ' '
