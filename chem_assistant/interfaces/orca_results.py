@@ -122,17 +122,27 @@ class OrcaResults(Results):
                 return line.lower()
 
     @property
+    def is_dft(self):
+        """
+        Used internally to decide if dft energies should be collected.
+        """
+        for line in self.read():
+            if 'Density Functional     Method          .... DFT' in line:
+                return True
+        return False
+            
+    @property
     def method(self):
         """
-        Returns energy type.
-        Currently parses the line of ! .... commands for specific values.
-        Note there is no order to this line, values can appear anywhere
+        Returns method used in calculation.
         """
-        types = ('hf', 'mp2', 'cc')
-
-        for t in types:
-            if t in self.user_commands:
-                return t
+        for line in self.read():
+            # dft
+            if 'Exchange Functional    Exchange' in line:
+                return line.split()[-1]
+            # HF
+            elif 'Ab initio Hamiltonian  Method' in line:
+                return line.split()[-1].split('(')[0]
 
     @property
     def basis(self):
@@ -151,31 +161,32 @@ class OrcaResults(Results):
         for line in self.read():
             if 'Total Energy       :' in line:
                 return float(line.split()[3].strip())
- 
-    def scf_data(self):
+    
+    @property
+    def final_single_point_energy(self):
         """
-        Return data for scf calculations.
+        Returns the energies printed for single points.
+        """
+        for line in self.eof(0.2):
+            if 'FINAL SINGLE POINT ENERGY' in line:
+                return float(line.split()[-1]) 
+
+    @property
+    def sp_data(self): 
+        """
+        Returns data for HF/DFT single point calculations.
         Note the NAs returned are because of no MP2 spin parameters.
         """
-        return self.file, self.path, self.method, self.basis, self.total_energy, 'NA', 'NA'
-
-
-    def get_data(self):
-        """
-        Returns the last occurrence of printed energies.
-        Currently implemented for DFT only.
-        """
+        return self.file, self.path, self.method, self.basis, self.final_single_point_energy, 'NA', 'NA'
+        
 
     def get_data(self):
         """
         Returns job data: filename, filepath, basis set, HF/DFT energy, and MP2 opposite
         and same spin parameters if relevant.
         """
-        if self.method == 'hf':
-            return self.scf_data()
-
-        # elif self.method == 'mp2':
-            # return self.mp2_data()
+        if self.is_spec:
+            return self.sp_data
     
     @property
     def multiplicity(self):
