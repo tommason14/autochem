@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH -J name
+#SBATCH -e name.%j.err
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH -c 46
+#SBATCH -t 24:00:00
+#SBATCH -p skx-normal
+
+module load orca/4.2.1
+orca name.inp > name.log
+find . -empty -delete
