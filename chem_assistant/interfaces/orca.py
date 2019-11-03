@@ -263,13 +263,14 @@ class OrcaJob(Job):
             extra_params=self.input.solvent.keys()
             ignore=('model', 'molecule')
             for param in ignore:
-                del self.input.solvent[param]
+                if param in extra_params:
+                    del self.input.solvent[param]
                 # extra_params.remove(param)
             if len(extra_params) > 0:
                 self.cpcm_opts='%cpcm\n'
                 for param in extra_params:
                     self.cpcm_opts += f'{param} {self.input.solvent[param]}\n'
-                self.cpcm_opts += 'end\n'
+                self.cpcm_opts += 'end'
         else:
             self.solvation=''
 
@@ -290,7 +291,8 @@ class OrcaJob(Job):
         a basis set, method or run type.
         """
         addn = ''
-        ignore=('runtype', 'opt', 'freq', 'numfreq', 'method', 'basis', 'density_fitting', 'charge', 'mult')
+        ignore=('runtype', 'Opt', 'Freq', 'NumFreq', 'method', 'basis', 'density_fitting', 'charge',
+                'mult', 'solvent')
         for arg in self.input:
             if arg not in ignore:
                 addn += arg + ' '
