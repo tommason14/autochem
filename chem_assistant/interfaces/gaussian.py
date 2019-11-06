@@ -73,6 +73,12 @@ class GaussJob(Job):
         job=self.get_job_template().replace('name', self.base_name)
         if 'time' in self.meta:
             job=job.replace('24:00:00', self.meta.time)
+        if 'mem' in self.meta:
+            mem = self.meta.mem[:-2]
+            job=job.replace('mem=32', f'mem={mem}') # for m3/mon, mem=... doesn't appear for stm
+        if 'nproc' in self.meta:
+            job=job.replace('cpus-per-task=16', f'cpus-per-task={self.meta.nproc}') 
+            # for m3/mon, specified as -c, so we're safe here
         return job
             
     @property
