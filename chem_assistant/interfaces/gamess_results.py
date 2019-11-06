@@ -41,11 +41,6 @@ store the iteration number.
     #                              #
     ################################
 
-    def __repr__(self):
-        return self.log # debugging
-
-    __str__ = __repr__
-
     def completed(self):
         found = False
         for line in eof(self.log, 0.1):

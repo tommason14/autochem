@@ -23,11 +23,6 @@ class GaussianResults(Results):
     #                              #
     ################################
 
-    def __repr__(self):
-        return self.log # debugging
-
-    __str__ = __repr__
-
     def get_runtype(self):
         """
         Can have multiple runs in one file i.e. opt freq

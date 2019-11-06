@@ -102,10 +102,12 @@ class Molecule:
                                   'C','S','O','H','O','O','H']
     Dications = dict()
                                                    
-    Dication_radicals = {'maotmac-dimer' : ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H','C',
-                                            'H','H','O','C','O','C','C','H','H','H','C','H','H','C','C','H','H',
-                                            'H','C','H','H','H','C','O','O','C','H','H','C','H','H','N','C','H',
-                                            'H','H','C','H','H','H','C','H','H','H']}
+    Dication_radicals = {'maotmac-dimer-hydrogenated-rad' : 
+        ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H',
+         'C','H','H','O','C','O','C','C','H','H','H','C','H','H','C','C',
+         'H','H','H','C','H','H','H','C','O','O','C','H','H','C','H','H',
+         'N','C','H','H','H','C','H','H','H','C','H','H','H']
+}
 
     def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
@@ -320,7 +322,8 @@ class Molecule:
 
         self.fragments = {}
         for db in (Molecule.Anions, Molecule.Cations, 
-                   Molecule.Neutrals, Molecule.Radicals, Molecule.Dications):
+                   Molecule.Neutrals, Molecule.Radicals, 
+                   Molecule.Dications, Molecule.Dication_radicals):
             self.fragments = check_dict(self.fragments, symbols, db)
 
         #sort order of atoms
@@ -877,6 +880,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     @classmethod
     def get_multiplicity(cls, fragment_dict):
-        return 2 if any(frag['type'] == 'radical' for frag in fragment_dict.values()) else 1
+        return 2 if any('radical' in frag['type'] for frag in fragment_dict.values()) else 1
         # extend multiplicity for biradicals etc...
 

@@ -18,11 +18,6 @@ class OrcaResults(Results):
     def __init__(self, log):
         super().__init__(log)
 
-    def __repr__(self):
-        return self.log
-
-    __str__ = __repr__
-
     def get_runtype(self):
         """
         Can have multiple runs in one file i.e. opt freq

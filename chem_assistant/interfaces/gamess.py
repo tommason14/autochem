@@ -168,7 +168,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         consistent basis sets without the need to define it in the user code.
         """
 
-        self.find_charge_and_mult()
+        self.change_charge_and_mult()
 
         opp_spin_params = {'cct': 1.64,
                            'ccq': 1.689,
@@ -226,8 +226,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             return ret
     
         # hack for now
-        del self.input['charge']
-        del self.input['mult']
+        # del self.input['charge']
+        # del self.input['mult']
 
         inp = [parse(item, self.input[item])
             for item in self.input]
@@ -244,10 +244,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if len(data['atoms']) == 1:
                     # should add to next fragment- wasteful to run on own node
                     info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
-                    "charg" : str(data['charge'])}
+                    "charg" : str(data['charge']),
+                    "mult"  : str(data['multiplicity'])}
                 else:
                     info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
-                    "charg" : str(data['charge'])}
+                    "charg" : str(data['charge']),
+                    "mult"  : str(data['multiplicity'])}
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
         # 0,8,28,
@@ -261,12 +263,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file        
-        self.indat = []
-        self.charg = []
+        self.fmo_indat = []
+        self.fmo_charg = []
+        self.fmo_mult = []
         for val in sorted_info:
-            self.indat.append(val[1]['indat'])
-            self.charg.append(val[1]['charg'])
-        self.indat.append('0')
+            self.fmo_indat.append(val[1]['indat'])
+            self.fmo_charg.append(val[1]['charg'])
+            self.fmo_mult.append(val[1]['mult'])
+        self.fmo_indat.append('0')
 
     def fmo_formatting(self):
         self.fmo_meta() # gives self.mol.indat, self.mol.charg
@@ -281,10 +285,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
         if 'mp2' in self.input:
             string += "     MPLEVL(1)=2\n"
-        string += f"     INDAT(1)={self.indat[0]}\n"
-        for d in self.indat[1:]:
+        string += f"     INDAT(1)={self.fmo_indat[0]}\n"
+        for d in self.fmo_indat[1:]:
             string += f"{' '*14}{d}\n"
-        string += f"     ICHARG(1)={','.join(self.charg)}\n"
+        string += f"     ICHARG(1)={','.join(self.fmo_charg)}\n"
+        string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         return string
 

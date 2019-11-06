@@ -14,6 +14,12 @@ class Results:
         self.basename = self.file.split('.')[0]
         self.abspath = os.path.abspath(log)
         self.parent_dir = self.abspath.split('/')[-2]
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}: {self.log}' # debugging
+
+    __str__ = __repr__
+
         
     def read(self):
         """

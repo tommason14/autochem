@@ -114,10 +114,11 @@ is_complex = False, run_dir = None, cp = False):
         
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
+        self.find_charge_and_mult()
         comment = f"# PSI4 Calc: {self.title}\n\n"
         mem  = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
-        charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
+        charge = f"{self.input.charge} {self.input.mult}\n"
         atoms = ""
         for atom in self.mol.coords:
             atoms += f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
@@ -232,11 +233,11 @@ is_complex = False, run_dir = None, cp = False):
         #       atoms = "\n".join(atoms[:-1]) + '\n'
         #       return atoms
 
-
+        self.find_charge_and_mult()
         comment = f"# PSI4 Calc: {self.title}\n\n"
         mem  = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
-        charge = f"{self.input.molecule.charge} {self.input.molecule.multiplicity}\n"
+        charge = f"{self.input.charge} {self.input.mult}\n"
         atoms=[]
         if not hasattr(self.mol, 'fragments'):
             self.mol.separate()

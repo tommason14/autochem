@@ -9,11 +9,6 @@ class PsiResults(Results):
     def __init__(self, log):
         super().__init__(log)
     
-    def __repr__(self):
-        return self.log # debugging
-
-    __str__ = __repr__
-
     def completed(self):
         complete = False
         for line in self.read():

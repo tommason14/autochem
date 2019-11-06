@@ -5,7 +5,7 @@ from .sc import Supercomp
 from .utils import (sort_elements, write_xyz)
 
 from os.path import (basename, dirname, join, exists)
-from os import(mkdir, chdir, getcwd, system, walk, listdir)
+from os import (mkdir, chdir, getcwd, system, walk, listdir)
 import sys
 
 __all__ = ['Job']
@@ -26,6 +26,11 @@ molecular dynamics. This class also creates job files in the same directory as t
                 self.mol = Molecule(using, group = user_settings.grouped)
             else:
                 self.mol = Molecule(using)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}: {self.mol.xyz}'
+
+    __str__ = __repr__
 
     def get_sc(self):
         if hasattr(self, 'merged'):
