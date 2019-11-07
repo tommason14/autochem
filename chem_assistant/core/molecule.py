@@ -88,6 +88,27 @@ class Molecule:
     Neutrals['amps'] = ['H','C','H','C','H','C','O','N','H','C','C','H','H','H',
                         'C','H','H','H','C','H','H','S','O','H','O','O']
     Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C','H','C','C','H','C','H','S','O','H','O','O']
+    
+    # Dopamine "monomers"
+    Neutrals['dhica'] = ['O','C','C','C','N','H','C','C','C','C','C','O','H','H','H','H','C','H','O','O','H']
+    Neutrals['pezz-2a'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','C','O','H','O','O','H','O','H','H','H','H','H','H','H','H']
+    Neutrals['pezz-2b'] = ['C','C','C','C','C','C','C','C','N','O','H','O','H','H','H','H','C','N','C','C','H','C','H','C','C','C','C','H','H','O','O','H']
+    Neutrals['pezz-2c'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2d'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2e'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2f'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2g'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2h'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2i'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2j'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2k'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2l'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2m'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2n'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['quinone-methide'] = ['O','C','C','C','N','C','C','C','C','C','O','H','H','H','H','H']
+    Neutrals['quinonimine-projct'] = ['O','C','C','C','N','C','H','C','H','C','C','C','O','H','H','H']
+    Neutrals['uncyclised-dopamine'] = ['C','C','C','C','C','C','H','H','H','C','C','H','H','N','H','H','H','H','O','H','O','H']
+
 
     Radicals = {'amps-dimer': ['H','O','S','O','O','C','H','H','C','C','H','H','H','C','H','H','H','N',
                                'H','C','O','C','H','H','C','H','H','C','H','H','C','H','C','O','N','H',
@@ -107,7 +128,16 @@ class Molecule:
          'C','H','H','O','C','O','C','C','H','H','H','C','H','H','C','C',
          'H','H','H','C','H','H','H','C','O','O','C','H','H','C','H','H',
          'N','C','H','H','H','C','H','H','H','C','H','H','H']
-}
+    }
+
+    molecules = {
+            **Molecule.Cations,
+            **Molecule.Anions,
+            **Molecule.Neutrals,
+            **Molecule.Radicals,
+            **Molecule.Dications,
+            **Molecule.Dication_radicals
+        }
 
     def __init__(self, using = None, atoms = None, group = None):
         if using is not None:
@@ -321,9 +351,7 @@ class Molecule:
             return molecules_dict
 
         self.fragments = {}
-        for db in (Molecule.Anions, Molecule.Cations, 
-                   Molecule.Neutrals, Molecule.Radicals, 
-                   Molecule.Dications, Molecule.Dication_radicals):
+        for db in Molecule.molecules:
             self.fragments = check_dict(self.fragments, symbols, db)
 
         #sort order of atoms
@@ -520,19 +548,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         if not hasattr(self, 'fragments'):
             self.separate()
 
-        molecules = {
-            **Molecule.Cations,
-            **Molecule.Anions,
-            **Molecule.Neutrals,
-            **Molecule.Radicals,
-            **Molecule.Dications,
-            **Molecule.Dication_radicals
-        }
-
         for atom in self.coords:
             try:
                 name_given = self.fragments[atom.mol]['name']
-                if name_given not in molecules:
+                if name_given not in Molecules.molecules:
                     return False
             except KeyError:
                 # means that fragments haven't been renumbered, so
