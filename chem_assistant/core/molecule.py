@@ -351,7 +351,13 @@ class Molecule:
             return molecules_dict
 
         self.fragments = {}
-        for db in Molecule.molecules:
+        for db in (
+            Molecule.Cations,
+            Molecule.Anions,
+            Molecule.Neutrals,
+            Molecule.Radicals,
+            Molecule.Dications,
+            Molecule.Dication_radicals):
             self.fragments = check_dict(self.fragments, symbols, db)
 
         #sort order of atoms
