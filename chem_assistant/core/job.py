@@ -18,14 +18,16 @@ molecular dynamics. This class also creates job files in the same directory as t
     * ``using`` -- coordinates of chemical system, in xyz format
 
     """
-    def __init__(self, using = None, run_dir = None, frags_in_subdir = False, user_settings=None, **kwargs): 
+    def __init__(self, using = None, run_dir = None, frags_in_subdir = False, user_settings=None,
+    bonds_to_split = None, **kwargs): 
         # allows for fmo=True, even if nothing done with the arguments
+        # pass on grouping/splitting to the base Molecule class
         if using is not None:
             self.molecule_name = using
             if user_settings is not None and 'grouped' in user_settings.keys():
-                self.mol = Molecule(using, group = user_settings.grouped)
+                self.mol = Molecule(using, group = user_settings.grouped, bonds_to_split=bonds_to_split)
             else:
-                self.mol = Molecule(using)
+                self.mol = Molecule(using, bonds_to_split=bonds_to_split)
 
     def __repr__(self):
         return f'{self.__class__.__name__}: {self.mol.xyz}'

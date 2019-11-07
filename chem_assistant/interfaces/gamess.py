@@ -76,8 +76,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     small number of atoms assigned to them. 
     
     """
-    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None):
-        super().__init__(using, user_settings=settings)
+    def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None, bonds_to_split = None):
+        super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split) 
+        # bonds to split will reorder xyz!!!!!
         self.fmo = fmo # Boolean
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
@@ -96,11 +97,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         
         self.create_complex_dir_if_required(is_complex, frags_in_subdir)
 
+        self.made_run_dir = False
         if run_dir is not None:
             self.made_run_dir = True
-        else:
-            self.made_run_dir = False
-         
+    
+        self.split_on_bond = False
+        if bonds_to_split is not None:
+            self.split_on_bond = True
+
         self.create_inp()
         self.create_job()
         self.place_files_in_dir()
@@ -120,7 +124,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.input.fmo = fmo_data
             self.input.fmoprp.maxit = 200
             self.input.gddi.ngroup = len(self.mol.fragments)
-
+        
     def order_header(self):
         if self.fmo:
             desired = ['SYSTEM', 'CONTRL', 'GDDI', 'STATPT', 'SCF', 'BASIS', 'FMO', 'FMOPRP'] # mp2/dft after
@@ -154,8 +158,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         Changes charge and multiplicity unless user defines values. 
         In that case, the user-defined charge and multiplicity are used.
         """
-        user_assigned_charge = hasattr(self.user_settings, 'input.contrl.icharg')
-        user_assigned_mult = hasattr(self.user_settings, 'input.contrl.mult')
+        user_assigned_charge = False
+        user_assigned_mult = False
+        if hasattr(self, 'user_settings'):
+            user_assigned_charge = hasattr(self.user_settings, 'input.contrl.icharg')
+            user_assigned_mult = hasattr(self.user_settings, 'input.contrl.mult')
         if self.mol.overall_charge != 0 and not user_assigned_charge:
             self.input.contrl.icharg = self.mol.overall_charge
         if self.mol.overall_mult != 1 and not user_assigned_mult:
@@ -238,7 +245,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
         molecule instance as self.indat and self.charg"""
         info = {}
-        #group together indat and charge for each fragment, and order according to the atom indices of indat 
+        #group together indat and charge for each fragment, and order according
+        #to the atom indices of indat 
         for frag, data in self.mol.fragments.items():
             if frag is not 'ionic':
                 if len(data['atoms']) == 1:

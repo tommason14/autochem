@@ -78,6 +78,8 @@ class Molecule:
 
     Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
     Neutrals['hf'] = ['H', 'F']
+    Neutrals['methane'] = ['C', 'H', 'H', 'H', 'H']
+    Neutrals['ethane'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H']
     Neutrals['water'] = ['H', 'H', 'O']
     Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H']
     Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H']
@@ -139,7 +141,7 @@ class Molecule:
         **Dication_radicals
         }
 
-    def __init__(self, using = None, atoms = None, group = None):
+    def __init__(self, using = None, atoms = None, group = None, bonds_to_split = None):
         if using is not None:
             self.xyz = using
             self.coords = self.read_xyz(self.xyz)
@@ -158,6 +160,11 @@ class Molecule:
         self.frags_grouped_if_desired = False    
         if group is not None:
             self.group_together = group    
+
+        self.split_on_bonds = False
+        if bonds_to_split is not None:
+            self.bonds_to_split = bonds_to_split
+            self.split_on_bonds = True
 
         for index, atom in enumerate(self.coords):
             atom.index = index + 1
@@ -266,6 +273,8 @@ class Molecule:
         """
         if not hasattr(self, 'fragments'):
             self.separate()
+        if self.split_on_bonds:
+            self.fragment_on_bonds()
         self.overall_charge = Molecule.get_charge(self.fragments)
         self.overall_mult = Molecule.get_multiplicity(self.fragments)
      
@@ -640,6 +649,119 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         self.add_ionic_network()
         if hasattr(self, 'fragments_after_merge'):
             self.fragments = self.fragments_after_merge
+        if self.split_on_bonds:
+            self.fragment_on_bonds()
+
+    def fragment_on_bonds(self):
+        """
+        Takes a system that has already been fragmented according to intermolecular
+        distance, and then fragments again according to the bonds passed in by the 
+        `bonds_to_split` parameter. This should be a nested list of atom indices,
+        indicating which bond to break. For example, [(4,9)] indicates a bond between
+        atoms 4 and 9 of the original xyz file that should be broken. 
+        """
+        def remove_connection(connections, atom1, atom2):
+            if atom2 in connections[atom1]:
+                connections[atom1].remove(atom2)
+            if atom1 in connections[atom2]:
+                connections[atom2].remove(atom1)
+            return connections
+
+        connections = {atom.index : [con.index for con in atom.connected_atoms] for atom in self}
+        # apply split
+        for bond in self.bonds_to_split:
+            a1, a2 = bond
+            connections = remove_connection(connections, a1, a2)
+
+        # convert indices back to atom objects
+        connections = {k: [self.coords[i - 1] for i in v] for k,v in connections.items()}
+
+        # now have {original_atom: [connections_to_original_atom]}
+        # but need include original_atom in that dict
+
+        for k, v in connections.items():
+            # include as first, why not
+            v.insert(0, self.coords[k - 1])
+
+        # collect up frags after applying split
+        for index, connected_atoms in connections.items():
+            # now check rest of indices of connections
+            # for connections to any of current atoms in fragment
+            for index2, connected2 in connections.items():
+                if index != index2:
+                    if any(atom in connected2 for atom in connected_atoms): # frags are connected
+                        # add the rest of connected2 into connected_atoms and empty 'old' frag
+                        for a2 in connected2:
+                            if a2 not in connected_atoms:
+                                connected_atoms.append(a2)
+                        connections[index2] = []
+
+        connections = {k: sorted(v, key=lambda atom: atom.index) for k,v in connections.items() if len(v) != 0}
+
+        # redefine molecule number for each atom, starting from 1
+        redefined = {}
+
+        for new_index, kv in enumerate(connections.items(), 1):
+            key, value = kv
+            redefined[new_index] = value
+
+        for k, v in redefined.items():
+            for atom in v:
+                atom.mol = k
+
+        self.split_fragments = redefined
+
+        # how do we assign charges??????
+        # need to look back at original fragments...
+        # print(self.fragments)
+
+        # assume that breaking does not change charge at all, and just carry over the original charges
+        # - if original molecule not charged, then nothing to do, set charge to 0, mult to 1
+        # - if molecule was originally charged, now can do one of two things:
+        #   1) Define certain functional groups to have charges
+        #       i.e. SO₃⁻ = -1, RNH3⁺ = +1 etc...
+        #   2) Count all electrons of fragment and determine electronic charge from there?
+        # For ease of use, can define fragments and read in from a file, a la qcp?
+
+        # At end of this, reassign self.fragments to be self.split_fragments, so that GAMESS
+        # script can use this new fragment dict for the FMO calcs.
+        
+        
+        # reassigning self.fragments
+        self.fragments = {}
+        for k, v in self.split_fragments.items():
+            self.fragments[k] = {
+                'type': 'frag',
+                'name': f'fragmented_{k}',
+                'atoms': v,
+                'charge': 0,  # can change
+                'multiplicity': 1, # can change
+                'elements': sort_elements(v),
+                'frag_type': 'fragmented_on_bond'
+            }
+
+        # reorder xyz if necessary!!
+        # if not consecutive numbering, will reorder, 
+        # and also write a new initial xyz to avoid confusion.
+        # orig_coords = self.coords
+        if not self.consecutive_atom_indices:
+            # reorder
+            # give new numbers as indices of the frag['atoms'] lists
+            # old_numbering = {index:val for index, val in enumerate(self.coords)}
+            # new_numbering = {}
+            combined_atoms = []
+            for frag in self.fragments.values():
+                combined_atoms += frag['atoms']
+                print([a.index for a in frag['atoms']])
+            for index, atom in enumerate(combined_atoms):
+                atom.index = index + 1
+
+        for frag in self.fragments.values():
+            print([a.index for a in frag['atoms']]) 
+           
+           # working but getting overwritten at some point,
+           # with the complex then ionic species being created maybe?
+
 
 
     def distance_matrix(self):
@@ -701,42 +823,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         self.mol_dict = {val: [atom for atom in self.coords if atom.mol == val] for val in nums}
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
-        
-    # @classmethod
-    # def create_complex_properties_dict(self):
-    #     """
-    #     Checks system for overall charge and multiplicity, and returns
-    #     properties in a dictionary
-    #     """
-    #     def check_charge_and_mult(atoms):
-    #         """
-    #         Must check charge of overall complex, may not be zero.
-    #         This function achieves this by creating a copy of the molecule, 
-    #         fragmenting the copy and then summing the charges of each fragment.
-    #         The reason being that the user may not want to have each fragment
-    #         written to a file- which would happen if fragmenting self??? Test it
-    #         Modify the self.complex dictionary
-    #         """
-    #         mol = Molecule(atoms = atoms)
-    #         if not hasattr(mol, 'fragments'):
-    #             mol.separate()
-    #         charge = Molecule.get_charge(mol.fragments)
-    #         multiplicity = Molecule.get_multiplicity(mol.fragments)
-    #         print(charge, multiplicity)
-    #         return charge, multiplicity
-
-    #     charge, mult = check_charge_and_mult(atoms)
-    #     # self.complex used in input files
-    #     # assuming a neutral closed shell system
-    #     return {
-    #         "type": "complex",
-    #         "name": "complex",
-    #         "atoms": atoms,
-    #         "charge": charge,
-    #         "mult": mult,
-    #         "elements": sort_elements(atoms)
-    #     }
-
 
     def find_h_bonds(self):
         """
@@ -899,6 +985,16 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 if a.index == atom.index:
                     return frag['name']
 
+    @property
+    def consecutive_atom_indices(self):
+        atom_counter = 0
+        for frag in self.fragments.values():
+            for index_of_list, current_atom in enumerate(frag['atoms']):
+                if atom_counter + 1 != current_atom.index:
+                    return False
+                atom_counter += 1
+        return True
+
     @classmethod
     def get_charge(cls, fragment_dict):
         return sum(frag['charge'] for frag in fragment_dict.values())
@@ -907,4 +1003,3 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
     def get_multiplicity(cls, fragment_dict):
         return 2 if any('radical' in frag['type'] for frag in fragment_dict.values()) else 1
         # extend multiplicity for biradicals etc...
-
