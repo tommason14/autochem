@@ -131,12 +131,12 @@ class Molecule:
     }
 
     molecules = {
-            **Molecule.Cations,
-            **Molecule.Anions,
-            **Molecule.Neutrals,
-            **Molecule.Radicals,
-            **Molecule.Dications,
-            **Molecule.Dication_radicals
+        **Cations,
+        **Anions,
+        **Neutrals,
+        **Radicals,
+        **Dications,
+        **Dication_radicals
         }
 
     def __init__(self, using = None, atoms = None, group = None):
