@@ -7,6 +7,7 @@ import time
 __all__ = [
 'assign_molecules_from_dict_keys',
 'check_user_input',
+'consecutive',
 'eof',
 'get_files', 
 'get_type', 
@@ -392,3 +393,13 @@ def remove_nones_from_dict(orig_dict):
             if v is not None:
                 d[k] = v 
     return d
+
+def consecutive(lst):
+    """
+    Check for missed values. [1,2,3] returns True, [1,3,4] returns False
+    """
+    for index, val in enumerate(lst):
+        if index != len(lst) - 1:
+            if lst[index + 1] != val + 1:
+                return False
+    return True

@@ -646,7 +646,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     all_assigned = True
         if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
             self.group_frags_together()
-        self.add_ionic_network()
+        # self.add_ionic_network()
         if hasattr(self, 'fragments_after_merge'):
             self.fragments = self.fragments_after_merge
         if self.split_on_bonds:
@@ -739,29 +739,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 'elements': sort_elements(v),
                 'frag_type': 'fragmented_on_bond'
             }
-
-        # reorder xyz if necessary!!
-        # if not consecutive numbering, will reorder, 
-        # and also write a new initial xyz to avoid confusion.
-        # orig_coords = self.coords
-        if not self.consecutive_atom_indices:
-            # reorder
-            # give new numbers as indices of the frag['atoms'] lists
-            # old_numbering = {index:val for index, val in enumerate(self.coords)}
-            # new_numbering = {}
-            combined_atoms = []
-            for frag in self.fragments.values():
-                combined_atoms += frag['atoms']
-                print([a.index for a in frag['atoms']])
-            for index, atom in enumerate(combined_atoms):
-                atom.index = index + 1
-
-        for frag in self.fragments.values():
-            print([a.index for a in frag['atoms']]) 
-           
-           # working but getting overwritten at some point,
-           # with the complex then ionic species being created maybe?
-
+        print(self.fragments)
 
 
     def distance_matrix(self):
@@ -984,16 +962,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             for a in frag['atoms']:
                 if a.index == atom.index:
                     return frag['name']
-
-    @property
-    def consecutive_atom_indices(self):
-        atom_counter = 0
-        for frag in self.fragments.values():
-            for index_of_list, current_atom in enumerate(frag['atoms']):
-                if atom_counter + 1 != current_atom.index:
-                    return False
-                atom_counter += 1
-        return True
 
     @classmethod
     def get_charge(cls, fragment_dict):

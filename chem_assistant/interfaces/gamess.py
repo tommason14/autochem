@@ -4,7 +4,7 @@ from ..core.settings import (Settings, read_template, dict_to_settings)
 from ..core.job import Job
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.sc import Supercomp
-from ..core.utils import (sort_elements, write_xyz)
+from ..core.utils import (consecutive, sort_elements, write_xyz)
 
 from os import (chdir, mkdir, getcwd, system, walk, listdir)
 from os.path import (exists, join, dirname)
@@ -244,6 +244,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def fmo_meta(self):
         """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
         molecule instance as self.indat and self.charg"""
+
         info = {}
         #group together indat and charge for each fragment, and order according
         #to the atom indices of indat 
@@ -251,11 +252,70 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if frag is not 'ionic':
                 if len(data['atoms']) == 1:
                     # should add to next fragment- wasteful to run on own node
-                    info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
+                    info[frag] = {
+                    "indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
                     "charg" : str(data['charge']),
                     "mult"  : str(data['multiplicity'])}
                 else:
-                    info[frag] = {"indat": f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},",
+                    # check for consecutive numbers
+                    # normal
+                    atom_indices = [atom.index for atom in data['atoms']]
+                    if consecutive(atom_indices):
+                        indat_string = f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
+                    else:
+                        # check until no longer consecutive
+                        # weird ordering, especially with fragmenting on a bond
+                        checked = []
+                        groups = []
+                        frags = []
+                        indices = [atom.index for atom in data['atoms']]
+                        for i, val in enumerate(indices):
+                            for j, val2 in enumerate(indices):
+                                if j == i + 1:
+                                    sublist = [val, val2]
+                                    # print(sublist)
+                                    if not consecutive(sublist):
+                                        # deal with one atom,
+                                        # atoms individually (1,-16,17) etc...
+                                        if len(frags) <= 2:
+                                            # may have many single atoms in a
+                                            # row
+                                            if val not in (any(v for v in sub) for sub in groups):
+                                                groups.append([val])                          
+                                            groups.append([val2])
+                                        else:
+                                            groups.append([frags[0], frags[-1]])
+                                        frag = []
+                                    else:
+                                        # keep track of each fragment
+                                        if len(frags) == 0:
+                                            frags += sublist
+                                        else:
+                                            frags.append(val2)
+                                    # add initial 2 atoms, or each subsequent atom
+                                     # keep track for all atoms
+                                    if len(checked) == 0:
+                                        checked += sublist
+                                    else:
+                                        checked.append(val2)
+                                    # if at end of list, add atoms in frag
+                                    if j == len(indices) - 1:
+                                        # weird case that I found
+                                        if len(frags) == 2 and consecutive(frag):
+                                            # element already there, not second
+                                            groups.append([frags[1]])
+                                        elif len(frags) > 2:
+                                            groups.append([frags[0], frags[-1]])
+                                        else:
+                                            groups.append(frags)
+                        indat_string = ''
+                        for group in groups:
+                            if len(group) == 1:
+                                indat_string += f'{group[0]},'
+                            else:
+                                indat_string += f'{group[0]},-{group[-1]},'   
+
+                    info[frag] = {"indat": indat_string,
                     "charg" : str(data['charge']),
                     "mult"  : str(data['multiplicity'])}
         # items need sorting
