@@ -170,11 +170,11 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
             'Multiplicity given': [],
             'ZPVE': [],
             'TC': [],
+            'S tot': [],
             'S elec': [],
             'S trans': [],
             'S rot': [],
             'S vib': [],
-            'S tot': [],
             'TC - TS': []
         }
     print('Print csv for more info')
@@ -185,10 +185,11 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
                 if r.is_hessian():
                     res = thermo_data(r.log, mult, temp)
                     res['File'] = r.log
-                    res['Method'] = r.energy_type
+                    res['Method'] = r.method
                     res['Basis'] = r.basis
                     res['Temperature [K]'] = temp
                     res['Multiplicity given'] = mult
+
                     for k, v in res.items():
                         collected[k].append(v)
         except AttributeError:
@@ -196,11 +197,11 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
         except UnicodeDecodeError:
             print(f'{log}- UnicodeDecodeError')
             continue
-
+    
     # add units to dict keys
 
     kj = ('ZPVE', 'TC', 'TC - TS')
-    jmol = ('S elec', 'S trans', 'S rot', 'S vib', 'S tot')
+    jmol = ('S tot', 'S elec', 'S trans', 'S rot', 'S vib')
     kv = list(collected.items())
     collected.clear()
     for k, v in kv:
@@ -210,6 +211,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
             collected[k + ' [J/(mol K)]'] = v
         else:
             collected[k] = v
+    
     responsive_table({k:v for k,v in collected.items() if
                       k in ('File', 'Temperature [K]', 'Multiplicity given', 'S tot [J/(mol K)]')}, 
                       strings=[1], min_width=10)

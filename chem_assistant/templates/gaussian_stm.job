@@ -6,6 +6,7 @@
 #SBATCH -p skx-normal
 #SBATCH -o name.log
 #SBATCH -e name.err
+#SBATCH -A Water-and-Ion-Intera
 
 module load gaussian
 

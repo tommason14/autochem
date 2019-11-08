@@ -6,6 +6,7 @@
 #SBATCH -n 1
 #SBATCH -c 16
 #SBATCH -t 03:00:00
+#SBATCH -A Water-and-Ion-Intera
 
 module load psi4
 psi4 name.inp name.log

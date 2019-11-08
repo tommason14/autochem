@@ -89,7 +89,7 @@ def thermo_initial_geom_gauss(file):
             sym, x, y, z = line.split()
             x, y, z = map(float, (x,y,z))
             atoms.append(Atom(symbol=sym, coords=(x,y,z)))
-        
+    
     write_geom_input(atoms)
 
 def freq_data_gamess(file, called_by_thermo_code=True): 

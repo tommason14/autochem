@@ -7,6 +7,7 @@
 #SBATCH -n 22
 #SBATCH -c 1
 #SBATCH -t 24:00:00
+#SBATCH -A Water-and-Ion-Intera
 
 module load intel/18.0.2
 module load hdf5/1.10.4
