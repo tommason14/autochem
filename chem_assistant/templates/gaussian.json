@@ -7,7 +7,6 @@
   "input":{
     "method": "M062X",
     "basis": "cc-pVDZ",
-    "scrf": "SMD,solvent=water",
     "int": "grid=ultrafine"
   }
 }
