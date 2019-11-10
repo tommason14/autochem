@@ -250,7 +250,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         #to the atom indices of indat 
         for frag, data in self.mol.fragments.items():
             if frag is not 'ionic':
-                print(data['multiplicity'])
                 if len(data['atoms']) == 1:
                     # should add to next fragment- wasteful to run on own node
                     info[frag] = {
@@ -259,7 +258,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     "mult"  : str(data['multiplicity'])}
                 else:
                     # check for consecutive numbers
-                    # normal
                     atom_indices = [atom.index for atom in data['atoms']]
                     if consecutive(atom_indices):
                         indat_string = f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
@@ -277,17 +275,18 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                                     if not consecutive(sublist):
                                         # deal with one atom,
                                         # atoms individually (1,-16,17) etc...
-                                        # if len(frags) == 1: # maybe initially?
-                                            # groups.append(frags)
+                                        if len(frags) == 0: # initially
+                                            
+                                            groups.append([val])
                                             # pass
-                                        if len(frags) <= 2:
+                                        if len(frags) == 2:
                                             # may have many single atoms in a
                                             # row
-                                            if val not in (any(v for v in sub) for sub in groups):
+                                            # if val not in (any(v for v in sub) for sub in groups):
                                                 # if not consecutive([val2, indices[j + 1]]): # val will never be added otherwise
-                                                groups.append([val])
-                                            groups.append([val2])
-                                        else:
+                                                # groups.append([val])
+                                            # groups.append([val2])
+                                        # else:
                                             groups.append([frags[0], frags[-1]])
                                         frag = []
                                     else:
@@ -313,16 +312,16 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                                         else:
                                             groups.append(frags)
                         indat_string = ''
-                        print(groups)
                         for group in groups:
                             if len(group) == 1:
                                 indat_string += f'{group[0]},'
                             else:
                                 indat_string += f'{group[0]},-{group[-1]},'   
                     
-                    info[frag] = {"indat": indat_string,
-                    "charg" : str(data['charge']),
-                    "mult"  : str(data['multiplicity'])}
+                        info[frag] = {"indat": indat_string,
+                        "charg" : str(data['charge']),
+                        "mult"  : str(data['multiplicity'])}
+
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
         # 0,8,28,
