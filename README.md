@@ -7,7 +7,16 @@ SRS-MP2 jobs by default in GAMESS.
 Use this code for:
 
 - Automatic input and job file creation
-- Scraping log files for relevant results: energies, coordinates, vibrations,
-  fluorescence data, geodesic charges, homo-lumo gaps
+- Scraping log files for relevant results: 
+  - energies
+  - geometries 
+    - Intermolecular hydrogen bond lengths
+  - vibrations
+  - fluorescence data
+  - geodesic charges
+  - homo-lumo gaps
 - Automatic analysis of results
-  - Interaction and free energies
+  - Interaction energies
+    - Purely ionic systems
+    - Mixed ionic/neutral species
+  - Calculates free energies
