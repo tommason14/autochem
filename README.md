@@ -10,13 +10,16 @@ Use this code for:
 - Scraping log files for relevant results: 
   - energies
   - geometries 
-    - Intermolecular hydrogen bond lengths
+    - intermolecular hydrogen bond lengths
   - vibrations
   - fluorescence data
   - geodesic charges
   - homo-lumo gaps
 - Automatic analysis of results
-  - Interaction energies
-    - Purely ionic systems
-    - Mixed ionic/neutral species
-  - Calculates free energies
+  - interaction energies
+    - purely ionic systems
+    - mixed ionic/neutral species
+  - calculates free energies
+
+Also exportable as a python package, and can be easily extended. See the
+[examples](examples/) section for more details.

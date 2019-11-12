@@ -5,6 +5,7 @@ class PeriodicTable:
     ptable = {}
     #[symbol, mass, radius, connectors, vdw radii]
         #atomic weights from: http://www.ciaaw.org/atomic-weights.htm
+        # need to add more vdw radii from molden oglmol file (vdwr array)
     ptable[  0] = ['Xx',   0.00000, 0.00 ,  0, 0.000]
     ptable[  1] = [ 'H',   1.00798, 0.30 ,  1, 0.430]
     ptable[  2] = ['He',   4.00260, 0.99 ,  0, 0.741]

@@ -118,6 +118,8 @@ def freq_data_gamess(file, called_by_thermo_code=True):
                'Frequencies [cm-1]'             : freqs, 
                'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
+    # eventually change to log.frequencies, log.intensities, and write into results class
+
     results = rm_additional_rots_and_trans(results)
     if called_by_thermo_code:    
         write_freq_out_file(results)

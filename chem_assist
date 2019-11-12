@@ -6,9 +6,9 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the current directory to the relative path given here', action='store')
 # TODO- need to re-write pretty much all functions in library to accept a depth parameter! 
-parser.add_argument('--depth', 
-                    help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
-                    action='store', type=int) 
+# parser.add_argument('--depth', 
+#                     help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
+#                     action='store', type=int) 
 parser.add_argument('--freqs', help='Print frequencies and intensities for GAMESS hessian/Gaussian frequency jobs', action='store_true')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
 parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')

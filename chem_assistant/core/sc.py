@@ -9,12 +9,7 @@ class Supercomp:
     A instance of this class can be concatenated with strings- used internally 
     when writing job files:
         >>> sc = Supercomp()
-        >>> print('gamess_' + sc) # gamess_rjn or gamess_mgs
-        
-    Note: On Magnus, the script assumes it is used in the 'scratch' directory- 
-    'scratch' must appear somewhere in the current path. If not, this class 
-    will produce the wrong result by assuming use on a local machine and not on
-    a remote file system.
+        >>> print('gamess_' + sc) # gamess_rjn or gamess_mgs   
     """
 
     def __init__(self):

@@ -8,7 +8,6 @@ class Results:
     """Base class, only for inheritance"""
 
     def __init__(self, log):
-        # self.log = log[2:]
         self.log = log
         self.path, self.file = os.path.split(self.log)
         self.basename = self.file.split('.')[0]
@@ -16,7 +15,7 @@ class Results:
         self.parent_dir = self.abspath.split('/')[-2]
 
     def __repr__(self):
-        return f'{self.__class__.__name__}: {self.log}' # debugging
+        return f'{self.__class__.__name__}: {self.log}'
 
     __str__ = __repr__
 
