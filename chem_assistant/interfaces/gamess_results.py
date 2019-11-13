@@ -449,16 +449,33 @@ store the iteration number.
     def vib_get_geom(self):
         pass
     
-    def vib_get_vibs(self):
-        vibs = {}
-        pass
-        # vibs[mode] = [list of vibs for each atom]
-        # one set for each mode
-    
-    def vib_get_intensity(self):
-        ints = {}
-        pass
-        # ints[mode] = [list of ints for each atom]
+    @property
+    def vibrations(self):
+        """
+        Returns vibrations, with translations/rotations removed.
+        Checks output below this line:
+        'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
+        """
+        vibs = []
+        regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
+        for line in self.eof(0.2): # last 20 % of file
+            if re.search(regex, line):
+                vibs.append(float(line.split()[1]))
+        return vibs[6:]
+
+    @property
+    def intensities(self):
+        """
+        Returns intensities of 3N-6 vibrations
+        Checks output below this line:
+        'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
+        """ 
+        ints = []
+        regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
+        for line in self.eof(0.2): # last 20 % of file
+            if re.search(regex, line):
+                ints.append(float(line.split()[-1]))
+        return ints[6:]
 
     def vib_get_coords(self):
         coords = {}
