@@ -230,7 +230,7 @@ class OrcaResults(Results):
         if self.multiplicity == 1:
             homo, lumo, gap = self._homo_lumo_gap()
             transition = 'HOMO-LUMO'
-        elif self.multiplicity == 2:
+        elif self.multiplicity == 2: # can probs change this to be self.mult > 1
             homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
             transition = 'SOMO-LUMO'
         else:
