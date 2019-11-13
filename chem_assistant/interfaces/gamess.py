@@ -259,7 +259,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 else:
                     # check for consecutive numbers
                     atom_indices = [atom.index for atom in data['atoms']]
-                    print(atom_indices)
                     if consecutive(atom_indices):
                         indat_string = f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
                     else:
@@ -313,7 +312,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                                             groups.append([frags[0], frags[-1]])
                                         else:
                                             groups.append(frags)
-                        print(groups)
                         indat_string = ''
                         for group in groups:
                             if len(group) == 1:
@@ -321,9 +319,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                             else:
                                 indat_string += f'{group[0]},-{group[-1]},'   
                     
-                        info[frag] = {"indat": indat_string,
-                        "charg" : str(data['charge']),
-                        "mult"  : str(data['multiplicity'])}
+                    info[frag] = {"indat": indat_string,
+                    "charg" : str(data['charge']),
+                    "mult"  : str(data['multiplicity'])}
 
         # items need sorting
         # 0,1,7, ### sort on 2nd item ###
