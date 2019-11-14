@@ -1,9 +1,10 @@
-from ..core.utils import write_xyz, eof
+from ..core.utils import write_geom_input_for_thermo, write_xyz, eof
 from ..core.results import Results
 
 import re
 import os
 import subprocess
+import sys
 
 __all__ = ['GamessResults']
 
@@ -477,7 +478,17 @@ store the iteration number.
                 ints.append(float(line.split()[-1]))
         return ints[6:]
 
-    def vib_get_coords(self):
-        coords = {}
-        pass
-        # coords[mode] = [list of coords, one coord for each atom]
+    def write_initial_geom_for_thermo(self):
+        """Parses GAMESS inputs for the initial geometry"""
+        atoms = []
+        regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
+        inp = file[:-3] + 'inp'
+        if inp not in os.listdir('.'):
+            sys.exit(f'Need an input file in the same directory as {self.log}')
+        for line in read_file(inp):
+            if re.search(regex, line):
+                sym, _, x, y, z = line.split()
+                x, y, z = map(float, (x, y, z))
+                atoms.append(Atom(symbol = sym, coords = (x, y, z)))
+        write_geom_input_for_thermo(atoms)
+

@@ -1,4 +1,4 @@
-from ..core.utils import read_file, write_xyz
+from ..core.utils import read_file, write_geom_input_for_thermo, write_xyz
 from ..core.results import Results
 from ..core.periodic_table import PeriodicTable as PT
 from ..core.atom import Atom
@@ -305,4 +305,42 @@ class GaussianResults(Results):
                 'HOMO/SOMO (eV)': homo, 
                 'LUMO (eV)': lumo, 
                 'Gap (eV)': gap}
+
+    @property
+    def vibrations(self):
+        vibs = []
+        for line in self.read():
+            if 'Frequencies --' in line:     
+                vibs += line.split()[2:]
+        vibs = [float(v) for v in vibs]
+        return vibs[6:]
+
+    @property
+    def intensities(self):
+        ints = []
+        for line in self.read():
+            if 'IR Inten    --' in line:     
+                ints += line.split()[3:]
+        ints = [float(i) for i in ints]
+        return ints[6:]
+
+    def write_initial_geom_for_thermo(self):
+        """
+        Parses Gaussian frequency calculation log file for the initial
+        geometry.
+        """
+        atoms = []
+        regex = '\s+[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}'
+        found_coords = False
+        for line in self.read():
+            if 'Symbolic Z-matrix:' in line:
+                found_coords=True
+            if line is '\n':
+                found_coords=False
+            if found_coords and re.search(regex, line):
+                sym, x, y, z = line.split()
+                x, y, z = map(float, (x,y,z))
+                atoms.append(Atom(symbol=sym, coords=(x,y,z)))
+
+        write_geom_input_for_thermo(atoms)
 

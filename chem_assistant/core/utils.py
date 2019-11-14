@@ -22,6 +22,7 @@ __all__ = [
 'sort_elements',
 'write_csv_from_dict', 
 'write_csv_from_nested', 
+'write_geom_input_for_thermo',
 'write_xyz'
 ]
 
@@ -403,3 +404,12 @@ def consecutive(lst):
             if lst[index + 1] != val + 1:
                 return False
     return True
+
+def write_geom_input_for_thermo(atoms):
+    """
+    Writes 'geom.input' from the list of |Atom| objects passed in.
+    """
+    with open('geom.input', 'w') as new:
+        for atom in atoms:
+            new.write(f"{atom.symbol:5s} {int(atom.atnum):3} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
+

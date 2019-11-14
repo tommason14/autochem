@@ -191,3 +191,27 @@ class OrcaResults(Results):
                 'LUMO (eV)': lumo, 
                 'Gap (eV)': gap}
 
+    @property
+    def vibrations(self):
+        """
+        Orca removes rotations/vibrations before printing
+        """
+        vibs = []
+        regex=r'^\s+[0-9]+:(\s+-?[0-9]+.[0-9]+){2}\s+\((\s+-?[0-9]+.[0-9]+){3}\)'
+        for line in self.read():
+            if re.search(regex, line):
+                vibs.append(float(line.split()[1]))
+        return vibs
+        
+    @property
+    def intensities(self):
+        """
+        Orca removes rotations/vibrations before printing
+        """
+        ints = []
+        regex=r'^\s+[0-9]+:(\s+-?[0-9]+.[0-9]+){2}\s+\((\s+-?[0-9]+.[0-9]+){3}\)'
+        for line in self.read():
+            if re.search(regex, line):
+                ints.append(float(line.split()[2]))
+        return ints
+
