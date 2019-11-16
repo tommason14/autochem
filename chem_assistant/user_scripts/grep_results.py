@@ -4,6 +4,7 @@ from ..core.thermo import (thermo_data,
                            freq_data_gamess,
                            freq_data_gauss)
 from ..core.utils import (read_file,
+                          eof,
                           get_files,
                           list_of_dicts_to_one_level_dict,
                           write_csv_from_dict,
@@ -17,7 +18,7 @@ import os
 import re
 import sys
 
-__all__ = ['geodesics',
+__all__ = ['charges',
            'get_h_bonds',
            'get_results_class',
            'homo_lumo_gaps',
@@ -269,20 +270,64 @@ def file_is_gamess(file):
     with open(file, 'r') as f:
         return 'rungms' in f.readline()
 
-def geodesics(dir, output):
+def file_is_gaussian(file):
+    """ Check for the word Gaussian in the first 5 lines """
+    for number, line in enumerate(read_file(file)):
+        if 'gaussian' in line.lower():
+            return True
+        if number == 5:
+            break
+    return False
+
+def charges(dir, output):
     """
     Recursively pulls geodesic charges from GAMESS calculations.
+    Pulls mulliken charges from Gaussian calculations.
     Writes to `charges.csv` if desired
     """
 
-    atom_regex = '^\s[A-Za-z]{1,2}\s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$'
-    charge_regex = '^\s[A-Za-z]{1,2}(\s*-?[0-9]*.[0-9]*){2}$'
+    # atom_regex = '^\s[A-Za-z]{1,2}s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$'
+    # charge_regex = '^\s[A-Za-z]{1,2}(\s*-?[0-9]*.[0-9]*){2}$'
 
     results = []
 
     files = get_files(dir, ['log'])
     for logfile in files:
+        if file_is_gaussian(logfile):
+            res = []
+            assigned = []
+            print(logfile)
+            atom_regex = '^\s?[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}'
+            charge_regex = '^\s+[0-9]+\s+[A-z]{1,2}\s+-?[0-9]+\.[0-9]+'
+            #     1  C   -0.122119
+            for line in read_file(logfile):
+                if re.search(atom_regex, line):
+                    sym, x, y, z = line.split()
+                    x, y, z = map(float, (x, y, z))
+                    res.append([logfile, Atom(sym, coords = (x, y, z))]) # new key for each coord
+            found = False
+            counter = 0
+            for line in eof(logfile, 0.20):
+                if 'Mulliken charges:' in line:
+                    found = True
+                if 'Sum of Mulliken charges' in line:
+                    break
+                if found: 
+                    if re.search(charge_regex, line):
+                        res[counter].append(float(line.split()[-1]))
+                        counter += 1
+            coordinates = [atom[1] for atom in res]
+            mol = Molecule(atoms = coordinates)
+            mol.separate()
+            for atom, r in zip(mol.coords, res):
+                path, _, charge = r
+                results.append([path, atom.index, atom.symbol, charge, 
+                atom.x, atom.y, atom.z, f"{mol.fragments[atom.mol]['name']}_{atom.mol}"])
+            
+            
         if file_is_gamess(logfile):
+            atom_regex = '^\s[A-Za-z]{1,2}\s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$'
+            charge_regex = '^\s[A-Za-z]{1,2}(\s*-?[0-9]*.[0-9]*){2}$'
             print(logfile)
             path, filename = os.path.split(logfile)
             inpfile = logfile[:-3] + 'inp'
@@ -316,7 +361,7 @@ def geodesics(dir, output):
 
     # nested list (one level) to dict
     data = {}
-    keys = ('Path', 'Index', 'Element', 'Geodesic', 'Rx', 'Ry', 'Rz', 'Fragment')
+    keys = ('Path', 'Index', 'Element', 'Charge', 'Rx', 'Ry', 'Rz', 'Fragment')
     for index, value in enumerate(keys):
         data[value] = [val[index] for val in results]
     responsive_table(data, strings=[1, 3, 8], min_width=10)

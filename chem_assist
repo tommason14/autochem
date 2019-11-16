@@ -11,7 +11,7 @@ parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the 
 #                     action='store', type=int) 
 parser.add_argument('--freqs', help='Print frequencies and intensities for GAMESS hessian/Gaussian frequency jobs', action='store_true')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
-parser.add_argument('--geodesics', help='Recursivley pull geodesic charges from GAMESS calculations.', action='store_true')
+parser.add_argument('--charges', help='Recursivley pull geodesic charges from GAMESS calculations, and Mulliken charges from Gaussian calculations.', action='store_true')
 parser.add_argument('-g', '--group', help="""\
 Pandas command to apply groups to the csv passed into --weight.
 Refer to the dataframe as df.
@@ -120,11 +120,11 @@ if args.weight:
         args.output = 'weighted.csv'
     apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
-if args.geodesics:
-    from chem_assistant.user_scripts.grep_results import geodesics
+if args.charges:
+    from chem_assistant.user_scripts.grep_results import charges
     if not args.output:
         args.output = 'charges.csv'
-    geodesics('.', output=args.output)
+    charges('.', output=args.output)
 
 if args.fluorescence:
     from chem_assistant.user_scripts.fluorescence import fluorescence_data
