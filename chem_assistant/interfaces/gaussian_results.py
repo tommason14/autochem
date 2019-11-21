@@ -136,8 +136,8 @@ class GaussianResults(Results):
             write_xyz(coords, os.path.join(MOLECULE_PARENT_DIR, f'{self.title}_equil.xyz'))
         else:
             if len(some_coords) > 0:
-                print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun.xyz')
-                write_xyz(some_coords, os.path.join(MOLECULE_PARENT_DIR, 'rerun.xyz'))
+                print(f'not found.\nNeeds resubmitting. Coords stored in {self.path}/{self.title}_rerun.xyz')
+                write_xyz(some_coords, os.path.join(MOLECULE_PARENT_DIR, f'{self.title}_rerun.xyz'))
             else:
                 print('No iterations were cycled through!')
         
