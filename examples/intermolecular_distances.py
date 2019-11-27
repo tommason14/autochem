@@ -108,7 +108,7 @@ for file, val in bonds.items():
     for _ in range(num_rows_per_file):
         files.append(file)
     for b, dists in val.items():
-        # MAKE LISTS SAME LENGTH AS FILE COLUMN
+        # make lists same length as file column
         to_add = num_rows_per_file - len(dists)
         for _ in range(to_add):
             dists.append('NA')
