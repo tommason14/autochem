@@ -20,7 +20,7 @@ import sys
 
 __all__ = ['charges',
            'get_h_bonds',
-           'get_results_class',
+           'file_as_results_class',
            'homo_lumo_gaps',
            'energies',
            'print_freqs',
@@ -35,15 +35,20 @@ def search_for_coords(dir):
     `rerun/rerun.xyz`, whilst also creating the corresponding input and
     job file.
     """
-    for log in get_files(dir, ('.log', '.out')):
-        r = get_results_class(log)
-        if r is not None and r.is_optimisation():
-            print(f'Searching {r.log}',
-                  end=" ")
-            r.get_equil_coords()
-            print()
+    def checked_before(r):
+        filepath = os.listdir(r.path)
+        return 'rerun' in filepath or 'spec' in filepath
 
-def get_results_class(log):
+    for log in get_files(dir, ('.log', '.out')):
+        r = file_as_results_class(log)
+        if r is not None and r.is_optimisation():
+            if not checked_before(r): 
+                print(f'Searching {r.log}',
+                      end=" ")
+                r.get_equil_coords()
+                print()
+
+def file_as_results_class(log):
     """Return an instance of the desired class- |GamessResults|, |PsiResults|"""
     log_type = get_type(log)
     logs = {'gamess': GamessResults(log),
@@ -82,7 +87,7 @@ def energies(dir, filepath_includes):
     """
     output = []
     for log in get_files(dir, ('.out', '.log'), filepath_includes=filepath_includes):
-        calc = get_results_class(log)
+        calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
             if calc.completed():  # add provision for energies of opts only if equilibrium found
@@ -142,7 +147,7 @@ def homo_lumo_gaps(dir, output):
     """
     info = []
     for log in get_files(dir, ('.out', '.log')):
-        calc = get_results_class(log)
+        calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
             if calc.completed() and calc.is_spec():
@@ -180,7 +185,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
         }
     print('Print csv for more info')
     for log in get_files(dir, ('.log', '.out'), filepath_includes=string_to_find):
-        r = get_results_class(log)
+        r = file_as_results_class(log)
         try:
             if r.completed():
                 if r.is_hessian():
@@ -225,7 +230,7 @@ def print_freqs(dir):
     """
     for f in os.listdir(dir):
         if f.endswith('log') or f.endswith('out'):
-            calc = get_results_class(f)
+            calc = file_as_results_class(f)
             if calc.is_hessian():
                 if get_type(f) == 'gamess':
                     freq_data_gamess(f, called_by_thermo_code=False) 

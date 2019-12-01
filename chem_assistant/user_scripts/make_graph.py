@@ -1,7 +1,7 @@
 from ..interfaces.gamess_results import GamessResults
 from ..interfaces.psi_results import PsiResults
 from ..interfaces.gaussian_results import GaussianResults
-from .grep_results import get_results_class
+from .grep_results import file_as_results_class
 
 import os
 import re
@@ -11,7 +11,7 @@ __all__ = ['plot_opt']
 #### DEPRECATED NOW, NO LONGER INCORPORATED INTO CHEM_ASSIST ####
 
 def get_data(file):
-    r = get_results_class(file)
+    r = file_as_results_class(file)
     iters = []
     energies = []
     if isinstance(r, GamessResults):
