@@ -9,7 +9,8 @@ parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the 
 # parser.add_argument('--depth', 
 #                     help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
 #                     action='store', type=int) 
-parser.add_argument('--freqs', help='Print frequencies and intensities for GAMESS hessian/Gaussian frequency jobs', action='store_true')
+parser.add_argument('--freqs', help='Print frequencies and intensities to a csv. Works recursively.', action='store_true')
+parser.add_argument('--freqs-to-tsv', help='Print frequencies and intensities as a tab-separated file for GAMESS hessian/Gaussian frequency jobs', action='store_true')
 parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
 parser.add_argument('--charges', help='Recursivley pull geodesic charges from GAMESS calculations, and Mulliken charges from Gaussian calculations.', action='store_true')
 parser.add_argument('-g', '--group', help="""\
@@ -55,7 +56,13 @@ if len(sys.argv) == 1:
 
 if args.freqs:
     from chem_assistant.user_scripts.grep_results import print_freqs
-    print_freqs('.')
+    if not args.output:
+        args.output = 'freqs.csv'
+    print_freqs('.', output=args.output)
+
+if args.freqs_to_tsv:
+    from chem_assistant.user_scripts.grep_results import print_freqs_to_tsv
+    print_freqs_to_tsv('.')
 
 if args.homo_lumo:
     from chem_assistant.user_scripts.grep_results import homo_lumo_gaps
