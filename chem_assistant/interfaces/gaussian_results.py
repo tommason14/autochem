@@ -313,7 +313,7 @@ class GaussianResults(Results):
             if 'Frequencies --' in line:     
                 vibs += line.split()[2:]
         vibs = [float(v) for v in vibs]
-        return vibs[6:]
+        return vibs
 
     @property
     def intensities(self):
@@ -322,7 +322,7 @@ class GaussianResults(Results):
             if 'IR Inten    --' in line:     
                 ints += line.split()[3:]
         ints = [float(i) for i in ints]
-        return ints[6:]
+        return ints
 
     def write_initial_geom_for_thermo(self):
         """

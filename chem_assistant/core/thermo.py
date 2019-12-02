@@ -47,20 +47,6 @@ def write_freq_out_file(results):
         for i in results['Frequencies [cm-1]']:
             output.write(f"{i:.3f}\n")
 
-def write_freq_ints(results, file):
-    """
-    Writes a tab-separated file of frequencies and intensities
-    """
-    name = file[:-4]
-    data = list(f for f in zip(results['Frequencies [cm-1]'], 
-                               results['Intensities [Debye^2/(amu Å^2)]']))
-    with open(f'{name}.ir.data.tsv', 'w') as f:
-        f.write(f'{"Freq":<8}\tIntensity\n')
-        for val in data:
-            freq, intensity = val
-            f.write(f'{freq:<8}\t{intensity}\n')
-        
-
 def rm_additional_rots_and_trans(results):
     """
     Removes the first 6 rotations and translations, to leave
@@ -92,7 +78,7 @@ def thermo_initial_geom_gauss(file):
     
     write_geom_input(atoms)
 
-def freq_data_gamess(file, called_by_thermo_code=True): 
+def freq_data_gamess(file): 
     """Parses GAMESS hessian log files for frequency data"""
     regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
     found_region = False
@@ -118,16 +104,11 @@ def freq_data_gamess(file, called_by_thermo_code=True):
                'Frequencies [cm-1]'             : freqs, 
                'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
-    # eventually change to log.frequencies, log.intensities, and write into results class
-
     results = rm_additional_rots_and_trans(results)
-    if called_by_thermo_code:    
-        write_freq_out_file(results)
-    else:
-        write_freq_ints(results, file)
+    write_freq_out_file(results)
     return results
     
-def freq_data_gauss(file, called_by_thermo_code=True):
+def freq_data_gauss(file):
     """Parses Gaussian frequency log files for frequency data"""
     freqs = []
     ints  = []
@@ -146,10 +127,7 @@ def freq_data_gauss(file, called_by_thermo_code=True):
                'Intensities [Debye^2/(amu Å^2)]': ints} # keys used as headers for csv
 
     results = rm_additional_rots_and_trans(results)
-    if called_by_thermo_code:    
-        write_freq_out_file(results)
-    else:
-        write_freq_ints(results, file)
+    write_freq_out_file(results)
 
     return results
 

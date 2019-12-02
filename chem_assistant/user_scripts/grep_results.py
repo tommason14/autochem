@@ -24,6 +24,7 @@ __all__ = ['charges',
            'homo_lumo_gaps',
            'energies',
            'print_freqs',
+           'print_freqs_to_tsv',
            'energy_table',
            'search_for_coords',
            'thermochemistry']
@@ -223,19 +224,39 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
                       strings=[1], min_width=10)
     name = write_csv_from_dict(collected, filename=output)
 
-def print_freqs(dir):
+def print_freqs(dir, output):
     """
-    Prints frequencies and intensities for jobs in the directory
-    passed in. Works for GAMESS/Gaussian jobs.
+    Writes frequencies and intensities of GAMESS/Gaussian frequency calculations
+    to a csv. Works recursively through the file system.
+    """
+    data = {}
+    data['File'] = []
+    data['Frequencies'] = []
+    data['Intensities'] = []
+    for file in get_files(dir, ['log', 'out']):
+        calc = file_as_results_class(file)
+        if calc.is_hessian():
+            data['Frequencies'] += calc.frequencies
+            data['Intensities'] += calc.intensities
+            data['File'] += [calc.log] * len(calc.frequencies)
+    responsive_table(data, strings=[1])
+    write_csv_from_dict(data, filename=output)
+            
+def print_freqs_to_tsv(dir):
+    """
+    Writes a tab-separated file of frequencies and intensities for each frequency calculation
+    in the current directory
     """
     for f in os.listdir(dir):
         if f.endswith('log') or f.endswith('out'):
             calc = file_as_results_class(f)
             if calc.is_hessian():
-                if get_type(f) == 'gamess':
-                    freq_data_gamess(f, called_by_thermo_code=False) 
-                else:
-                    freq_data_gauss(f, called_by_thermo_code=False) 
+                print(f'Extracting freqs from {calc.log}')
+                with open(f'{calc.basename}.ir.data.tsv', 'w') as f:
+                    f.write('Freq\tIntensity\n')
+                    for val in zip(calc.frequencies, calc.intensities):
+                        freq, intensity = val
+                        f.write(f'{freq}\t{intensity}\n')
 
 def get_h_bonds(dir):
     """

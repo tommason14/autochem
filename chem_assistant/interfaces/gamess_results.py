@@ -451,9 +451,9 @@ store the iteration number.
         pass
     
     @property
-    def vibrations(self):
+    def frequencies(self):
         """
-        Returns vibrations, with translations/rotations removed.
+        Returns vibrations, with translations/rotations included.
         Checks output below this line:
         'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
         """
@@ -462,12 +462,12 @@ store the iteration number.
         for line in self.eof(0.2): # last 20 % of file
             if re.search(regex, line):
                 vibs.append(float(line.split()[1]))
-        return vibs[6:]
+        return vibs
 
     @property
     def intensities(self):
         """
-        Returns intensities of 3N-6 vibrations
+        Returns intensities of all vibrations
         Checks output below this line:
         'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
         """ 
@@ -476,7 +476,7 @@ store the iteration number.
         for line in self.eof(0.2): # last 20 % of file
             if re.search(regex, line):
                 ints.append(float(line.split()[-1]))
-        return ints[6:]
+        return ints
 
     def write_initial_geom_for_thermo(self):
         """Parses GAMESS inputs for the initial geometry"""
