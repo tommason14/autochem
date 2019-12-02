@@ -43,8 +43,7 @@ def search_for_coords(dir):
         r = file_as_results_class(log)
         if r is not None and r.is_optimisation():
             if not checked_before(r): 
-                print(f'Searching {r.log}',
-                      end=" ")
+                print(f'Searching {r.log}')
                 r.get_equil_coords()
                 print()
 

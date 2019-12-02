@@ -134,7 +134,7 @@ store the iteration number.
                 found_some = False
        
         if len(equil) > 0:
-            print('found equilibrium!')
+            print('Found equilibrium!')
             newdir = os.path.join(MOLECULE_PARENT_DIR, 'spec')
             newname = self.basename + '_equil.xyz'
             if not os.path.isdir(newdir):
@@ -142,7 +142,8 @@ store the iteration number.
             write_xyz(equil, os.path.join(newdir, newname))
         else:
             if len(rerun) > 0:
-                print(f'equilibrium not found.\nNeeds resubmitting. Coords stored in {self.path}/rerun/rerun.xyz')
+                print('Equilibrium not found. Needs resubmitting.'
+                      f'\nCoords stored in {self.path}/rerun/rerun.xyz')
                 rerun_dir = os.path.join(self.path, 'rerun')
                 if not os.path.exists(rerun_dir): 
                     os.mkdir(rerun_dir)
