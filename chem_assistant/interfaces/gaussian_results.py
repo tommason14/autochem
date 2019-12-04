@@ -133,12 +133,18 @@ class GaussianResults(Results):
                 some_coords = coords_found
         if len(coords) > 0:
             print('Found equilibrium!')
-            write_xyz(coords, os.path.join(MOLECULE_PARENT_DIR, f'{self.title}_equil.xyz'))
+            newdir=os.path.join(MOLECULE_PARENT_DIR, 'spec')
+            if not os.path.isdir(newdir):
+                os.mkdir(newdir)
+            write_xyz(coords, os.path.join(newdir,f'{self.title}-equil.xyz'))
         else:
             if len(some_coords) > 0:
                 print('Equilibrium not found. Needs resubmitting.',
-                      f'Coords stored in {self.path}/{self.title}_rerun.xyz')
-                write_xyz(some_coords, os.path.join(MOLECULE_PARENT_DIR, f'{self.title}_rerun.xyz'))
+                      f'Coords stored in {self.path}/rerun/{self.title}.xyz')
+                newdir=os.path.join(MOLECULE_PARENT_DIR, 'rerun')
+                if not os.path.isdir(newdir):
+                    os.mkdir(newdir)
+                write_xyz(some_coords, os.path.join(newdir, f'{self.title}-rerun.xyz'))
             else:
                 print('No iterations were cycled through!')
         
@@ -177,8 +183,8 @@ class GaussianResults(Results):
     @property
     def method(self):
         """
-        Returns energy type. For example, for HF/cc-pVTZ, returns hf. 
-        For wB97xD/aug-cc-pVDZ, returns wb97xd.
+        Returns energy type. For example, for HF/cc-pVTZ, returns HF. 
+        For wB97xD/aug-cc-pVDZ, returns WB97XD.
         """
         return self.user_commands.split('/')[0].split()[-1].upper()
 
