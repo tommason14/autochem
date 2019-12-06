@@ -192,7 +192,7 @@ def one_level_dict(res):
     output['Config'] = configs
     output['Root']   = roots
     output['Iteration'] = iters
-    output['Transition Energies (eV)'] = oscs
+    output['Transition Energies (eV)'] = energies
     output['Wavelength (nm)'] = waves
     output['Intensity (au)'] = ints
     return output
