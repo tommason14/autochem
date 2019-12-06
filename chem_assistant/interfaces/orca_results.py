@@ -191,6 +191,8 @@ class OrcaResults(Results):
                 'LUMO (eV)': lumo, 
                 'Gap (eV)': gap}
 
+    # Vibrational analysis
+
     @property
     def frequencies(self):
         """
@@ -223,4 +225,65 @@ class OrcaResults(Results):
             if found and re.search(regex, line):
                 ints.append(float(line.split()[2]))
         return ints
+
+    # TD-DFT Excited states
+
+    # Also need to think about multiple iterations...
+
+    @property
+    def td_dft_wavelengths(self):
+        """
+        Returns a list of wavelengths
+        """
+        waves = []
+        found=False
+        regex='^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$'
+        for line in self.eof(0.1):
+            if 'TRANSITION ELECTRIC' in line:
+                found=True
+            if line is '\n':
+                found=False
+            if found:
+                if re.search(regex, line):
+                    waves.append(line.split()[2]) 
+        return waves
+
+    @property
+    def td_dft_intensities(self):
+        """
+        Returns a list of intensities
+        """
+        ints = []
+        found=False
+        regex='^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$'
+        for line in self.eof(0.1):
+            if 'TRANSITION ELECTRIC' in line:
+                found=True
+            if line is '\n':
+                found=False
+            if found:
+                if re.search(regex, line):
+                    ints.append(line.split()[4]) 
+        return ints
+
+    @property
+    def td_dft_transition_energies(self):
+        """
+        Returns a list of energies of each transition, converted 
+        from cm-1 to eV
+        """
+        vals = []
+        found=False
+        regex='^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$'
+        for line in self.eof(0.1):
+            if 'TRANSITION ELECTRIC' in line:
+                found=True
+            if line is '\n':
+                found=False
+            if found:
+                if re.search(regex, line):
+                    vals.append(line.split()[1])
+        inverse_cm_to_ev = lambda x: float(x) / 8065.6
+        vals = map(inverse_cm_to_ev, vals)
+        return vals
 
