@@ -81,7 +81,7 @@ def find_root(file, d, name):
     d[name][root]['peaks'] = {}
     return d, root
 
-def reassign_root_of_initial_spectra(d, name, root, iteration, oscillator_strength, intensity, wavelength, number, cutoff):
+def reassign_root_of_initial_spectra(d, name, root, iteration, transition_energy, intensity, wavelength, number, cutoff):
     """
     If the file being searched is run to find the 
     roots to take forward, need to know the roots!
@@ -98,7 +98,7 @@ def reassign_root_of_initial_spectra(d, name, root, iteration, oscillator_streng
         if iteration not in d[name][new_key]['peaks']:
             d[name][new_key]['peaks'][iteration] = []
     if intensity > cutoff:
-        d[name][new_key]['peaks'][iteration].append((oscillator_strength, wavelength, intensity))
+        d[name][new_key]['peaks'][iteration].append((transition_energy, wavelength, intensity))
     return d
 
 def find_spectral_data(file, d, name, root, cutoff):
@@ -123,13 +123,13 @@ def find_spectral_data(file, d, name, root, cutoff):
             if 'f=' in item:
                 intensity = float(item.split('=')[1])
             if 'eV' in item:
-                oscillator_strength = float(line[index - 1])
+                transition_energy = float(line[index - 1])
         if root == 'initial_spectra':
-            d = reassign_root_of_initial_spectra(d, name, root, iteration, oscillator_strength, intensity, wavelength,
+            d = reassign_root_of_initial_spectra(d, name, root, iteration, transition_energy, intensity, wavelength,
 number, cutoff)
         else:
             if intensity > cutoff:
-                d[name][root]['peaks'][iteration].append((oscillator_strength, wavelength, intensity))
+                d[name][root]['peaks'][iteration].append((transition_energy, wavelength, intensity))
     return d
 
 def grep_data(cutoff, files):
@@ -163,8 +163,8 @@ def transform(res):
         for root in sorted(res[name]):
             for iteration in res[name][root]['peaks']:
                 for peak in res[name][root]['peaks'][iteration]:
-                    strength, wave, intensity = peak
-                    flattened.append([name, root, iteration, strength, wave, intensity])
+                    energy, wave, intensity = peak
+                    flattened.append([name, root, iteration, energy, wave, intensity])
     return flattened
 
 def one_level_dict(res):
@@ -172,7 +172,7 @@ def one_level_dict(res):
     configs = []
     roots = []
     iters = []
-    oscs = [] 
+    energies = [] 
     waves = []
     ints = []
     for config in res:
@@ -180,11 +180,11 @@ def one_level_dict(res):
             for iteration in res[config][root]['peaks']:
                 data = res[config][root]['peaks'][iteration]
                 for val in data:
-                    osc, wave, intensity = val
+                    energy, wave, intensity = val
                     configs.append(config)
                     roots.append(root)
                     iters.append(iteration)
-                    oscs.append(osc)
+                    energies.append(energy)
                     waves.append(wave)
                     ints.append(intensity)
 
@@ -192,7 +192,7 @@ def one_level_dict(res):
     output['Config'] = configs
     output['Root']   = roots
     output['Iteration'] = iters
-    output['Oscillator Strength (eV)'] = oscs
+    output['Transition Energies (eV)'] = oscs
     output['Wavelength (nm)'] = waves
     output['Intensity (au)'] = ints
     return output
@@ -207,7 +207,7 @@ def fluorescence_data(dir, output):
         responsive_table(onelevel, strings = [1, 2, 3], min_width=2)
         write_csv_from_nested(data, 
             col_names = ['Config', 'Root', 'Iteration', 
-                         'Oscillator Strength (eV)', 
+                         'Transition Energies (eV)', 
                          'Wavelength (nm)', 'Intensity (au)'], 
             filename=output)
     else:
