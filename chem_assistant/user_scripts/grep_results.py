@@ -233,11 +233,12 @@ def print_freqs(dir, output):
     data['Frequencies'] = []
     data['Intensities'] = []
     for file in get_files(dir, ['log', 'out']):
-        calc = file_as_results_class(file)
-        if calc.is_hessian():
-            data['Frequencies'] += calc.frequencies
-            data['Intensities'] += calc.intensities
-            data['File'] += [calc.log] * len(calc.frequencies)
+        if 'slurm' not in file:
+            calc = file_as_results_class(file)
+            if calc.is_hessian():
+                data['Frequencies'] += calc.frequencies
+                data['Intensities'] += calc.intensities
+                data['File'] += [calc.log] * len(calc.frequencies)
     responsive_table(data, strings=[1])
     write_csv_from_dict(data, filename=output)
             
