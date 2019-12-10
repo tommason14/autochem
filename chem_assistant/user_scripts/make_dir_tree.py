@@ -176,9 +176,7 @@ def make_tree_and_copy(xyz_dir, files):
 
     # calc_dir = make_parent_dir()
     cwd = os.getcwd()
-    print(files)
     for file in files:
-        print(os.path.dirname(file))
         new_dirs = make_dir_list(file)
         for idx, d in enumerate(new_dirs):
             # if dir is rerun, no need to move to lower dir
