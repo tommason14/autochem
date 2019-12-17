@@ -239,7 +239,10 @@ def search_dict_recursively(d):
 
 def check_user_input(user_input, condition, if_error):
     """
-    Uses a try/except statement to create a scenario where the end user cannot give unexpected input. Give the condition referring to an item in a lambda expression i.e. lambda item: item.endswith('.csv'), or lambda item: item in range(...)
+    Uses a try/except statement to create a scenario where the 
+    end user cannot give unexpected input. 
+    Give the condition referring to an item in a lambda expression 
+    i.e. lambda item: item.endswith('.csv'), or lambda item: item in range(...)
 
     Usage:
         >>> check_user_input('Filename of output', lambda item: item.endswith('.csv'), "Please print a name ending in '.csv'")
