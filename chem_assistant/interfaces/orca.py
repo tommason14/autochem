@@ -79,7 +79,8 @@ class OrcaJob(Job):
         necessary modifications. After, the job file is printed in the      
         appropriate directory.
         """
-        jobfile = self.get_job_template().replace('name', self.base_name)
+        jobfile = self.get_job_template().replace(' name', f' {self.base_name}')
+        # need space due to `dirname` being used in script        
 
         # replace cpus for parallelisation
         # and set cpus per task to 1
