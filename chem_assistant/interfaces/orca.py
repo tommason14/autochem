@@ -194,12 +194,20 @@ class OrcaJob(Job):
         if self.filename is not None:
             self.base_name = self.filename
         else:
-            if self.runtype == '':
-                self.base_name = 'spec'
-            elif 'opt' in self.runtype:
-                self.base_name = 'opt'
+            if 'run' in self.input:
+                if 'opt' in self.input.run.lower():
+                    self.base_name = 'opt'
+                elif 'freq' in self.input.run.lower():
+                    self.base_name = 'freq'
+                else:
+                    self.base_name = 'spec'
             else:
-                self.base_name = 'freq'
+                if self.runtype == '':
+                    self.base_name = 'spec'
+                elif 'opt' in self.runtype:
+                    self.base_name = 'opt'
+                else:
+                    self.base_name = 'freq'
 
     # def move_to_subdir(self):
     #     """
