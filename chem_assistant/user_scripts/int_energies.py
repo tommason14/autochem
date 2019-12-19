@@ -72,6 +72,7 @@ def calculate_interaction_energies(csv, ionic_present=False, software='gamess', 
             if output is not None:
                 data.to_csv(output, index=False)
         else:
+            print(gamess_df.columns)
             data = (gamess_df >>
                 mutate(Config = X.Path.str.split('/').str[0]) >>
                 mutate(Type = if_else(X.Path.str.contains('frag'), 'frag', 'complex')) >>

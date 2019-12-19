@@ -35,6 +35,10 @@ molecular dynamics. This class also creates job files in the same directory as t
     __str__ = __repr__
 
     def get_sc(self):
+        """
+        Attempts to read in the supercomputer from a user defined `sett.supercomp`,
+        or uses the hostname of the cluster to decide otherwise
+        """
         if hasattr(self, 'merged'):
             meta = self.merged
         else:
@@ -43,6 +47,7 @@ molecular dynamics. This class also creates job files in the same directory as t
             user_sc = meta.supercomp
             supercomps = {'rjn': 'rjn',
                           'raijin': 'rjn',
+                          'gadi': 'gadi',
                           'mgs': 'mgs',
                           'magnus': 'mgs',
                           'mon': 'mon',

@@ -8,6 +8,7 @@ from ..core.utils import (search_dict_recursively, write_xyz)
 
 from os import (chdir, mkdir, getcwd, system)
 from os.path import (exists, join, dirname)
+import re
 
 __all__ = ['OrcaJob']
 
@@ -26,6 +27,9 @@ class OrcaJob(Job):
     >>> s.input.solvent.model='cpcm'
     >>> s.input.solvent.molecule='water'
     """
+
+    _procs = {'stm': 46, 'mon': 16, 'mas': 16, 'gadi': 46, 'mgs': 24}
+
     def __init__(self, using = None, frags_in_subdir = False, 
                  settings = None, filename = None,
                  is_complex = None):
@@ -46,6 +50,7 @@ class OrcaJob(Job):
         self.xyzfile = using.split('/')[-1]         
 
         self.file_basename()
+        self.get_sc() # required to be called here as func uses sett.supercomp if provided
     
         self.is_complex = is_complex # creates a `complex` dir
 
@@ -72,8 +77,22 @@ class OrcaJob(Job):
         """
         Returns the relevant job template as a list, then performs the 
         necessary modifications. After, the job file is printed in the      
-        appropriate directory."""
+        appropriate directory.
+        """
         jobfile = self.get_job_template().replace('name', self.base_name)
+
+        # replace cpus for parallelisation
+        # and set cpus per task to 1
+        # create list for ease of manipulation
+        jobfile = jobfile.split('\n')
+        for num, line in enumerate(jobfile):
+            # SLURM
+            if re.search('SBATCH -n(tasks)? [0-9]+', line):
+                jobfile[num] = f'#SBATCH -n {OrcaJob._procs[self.sc]}'
+            if re.search('SBATCH -c(pus-per-task)? [0-9]+', line):
+                jobfile[num] = '#SBATCH -c 1'
+            # PBS?
+        jobfile = '\n'.join(jobfile)
         self.write_file(jobfile, filetype='job')        
 
     def place_files_in_dir(self):
@@ -219,10 +238,11 @@ class OrcaJob(Job):
         self.solvation_effects()
         inp = [
             self.run_info,
+            self.additional_info,
             self.coord_info
         ]
         if hasattr(self, 'cpcm_opts'):
-            inp.insert(1, self.cpcm_opts)
+            inp.insert(2, self.cpcm_opts) # after additional info
         return '\n\n'.join(inp)
 
     @property
@@ -292,7 +312,7 @@ class OrcaJob(Job):
         """
         addn = ''
         ignore=('runtype', 'Opt', 'Freq', 'NumFreq', 'method', 'basis', 'density_fitting', 'charge',
-                'mult', 'solvent')
+                'mult', 'solvent', 'meta')
         for arg in self.input:
             if arg not in ignore:
                 addn += arg + ' '
@@ -303,8 +323,12 @@ class OrcaJob(Job):
         """
         Creating a line like this:
         ! opt HF aug-cc-pVTZ RIJK additional_params
-        from data stored in self.input
+        from data stored in self.input.
+        For ease, can define a `sett.input.run` string which will
+        be used.
         """
+        if 'run' in self.input:
+            return f'!{self.input.run}'
         if self.input.density_fitting is not None:
             return (f'!{self.formatted_run}{self.input.method} '
                     f'{self.input.basis} {self.input.density_fitting} '
@@ -319,4 +343,29 @@ class OrcaJob(Job):
         self.find_charge_and_mult()
         return f'*xyzfile {self.input.charge} {self.input.mult} {self.xyzfile}\n\n'
 
+    @property
+    def additional_info(self):
+        """
+        Add information such as:
+        %pal 
+            nprocs 46 
+        end
+        with this function.
+        By default, Orca is set to run in parallel with the following number of CPUs
+        per node depending on the supercomputer:
         
+        - Stampede: 46        
+        - Magnus: 24
+        - Monarch: 16
+        - Massive: 16
+        - Gadi: 46
+
+        Can also set manually with `sett.input.meta.pal='nprocs 20'`, for example.
+        """           
+        ret = ''    
+        if 'pal' not in self.input.meta:
+            ret += f'%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend'          
+        for key, val in self.input.meta.items():
+            ret += f'\n\n%{key}\n{val}\nend'
+        return ret
+

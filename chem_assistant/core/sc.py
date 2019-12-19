@@ -13,12 +13,14 @@ class Supercomp:
     """
 
     def __init__(self):
-        cases = {'raijin': 'rjn',
-                 'magnus': 'mgs',
-                 'nfs': 'gaia',
+        cases = {
+                 'gadi': 'gadi',
                  'm3': 'mas',
+                 'magnus': 'mgs',
                  'monarch': 'mon',
-                 'stampede': 'stm'
+                 'nfs': 'gaia',
+                 'raijin': 'rjn',
+                 'stampede': 'stm',
                  }
         hostname = subprocess.run('hostname', encoding = 'utf-8',
                    stdout = subprocess.PIPE).stdout[:-1]

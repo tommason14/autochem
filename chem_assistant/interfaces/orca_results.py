@@ -229,6 +229,7 @@ class OrcaResults(Results):
     # TD-DFT Excited states
 
     # Also need to think about multiple iterations...
+    # Probably best handled in the external user script,
 
     @property
     def td_dft_wavelengths(self):

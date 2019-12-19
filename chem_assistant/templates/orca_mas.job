@@ -2,8 +2,8 @@
 #SBATCH -J name
 #SBATCH -e name.%j.err
 #SBATCH -N 1
-#SBATCH -n 1
-#SBATCH -c 16
+#SBATCH -n 16
+#SBATCH -c 1
 #SBATCH --mem=64G
 #SBATCH -t 10:00:00
 #SBATCH -p comp
@@ -12,5 +12,8 @@ export PROJECT="sn29"
 
 module load orca/4.0.1
 module load openmpi/1.10.7-mlx
-orca name.inp > name.log
+orcapath=$(dirname $(which orca))
+
+$orcapath/orca name.inp > name.log
+
 find . -empty -delete
