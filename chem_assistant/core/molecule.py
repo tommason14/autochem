@@ -739,7 +739,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 'elements': sort_elements(v),
                 'frag_type': 'fragmented_on_bond'
             }
-        print(self.fragments)
 
 
     def distance_matrix(self):

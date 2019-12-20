@@ -77,8 +77,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     
     """
     def __init__(self, using = None, fmo = False, frags_in_subdir = False, settings = None, filename = None, is_complex = False, run_dir = None, bonds_to_split = None):
-        super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split) 
-        # bonds to split will reorder xyz!!!!!
+        # Also read in bonds to split from settings object
         self.fmo = fmo # Boolean
         self.filename = filename
         self.defaults = read_template('gamess.json') #settings object 
@@ -89,8 +88,16 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.job = self.merged.job
         else:
             self.input = self.defaults.input
+
+        # Split each molecule on a bond?
+        if bonds_to_split is None:
+            if 'bonds_to_split' in self.merged:
+                bonds_to_split = self.merged.bonds_to_split
+
+        super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split) 
+
         if '/' in using:
-            self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> 
+            self.title = using.split('/')[-1][:-4] #say using = ../xyz_files/file.xyz --> file
         else:
             self.title = using[:-4]
         self.xyz = using
@@ -100,10 +107,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.made_run_dir = False
         if run_dir is not None:
             self.made_run_dir = True
-    
-        self.split_on_bond = False
-        if bonds_to_split is not None:
-            self.split_on_bond = True
 
         self.create_inp()
         self.create_job()
@@ -202,6 +205,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 for val in line:
                     line_length += len(val)
                     chars.append(line_length)
+
+                # For super long lines, could call this recursively
                 for index, length in enumerate(chars):
                     if length > 55:
                         line.insert(index - 1, '\n ')
@@ -232,15 +237,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret = format_line_if_too_long(ret)
             return ret
     
-        # hack for now
-        # del self.input['charge']
-        # del self.input['mult']
-
         inp = [parse(item, self.input[item])
             for item in self.input]
         return inp
 
-    #format for fmo run of complete system 
     def fmo_meta(self):
         """Creates strings for the INDAT and ICHARG blocks of GAMESS FMO calculations, bound to the
         molecule instance as self.indat and self.charg"""
@@ -262,63 +262,68 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     if consecutive(atom_indices):
                         indat_string = f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
                     else:
-                        # check until no longer consecutive
-                        # weird ordering, especially with fragmenting on a bond
-                        checked = []
+                        # odd ordering, especially with fragmenting on a bond
                         groups = []
                         frags = []
                         indices = [atom.index for atom in data['atoms']]
-                        for i, val in enumerate(indices):
-                            for j, val2 in enumerate(indices):
+                        for i, atom_i in enumerate(indices):
+                            for j, atom_j in enumerate(indices):
                                 if j == i + 1:
-                                    sublist = [val, val2]
-                                    if not consecutive(sublist):
-                                        # deal with one atom,
-                                        # atoms individually (1,-16,17) etc...
-                                        if len(frags) == 0: # initially
-                                            
-                                            groups.append([val])
-                                            # pass
-                                        if len(frags) == 2:
-                                            # may have many single atoms in a
-                                            # row
-                                            if val not in (any(v for v in sub) for sub in groups):
-                                                print(val)
-                                                # if not consecutive([val2, indices[j + 1]]): # val will never be added otherwise
-                                                # groups.append([val])
-                                            # groups.append([val2])
-                                        # else:
-                                            groups.append([frags[0], frags[-1]])
-                                        frag = []
-                                    else:
-                                        # keep track of each fragment
-                                        if len(frags) == 0:
-                                            frags += sublist
+                                    # first item
+                                    if len(frags) == 0:
+                                        frags.append(atom_i)
+                                    if not consecutive([atom_i, atom_j]):
+                                        if frags[-1] == '-':
+                                            # end one fragment, start another
+                                            frags += [atom_i,atom_j]
+                                    # count back to see how many atoms are in 'current' fragment
+                                    count = 0
+                                    for val in frags[::-1]:
+                                        if val == '-':
+                                            count += 1
                                         else:
-                                            frags.append(val2)
-                                    # add initial 2 atoms, or each subsequent atom
-                                     # keep track for all atoms
-                                    if len(checked) == 0:
-                                        checked += sublist
-                                    else:
-                                        checked.append(val2)
-                                    # if at end of list, add atoms in frag
+                                            break
+                                    if count == 0:
+                                        frags.append('-')
+                                    # at end
                                     if j == len(indices) - 1:
-                                        # weird case that I found
-                                        if len(frags) == 2 and consecutive(frag):
-                                            # element already there, not second
-                                            groups.append([frags[1]])
-                                        elif len(frags) > 2:
-                                            groups.append([frags[0], frags[-1]])
-                                        else:
-                                            groups.append(frags)
-                        indat_string = ''
+                                        frags.append(atom_j)
+    
+                        # Algorithm above needs improving- if it worked properly,
+                        # there would be no need for the next two for loops                     
+    
+                        # Check for 'single' atom parts i.e. 43, -, 43,
+                        # remove -, 43
+                        for i, val in enumerate(frags):
+                            if frags[i:i+3] == [val, '-', val]:
+                                del frags[i+1:i+3]
+                        # Check for consecutives like 46, -, 47, remove - from middle
+                        for i, val in enumerate(frags):
+                            try:
+                                if (isinstance(frags[i], int) and
+                                    isinstance(frags[i+1], str) and
+                                    isinstance(frags[i+2], int)):
+                                    if frags[i+2] == val + 1:
+                                        del frags[i+1]
+                            except IndexError:
+                                break
+                        groups.append(frags)
+                        
+                        indat_string = '0,'
                         for group in groups:
                             if len(group) == 1:
                                 indat_string += f'{group[0]},'
                             else:
-                                indat_string += f'{group[0]},-{group[-1]},'   
-                    
+                                # indat_string += f'{group[0]},-{group[-1]},'   
+                                # if '-', then add to next element
+                                for i, val in enumerate(group):
+                                    if val == '-':
+                                        group[i + 1] = f'-{group[i+1]}'
+                                        del group[i]
+                                group = map(str, group)
+                                indat_string += ','.join(group) + ','
+
+
                     info[frag] = {"indat": indat_string,
                     "charg" : str(data['charge']),
                     "mult"  : str(data['multiplicity'])}

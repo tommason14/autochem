@@ -64,6 +64,15 @@ class OrcaResults(Results):
                 return line.lower()
 
     @property
+    def title(self):
+        """
+        Returns xyz file with no extension. Used when writing new coords
+        """
+        for line in self.read():
+            if 'The coordinates will be read from file' in line:
+                return line.split()[-1].rsplit('.')[0]
+
+    @property
     def is_dft(self):
         """
         Used internally to decide if dft energies should be collected.
@@ -85,6 +94,50 @@ class OrcaResults(Results):
             # HF
             elif 'Ab initio Hamiltonian  Method' in line:
                 return line.split()[-1].split('(')[0]
+            # MP2
+            # elif ....
+
+    @property
+    def num_atoms(self):
+        for line in self.read():
+            if 'Number of atoms' in line:   
+                return int(line.split()[-1])
+
+    def get_equil_coords(self):
+        coords = []
+        found_coords = False
+        found_equil = False
+        regex = '^\s+[A-z]+(\s+-?[0-9]+\.[0-9]+){3}$'
+        
+        for line in self.eof(0.5):
+            if 'THE OPTIMIZATION HAS CONVERGED' in line:
+                found_equil = True
+            if 'CARTESIAN COORDINATES (ANGSTROEM)' in line:
+                found_coords = True
+            if line is '\n':
+                found_coords = False
+            if found_coords and re.search(regex, line):
+                if len(coords) == self.num_atoms:
+                    coords = []
+                sym, x, y, z = line.split()
+                coords.append(Atom(sym, coords = [x,y,z]))
+        
+        if found_equil:
+            print('Found equilibrium!')
+            newdir = os.path.join(self.path, 'spec')
+            if not os.path.isdir(newdir):
+                os.mkdir(newdir)
+            write_xyz(coords, os.path.join(newdir,f'{self.title}-equil.xyz'))
+        else:
+            if len(coords) > 0:
+                print('Equilibrium not found. Needs resubmitting.',
+                      f'Coords stored in {self.path}/rerun/{self.title}.xyz')
+                newdir = os.path.join(self.path, 'rerun')
+                if not os.path.isdir(newdir):
+                    os.mkdir(newdir)
+                write_xyz(some_coords, os.path.join(newdir, f'{self.title}-rerun.xyz'))
+            else:
+                print('No iterations were cycled through!')
 
     @property
     def basis(self):
