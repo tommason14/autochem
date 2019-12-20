@@ -54,7 +54,6 @@ def get_type(file):
             return 'psi4'
         elif 'GAMESS' in line:
             return 'gamess'
-        # extend to lammps
 
 def read_xyz(using):
     """Reads coordinates of an xyz file and return a list of |Atom| objects, one for each atom"""

@@ -476,7 +476,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if self.is_complex:
             if not exists(complex_dir):
                 mkdir(complex_dir)
-        #         # copy the xyz over from the parent dir - only one xyz in the dir, but no idea of the name- if _ in the name, the parent dir will be a number, or it might be the nsame of the complex? 
             system(f'mv {self.base_name}.inp {self.base_name}.job complex/')
             system(f'cp {self.xyz} complex/complex.xyz')
 
@@ -485,7 +484,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         If ionic molecule has more than two fragments, return True, and use fmo,
         else make a non-fmo calculation
         """
-        ionic_mol=Molecule(atoms=self.mol.ionic['atoms'])
+        ionic_mol = Molecule(atoms=self.mol.ionic['atoms'])
         ionic_mol.separate()
         return len(ionic_mol.fragments) > 2
 

@@ -1,9 +1,9 @@
 from chem_assistant import Settings, GamessJob
 import glob
 
-xyz = glob.glob('*xyz')[0]
+xyz=glob.glob('*xyz')[0]
 
-sett = Settings()
+sett=Settings()
 sett.input.basis.gbasis='cct'
 sett.input.contrl.runtyp='energy'
 sett.input.elpot.iepot=1

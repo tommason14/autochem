@@ -118,8 +118,6 @@ class Settings(dict):
         old = self.as_dict()
         new = remove_nones_from_dict(old)
         return Settings(new)
-        
-         
 
     __repr__ = __str__
 

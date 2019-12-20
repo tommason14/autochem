@@ -1,7 +1,7 @@
 from chem_assistant import GaussJob, Settings
 import glob
 
-xyz = glob.glob('*xyz')[0]
+xyz=glob.glob('*xyz')[0]
 
 sett=Settings()
 sett.input.opt='ts,noeigentest,calcfc'

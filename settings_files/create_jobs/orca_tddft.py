@@ -1,9 +1,9 @@
 from chem_assistant import Settings, OrcaJob
-
 import glob
-xyz = glob.glob('*xyz')[0]
 
-sett = Settings()
+xyz=glob.glob('*xyz')[0]
+
+sett=Settings()
 sett.input.run='wB97X-D3 aug-cc-pVTZ RIJCOSX CPCM'
 sett.input.meta.tddft="""\
   maxdim 5

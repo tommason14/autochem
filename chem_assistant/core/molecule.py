@@ -713,7 +713,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         # how do we assign charges??????
         # need to look back at original fragments...
-        # print(self.fragments)
 
         # assume that breaking does not change charge at all, and just carry over the original charges
         # - if original molecule not charged, then nothing to do, set charge to 0, mult to 1
