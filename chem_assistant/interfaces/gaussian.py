@@ -1,12 +1,13 @@
 from ..core.atom import Atom
 from ..core.molecule import Molecule
-from ..core.settings import (Settings, read_template)
+from ..core.settings import Settings, read_template
 from ..core.job import Job
-from os import (mkdir, chdir, getcwd)
-from os.path import (exists, join)
-from shutil import (copyfile, move)
+from os import mkdir, chdir, getcwd
+from os.path import exists, join
+from shutil import copyfile, move
 
-__all__ = ['GaussJob']
+__all__ = ["GaussJob"]
+
 
 class GaussJob(Job):
     """Class for creating Gaussian input files and job scripts. 
@@ -28,7 +29,7 @@ class GaussJob(Job):
     def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):
         super().__init__(using)
         self.filename = filename
-        self.defaults = read_template('gaussian.json')
+        self.defaults = read_template("gaussian.json")
         if settings is not None:
             self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings)
@@ -37,8 +38,8 @@ class GaussJob(Job):
         else:
             self.input = self.defaults.input
         self.input = self.input.remove_none_values()
-        if '/' in using:
-            self.title = using.split('/')[-1][:-4]
+        if "/" in using:
+            self.title = using.split("/")[-1][:-4]
         else:
             self.title = using[:-4]
         self.xyz = using
@@ -46,7 +47,7 @@ class GaussJob(Job):
         self.file_basename()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
-        self.write_file(self.inp, filetype='job')
+        self.write_file(self.inp, filetype="job")
 
     def file_basename(self):
         """
@@ -59,28 +60,30 @@ class GaussJob(Job):
         if self.filename is not None:
             self.base_name = self.filename
         else:
-            if self.runtype == '':
-                self.base_name = 'spec'
-            elif 'opt' in self.runtype and 'freq' in self.runtype:
-                self.base_name = 'opt-freq'
-            elif 'opt' in self.runtype and 'freq' not in self.runtype:
-                self.base_name = 'opt'
+            if self.runtype == "":
+                self.base_name = "spec"
+            elif "opt" in self.runtype and "freq" in self.runtype:
+                self.base_name = "opt-freq"
+            elif "opt" in self.runtype and "freq" not in self.runtype:
+                self.base_name = "opt"
             else:
-                self.base_name = 'freq'
-    
+                self.base_name = "freq"
+
     @property
     def job_data(self):
-        job=self.get_job_template().replace('name', self.base_name)
-        if 'time' in self.meta:
-            job=job.replace('24:00:00', self.meta.time)
-        if 'mem' in self.meta:
+        job = self.get_job_template().replace("name", self.base_name)
+        if "time" in self.meta:
+            job = job.replace("24:00:00", self.meta.time)
+        if "mem" in self.meta:
             mem = self.meta.mem[:-2]
-            job=job.replace('mem=32', f'mem={mem}') # for m3/mon, mem=... doesn't appear for stm
-        if 'nproc' in self.meta:
-            job=job.replace('cpus-per-task=16', f'cpus-per-task={self.meta.nproc}') 
+            job = job.replace(
+                "mem=32", f"mem={mem}"
+            )  # for m3/mon, mem=... doesn't appear for stm
+        if "nproc" in self.meta:
+            job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.nproc}")
             # for m3/mon, specified as -c, so we're safe here
         return job
-            
+
     @property
     def inp(self):
         """
@@ -100,9 +103,9 @@ class GaussJob(Job):
             self.run_info,
             self.title,
             self.coord_info,
-            'END'
+            "END",
         ]
-        return '\n\n'.join(inp)
+        return "\n\n".join(inp)
 
     @property
     def metadata(self):
@@ -110,14 +113,14 @@ class GaussJob(Job):
         Include data such as memory and number of cpus in the Gaussian file.
         """
         meta = []
-        if self.sc == 'stm':
-            self.meta.mem='160gb'
-            self.meta.nproc=46
+        if self.sc == "stm":
+            self.meta.mem = "160gb"
+            self.meta.nproc = 46
         for k, v in self.meta.items():
-            if k is not 'time':
-                meta.append(f'%{k}={v}')
+            if k is not "time":
+                meta.append(f"%{k}={v}")
 
-        return '\n'.join(meta).replace('name', self.base_name)
+        return "\n".join(meta).replace("name", self.base_name)
 
     @property
     def runtype(self):
@@ -127,15 +130,15 @@ class GaussJob(Job):
         Also adds parameters like ts,eigentest to the opt call, for example.
         """
         params = self.input.keys()
-        runtype = ''
-        if 'opt' in params:
-            runtype += gauss_print(self.input, 'opt')
-        if 'freq' in params:
+        runtype = ""
+        if "opt" in params:
+            runtype += gauss_print(self.input, "opt")
+        if "freq" in params:
             if len(runtype) > 0:
-                runtype += ' '
-            runtype += 'freq'
-        if 'opt' not in params and 'freq' not in params:
-            runtype = ''
+                runtype += " "
+            runtype += "freq"
+        if "opt" not in params and "freq" not in params:
+            runtype = ""
         return runtype
 
     @property
@@ -144,11 +147,11 @@ class GaussJob(Job):
         Add in parameters to the `run_info` that do not involve 
         a basis set, method or run type.
         """
-        addn = ''
-        ignore=('opt', 'freq', 'method', 'basis', 'meta', 'charge', 'mult')
+        addn = ""
+        ignore = ("opt", "freq", "method", "basis", "meta", "charge", "mult")
         for arg in self.input:
             if arg not in ignore:
-                addn += gauss_print(self.input, arg) + ' '
+                addn += gauss_print(self.input, arg) + " "
         return addn
 
     @property
@@ -159,7 +162,7 @@ class GaussJob(Job):
         Instead, use this function and include with no spaces in `run_info`.
         i.e. '{...}{self.formatted_run}{...}'
         """
-        return ' ' if self.runtype == '' else f' {self.runtype} '
+        return " " if self.runtype == "" else f" {self.runtype} "
 
     @property
     def run_info(self):
@@ -168,16 +171,21 @@ class GaussJob(Job):
         #P wB97XD/cc-pVDZ opt=(ts,noeigentest,calcfc) freq SCF=tight SCRF=(SMD,solvent=water) INT=(grid=ultrafine)
         from data stored in self.input
         """
-        return (f'#P {self.input.method}/{self.input.basis}'
-                f'{self.formatted_run}{self.additional_params}')
+        return (
+            f"#P {self.input.method}/{self.input.basis}"
+            f"{self.formatted_run}{self.additional_params}"
+        )
 
     @property
     def coord_info(self):
         self.find_charge_and_mult()
-        info = [f'{self.input.charge} {self.input.mult}']
-        info += [f'{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}' 
-                 for atom in self.mol.coords]
-        return '\n'.join(info)
+        info = [f"{self.input.charge} {self.input.mult}"]
+        info += [
+            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}"
+            for atom in self.mol.coords
+        ]
+        return "\n".join(info)
+
 
 def gauss_print(d, value):
     """
@@ -191,9 +199,9 @@ def gauss_print(d, value):
     work with lists or dict values, but unlikely that they would
     be passed in as settings values anyway.
     """
-    if isinstance(d[f'{value}'], bool) or isinstance(d[f'{value}'], int):
+    if isinstance(d[f"{value}"], bool) or isinstance(d[f"{value}"], int):
         return value
-    elif len(d[f'{value}'].split(',')) > 1 or '=' in d[f'{value}']:
+    elif len(d[f"{value}"].split(",")) > 1 or "=" in d[f"{value}"]:
         return f"{value}=({d[f'{value}']})"
     else:
         return f"{value}={d[f'{value}']}"

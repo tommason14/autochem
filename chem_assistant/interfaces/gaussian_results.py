@@ -7,7 +7,8 @@ import re
 import os
 import subprocess
 
-__all__ = ['GaussianResults']
+__all__ = ["GaussianResults"]
+
 
 class GaussianResults(Results):
     """
@@ -32,23 +33,23 @@ class GaussianResults(Results):
         opt = False
         freq = False
         for p in self.user_commands.split():
-            if 'opt' in p:
+            if "opt" in p:
                 opt = True
-            if 'freq' in p:
+            if "freq" in p:
                 freq = True
         if opt and not freq:
-            return 'opt'
-        if opt and freq: 
-            return 'opt-freq'
+            return "opt"
+        if opt and freq:
+            return "opt-freq"
         if freq and not opt:
-            return 'freq'
+            return "freq"
         if not opt and not freq:
-            return 'spec'
+            return "spec"
 
     def completed(self):
         found = False
         for line in self.eof(0.01):
-            if 'Normal termination' in line:
+            if "Normal termination" in line:
                 return True
         return False
 
@@ -61,93 +62,95 @@ class GaussianResults(Results):
         found_some = False
         found_equil = False
         for line in self.read():
-            if 'Optimization completed' in line:
+            if "Optimization completed" in line:
                 found_equil = True
-            if 'Standard orientation' in line:
+            if "Standard orientation" in line:
                 found_some = True
                 if len(coords) > 0:
-                    coords = [] # after each iter
-            if 'Rotational constants' in line:
+                    coords = []  # after each iter
+            if "Rotational constants" in line:
                 found_some = False
             # check that opt has finished (if opt freq ran)
-            if re.search('Freq$', line):
+            if re.search("Freq$", line):
                 break
             if found_some:
                 if re.search(regex, line):
                     _, atnum, _, x, y, z = line.split()
                     atnum, x, y, z = map(float, (atnum, x, y, z))
-                    coords.append(Atom(atnum=atnum, coords = (x, y, z)))
+                    coords.append(Atom(atnum=atnum, coords=(x, y, z)))
         if found_equil:
-            return coords, 'equil'
+            return coords, "equil"
         else:
-            return coords, 'rerun'
+            return coords, "rerun"
 
-    def get_equil_coords(self, output = None):
+    def get_equil_coords(self, output=None):
         """
         Returns either the equilibrium coordinates or coordinates for the rerun.
         """
         # with calcall, things are different, collect standard orientation
         # and if optimization completed found, they are equil coords
         # else rerun
-        calcall = True if 'calcall' else False in self.user_commands
+        calcall = True if "calcall" else False in self.user_commands
         found_equil = False
         found_some = False
         regex = "^(\s+[0-9]+){3}(\s+-?[0-9]{1,3}.[0-9]+){3}$"
         coords = []
         some_coords = []
         par_dir = []
-        for part in self.path.split('/'):
-            if part not in ('opt', 'spec', 'hess'):
+        for part in self.path.split("/"):
+            if part not in ("opt", "spec", "hess"):
                 par_dir.append(part)
             else:
                 break
-        MOLECULE_PARENT_DIR = '/'.join(par_dir)
+        MOLECULE_PARENT_DIR = "/".join(par_dir)
         if not calcall:
             for line in self.read():
-                if 'Optimization completed' in line:
+                if "Optimization completed" in line:
                     found_equil = True
-                if 'Standard orientation' in line:
+                if "Standard orientation" in line:
                     found_some = True
-                    if len(some_coords) > 0: # from last run, remove those coords
+                    if len(some_coords) > 0:  # from last run, remove those coords
                         some_coords = []
                 if found_equil:
                     if re.search(regex, line):
                         _, atnum, _, x, y, z = line.split()
                         atnum, x, y, z = map(float, (atnum, x, y, z))
-                        coords.append(Atom(atnum=atnum, coords = (x, y, z)))
+                        coords.append(Atom(atnum=atnum, coords=(x, y, z)))
                 if found_some:
                     if re.search(regex, line):
                         _, atnum, _, x, y, z = line.split()
                         atnum, x, y, z = map(float, (atnum, x, y, z))
-                        some_coords.append(Atom(atnum=atnum, coords = (x, y, z)))
-                if 'Rotational constants' in line:
+                        some_coords.append(Atom(atnum=atnum, coords=(x, y, z)))
+                if "Rotational constants" in line:
                     found_some = False
-                if 'Distance matrix (angstroms)' in line:
+                if "Distance matrix (angstroms)" in line:
                     found_equil = False
-        
+
         if calcall:
             coords_found, coord_type = self._calcall_equil_coords()
-            if coord_type == 'equil':
+            if coord_type == "equil":
                 coords = coords_found
             else:
                 some_coords = coords_found
         if len(coords) > 0:
-            print('Found equilibrium!')
-            newdir=os.path.join(MOLECULE_PARENT_DIR, 'spec')
+            print("Found equilibrium!")
+            newdir = os.path.join(MOLECULE_PARENT_DIR, "spec")
             if not os.path.isdir(newdir):
                 os.mkdir(newdir)
-            write_xyz(coords, os.path.join(newdir,f'{self.title}-equil.xyz'))
+            write_xyz(coords, os.path.join(newdir, f"{self.title}-equil.xyz"))
         else:
             if len(some_coords) > 0:
-                print('Equilibrium not found. Needs resubmitting.',
-                      f'Coords stored in {self.path}/rerun/{self.title}.xyz')
-                newdir=os.path.join(MOLECULE_PARENT_DIR, 'rerun')
+                print(
+                    "Equilibrium not found. Needs resubmitting.",
+                    f"Coords stored in {self.path}/rerun/{self.title}.xyz",
+                )
+                newdir = os.path.join(MOLECULE_PARENT_DIR, "rerun")
                 if not os.path.isdir(newdir):
                     os.mkdir(newdir)
-                write_xyz(some_coords, os.path.join(newdir, f'{self.title}-rerun.xyz'))
+                write_xyz(some_coords, os.path.join(newdir, f"{self.title}-rerun.xyz"))
             else:
-                print('No iterations were cycled through!')
-        
+                print("No iterations were cycled through!")
+
     @property
     def title(self):
         """
@@ -162,10 +165,10 @@ class GaussianResults(Results):
         lines = []
         found = False
         for line in self.read():
-            if 'Leave Link' in line:
+            if "Leave Link" in line:
                 found = True
-                continue 
-            if 'Symbolic' in line:
+                continue
+            if "Symbolic" in line:
                 break
             if found:
                 lines.append(line)
@@ -177,7 +180,7 @@ class GaussianResults(Results):
         Returns the #P line of the input file.
         """
         for line in self.read():
-            if re.search('^\s*?#P', line):
+            if re.search("^\s*?#P", line):
                 return line.lower()
 
     @property
@@ -186,7 +189,7 @@ class GaussianResults(Results):
         Returns energy type. For example, for HF/cc-pVTZ, returns HF. 
         For wB97xD/aug-cc-pVDZ, returns WB97XD.
         """
-        return self.user_commands.split('/')[0].split()[-1].upper()
+        return self.user_commands.split("/")[0].split()[-1].upper()
 
     @property
     def basis(self):
@@ -194,34 +197,34 @@ class GaussianResults(Results):
         Returns basis set. For example, for HF/cc-pVTZ, returns cc-pvtz. 
         For wB97xD/aug-cc-pVDZ, returns aug-cc-pVDZ.
         """
-        basis = self.user_commands.split('/')[1].split()[0]
+        basis = self.user_commands.split("/")[1].split()[0]
         # turn cc-pvtz into cc-pVTZ
-        if 'cc' in basis:
-            *rest, last = basis.split('-')
+        if "cc" in basis:
+            *rest, last = basis.split("-")
             last = last[:-3] + last[-3:].upper()
-            basis = '-'.join(rest + [last])
+            basis = "-".join(rest + [last])
         return basis
 
     def is_optimisation(self):
-        return 'opt' in self.get_runtype()
+        return "opt" in self.get_runtype()
 
     def is_spec(self):
-        return self.get_runtype() == 'spec'
+        return self.get_runtype() == "spec"
 
     def is_hessian(self):
-        return 'freq' in self.get_runtype()
+        return "freq" in self.get_runtype()
 
     @property
     def hf_energy(self):
         """
         Returns last occurrence of Hartree-Fock energy.
         """
-        HF = ''
+        HF = ""
         for line in self.read():
-            if re.search('^\sE=\s*-?[0-9]*.[0-9]*', line):
+            if re.search("^\sE=\s*-?[0-9]*.[0-9]*", line):
                 HF = line.split()[1]
         return float(HF)
-    
+
     @property
     def mp2_energy(self):
         """
@@ -235,9 +238,9 @@ class GaussianResults(Results):
         """
         Returns last occurrence of DFT energy.
         """
-        dft = ''
+        dft = ""
         for line in self.read():
-            if 'SCF Done' in line:
+            if "SCF Done" in line:
                 dft = line.split()[4]
         return float(dft)
 
@@ -248,12 +251,39 @@ class GaussianResults(Results):
         Must return file, path, method, basis, hf/dft, mp2/srs, mp2_opp, mp2_same
         in the order, so 'NA' values are there to satisfy that criteria.
         """
-        if self.method == 'hf':
-            return self.file, self.path, self.method, self.basis, self.hf_energy, 'NA', 'NA', 'NA'
-        elif self.method == 'mp2':
-            return self.file, self.path, self.method, self.basis, self.hf_energy, self.mp2_energy, 'NA', 'NA'
+        if self.method == "hf":
+            return (
+                self.file,
+                self.path,
+                self.method,
+                self.basis,
+                self.hf_energy,
+                "NA",
+                "NA",
+                "NA",
+            )
+        elif self.method == "mp2":
+            return (
+                self.file,
+                self.path,
+                self.method,
+                self.basis,
+                self.hf_energy,
+                self.mp2_energy,
+                "NA",
+                "NA",
+            )
         else:
-            return self.file, self.path, self.method, self.basis, self.dft_energy, 'NA', 'NA', 'NA'
+            return (
+                self.file,
+                self.path,
+                self.method,
+                self.basis,
+                self.dft_energy,
+                "NA",
+                "NA",
+                "NA",
+            )
 
     @property
     def multiplicity(self):
@@ -261,20 +291,20 @@ class GaussianResults(Results):
         Returns multiplicity from the symbolic z-matrix section.
         """
         for line in self.read():
-            if 'Charge' in line and 'Multiplicity' in line:
+            if "Charge" in line and "Multiplicity" in line:
                 return int(line.split()[-1])
-    
+
     def _homo_lumo(self):
         """
         Finds HOMO/LUMO orbitals.
         """
         occupied = []
-        lumo = ''
+        lumo = ""
         for line in self.read():
-            if 'Alpha  occ. eigenvalues' in line:
+            if "Alpha  occ. eigenvalues" in line:
                 occupied += line.split()[4:]
-            if 'Alpha virt. eigenvalues' in line:
-                lumo = line.split()[4] 
+            if "Alpha virt. eigenvalues" in line:
+                lumo = line.split()[4]
                 break
         homo = occupied[-1]
         homo, lumo = map(float, (homo, lumo))
@@ -298,26 +328,30 @@ class GaussianResults(Results):
 
         if self.multiplicity == 1:
             homo, lumo, gap = self._homo_lumo_gap()
-            transition = 'HOMO-LUMO'
+            transition = "HOMO-LUMO"
         elif self.multiplicity == 2:
-            homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
-            transition = 'SOMO-LUMO'
+            homo, lumo, gap = self._homo_lumo_gap()  # here homo is somo
+            transition = "SOMO-LUMO"
         else:
-            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
-            
-        return {'File': self.file,
-                'Path': self.path,
-                'Multiplicity': self.multiplicity, 
-                'Transition': transition, 
-                'HOMO/SOMO (eV)': homo, 
-                'LUMO (eV)': lumo, 
-                'Gap (eV)': gap}
+            print(
+                f"Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}"
+            )
+
+        return {
+            "File": self.file,
+            "Path": self.path,
+            "Multiplicity": self.multiplicity,
+            "Transition": transition,
+            "HOMO/SOMO (eV)": homo,
+            "LUMO (eV)": lumo,
+            "Gap (eV)": gap,
+        }
 
     @property
     def vibrations(self):
         vibs = []
         for line in self.read():
-            if 'Frequencies --' in line:     
+            if "Frequencies --" in line:
                 vibs += line.split()[2:]
         vibs = [float(v) for v in vibs]
         return vibs
@@ -326,7 +360,7 @@ class GaussianResults(Results):
     def intensities(self):
         ints = []
         for line in self.read():
-            if 'IR Inten    --' in line:     
+            if "IR Inten    --" in line:
                 ints += line.split()[3:]
         ints = [float(i) for i in ints]
         return ints
@@ -337,17 +371,16 @@ class GaussianResults(Results):
         geometry.
         """
         atoms = []
-        regex = '\s+[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}'
+        regex = "\s+[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}"
         found_coords = False
         for line in self.read():
-            if 'Symbolic Z-matrix:' in line:
-                found_coords=True
-            if line is '\n':
-                found_coords=False
+            if "Symbolic Z-matrix:" in line:
+                found_coords = True
+            if line is "\n":
+                found_coords = False
             if found_coords and re.search(regex, line):
                 sym, x, y, z = line.split()
-                x, y, z = map(float, (x,y,z))
-                atoms.append(Atom(symbol=sym, coords=(x,y,z)))
+                x, y, z = map(float, (x, y, z))
+                atoms.append(Atom(symbol=sym, coords=(x, y, z)))
 
         write_geom_input_for_thermo(atoms)
-

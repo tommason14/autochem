@@ -6,7 +6,8 @@ import os
 import subprocess
 import sys
 
-__all__ = ['GamessResults']
+__all__ = ["GamessResults"]
+
 
 class GamessResults(Results):
     """Class for obtaining results from Gamess simulations. This class requires
@@ -33,6 +34,7 @@ back if not found.
 instance, really. Simple fix; instead of returning values, store in list and return the list, maybe
 store the iteration number.
     """
+
     def __init__(self, log):
         super().__init__(log)
 
@@ -45,16 +47,16 @@ store the iteration number.
     def completed(self):
         found = False
         for line in eof(self.log, 0.1):
-            if 'EXECUTION OF GAMESS TERMINATED NORMALLY' in line:
+            if "EXECUTION OF GAMESS TERMINATED NORMALLY" in line:
                 found = True
         return found
-        
+
         ####NEEDS WORK####
         # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
         # ARE NOT RETURNED, EVEN IF THERE
 
     def memory_error(self):
-        print('Memory Error- check allocation before resubmitting')
+        print("Memory Error- check allocation before resubmitting")
 
     def get_error(self):
         super().get_error()
@@ -62,14 +64,13 @@ store the iteration number.
             no_equil = True
             for line in self.read():
                 # check for equilibrium coords
-                if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
-                    no_equil = False    
+                if "EQUILIBRIUM GEOMETRY LOCATED" in line:
+                    no_equil = False
             if no_equil:
-                return 'No equilibrium geometry found- need to resubmit with rerun.xyz'
+                return "No equilibrium geometry found- need to resubmit with rerun.xyz"
             else:
-                self.memory_error() # last resort
+                self.memory_error()  # last resort
 
- 
     ################################
     #                              #
     #         IF COMPLETED         #
@@ -79,86 +80,89 @@ store the iteration number.
     def get_runtype(self):
         """Returns type of calculation ran"""
         for line in self.read():
-            if 'RUNTYP=' in line.upper():
+            if "RUNTYP=" in line.upper():
                 parts = line.split()
                 for p in parts:
-                    if 'RUNTYP=' in p:
-                        return p.split('=')[1].lower()
-    
+                    if "RUNTYP=" in p:
+                        return p.split("=")[1].lower()
+
     def get_fmo_level(self):
         """Returns level of FMO calculation ran"""
         for line in self.read():
-            if 'NBODY' in line:
-              return int(line.split()[-1].split('=')[-1]) # FMO2 or 3
+            if "NBODY" in line:
+                return int(line.split()[-1].split("=")[-1])  # FMO2 or 3
         return 0
-        
-    def get_equil_coords(self, output = None):
+
+    def get_equil_coords(self, output=None):
         # find the parent dir for the system, regardless of opt/rerun
         # find the dir with complex/ionic/frags (for frags in subdir) /opt/spec/hess (not frags in
         # subdir)
         # first time that comes up- that's the parent!
         import re
+
         equil = []
         rerun = []
         regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
         found_equil = False
         found_some = False
         par_dir = []
-        for part in self.path.split('/'):
-            if part in ('opt', 'spec', 'hess'):
+        for part in self.path.split("/"):
+            if part in ("opt", "spec", "hess"):
                 break
             else:
                 par_dir.append(part)
-        MOLECULE_PARENT_DIR = '/'.join(par_dir)
+        MOLECULE_PARENT_DIR = "/".join(par_dir)
         for line in self.read():
-            if 'EQUILIBRIUM GEOMETRY LOCATED' in line:
+            if "EQUILIBRIUM GEOMETRY LOCATED" in line:
                 found_equil = True
-            if 'COORDINATES OF ALL ATOMS ARE (ANGS)' in line: #store every coord list
+            if "COORDINATES OF ALL ATOMS ARE (ANGS)" in line:  # store every coord list
                 found_some = True
-                if len(rerun) > 0: # from last run, remove those coords
+                if len(rerun) > 0:  # from last run, remove those coords
                     rerun = []
             if found_equil:
                 if re.search(regex, line):
-                    if line.endswith('\n'):
-                        equil.append(line[:-1]) # drop newline char
+                    if line.endswith("\n"):
+                        equil.append(line[:-1])  # drop newline char
                     else:
                         equil.append(line)
             if found_some:
                 if re.search(regex, line):
-                    if line.endswith('\n'):
-                        rerun.append(line[:-1]) # drop newline char
+                    if line.endswith("\n"):
+                        rerun.append(line[:-1])  # drop newline char
                     else:
                         rerun.append(line)
-            if line is '\n':
+            if line is "\n":
                 found_equil = False
                 found_some = False
-       
+
         if len(equil) > 0:
-            print('Found equilibrium!')
-            newdir = os.path.join(MOLECULE_PARENT_DIR, 'spec')
-            newname = self.basename + '_equil.xyz'
+            print("Found equilibrium!")
+            newdir = os.path.join(MOLECULE_PARENT_DIR, "spec")
+            newname = self.basename + "_equil.xyz"
             if not os.path.isdir(newdir):
                 os.mkdir(newdir)
             write_xyz(equil, os.path.join(newdir, newname))
         else:
             if len(rerun) > 0:
-                print('Equilibrium not found. Needs resubmitting.'
-                      f'\nCoords stored in {self.path}/rerun/rerun.xyz')
-                rerun_dir = os.path.join(self.path, 'rerun')
-                if not os.path.exists(rerun_dir): 
+                print(
+                    "Equilibrium not found. Needs resubmitting."
+                    f"\nCoords stored in {self.path}/rerun/rerun.xyz"
+                )
+                rerun_dir = os.path.join(self.path, "rerun")
+                if not os.path.exists(rerun_dir):
                     os.mkdir(rerun_dir)
-                write_xyz(rerun, os.path.join(rerun_dir, 'rerun.xyz'))
+                write_xyz(rerun, os.path.join(rerun_dir, "rerun.xyz"))
             else:
-                print('No iterations were cycled through!')   
-    
+                print("No iterations were cycled through!")
+
     def is_optimisation(self):
-        return self.get_runtype() == 'optimize'
-    
+        return self.get_runtype() == "optimize"
+
     def is_spec(self):
-        return self.get_runtype() == 'energy'
+        return self.get_runtype() == "energy"
 
     def is_hessian(self):
-        return self.get_runtype() == 'hessian'
+        return self.get_runtype() == "hessian"
 
     ################################
     #                              #
@@ -166,7 +170,6 @@ store the iteration number.
     #                              #
     ################################
 
-    
     def fmo_mp2_data(self, mp2_type):
         """
         Returns Hartree Fock and MP2 data.
@@ -178,12 +181,12 @@ store the iteration number.
         to return the correlated SCS energy, 'E corr SCS', or correlated
         MP2 energies, 'E corr MP2'.
         """
-        HF = ''
-        MP2 = ''
-        for line in eof(self.log, 0.2): # last values only
-            if 'Euncorr HF' in line:
+        HF = ""
+        MP2 = ""
+        for line in eof(self.log, 0.2):  # last values only
+            if "Euncorr HF" in line:
                 HF = line.split()[-1]
-            if f'E corr {mp2_type}' in line:
+            if f"E corr {mp2_type}" in line:
                 MP2 = line.split()[-1]
 
         HF, MP2 = map(float, (HF, MP2))
@@ -194,47 +197,52 @@ store the iteration number.
         """
         Returns last occurrence of total energy.
         """
-        total = ''
+        total = ""
         for line in self.read():
-            if 'TOTAL ENERGY =' in line:
+            if "TOTAL ENERGY =" in line:
                 total = line.split()[-1]
         return float(total)
 
-    @property 
+    @property
     def basis(self):
         """
         Returns basis set.
         """
+
         def raw_basis():
             for line in self.read():
-                if 'INPUT CARD> $BASIS' in line:
-                    return line.split()[-2].split('=')[1]
-        
+                if "INPUT CARD> $BASIS" in line:
+                    return line.split()[-2].split("=")[1]
+
         basis = raw_basis()
-        change_basis = {'CCD'  : 'cc-pVDZ',
-                        'CCT'  : 'cc-pVTZ',
-                        'CCQ'  : 'cc-pVQZ',
-                        'aCCD' : 'aug-cc-pVDZ',
-                        'aCCT' : 'aug-cc-pVTZ',
-                        'aCCQ' : 'aug-cc-pVQZ'}
-        return change_basis.get(basis, basis) # if self.basis not in dict, return self.basis
-    
+        change_basis = {
+            "CCD": "cc-pVDZ",
+            "CCT": "cc-pVTZ",
+            "CCQ": "cc-pVQZ",
+            "aCCD": "aug-cc-pVDZ",
+            "aCCT": "aug-cc-pVTZ",
+            "aCCQ": "aug-cc-pVQZ",
+        }
+        return change_basis.get(
+            basis, basis
+        )  # if self.basis not in dict, return self.basis
+
     def non_fmo_mp2_data_gas(self):
         """
         Returns value of E(0) as HF, E(2S) as the opposite spin energy and
         E(2T) as same spin energy. Then user can scale energies accordingly.
         """
-        HF = ''
-        MP2_opp = ''
-        MP2_same = ''
+        HF = ""
+        MP2_opp = ""
+        MP2_same = ""
         for line in eof(self.log, 0.2):
             line = line.split()
             # print(line)
-            if 'E(0)=' in line:
+            if "E(0)=" in line:
                 HF = line[-1]
-            if 'E(2S)=' in line:
+            if "E(2S)=" in line:
                 MP2_opp = line[-1]
-            if 'E(2T)=' in line:
+            if "E(2T)=" in line:
                 MP2_same = line[-1]
 
         HF, MP2_opp, MP2_same = map(float, (HF, MP2_opp, MP2_same))
@@ -248,13 +256,13 @@ store the iteration number.
         not with the addition of the energy of the solvent. In order to find
         that, search for 'THE P(2) CORRECTED MP2-CPCM ENERGY'.
         """
-        HF = ''
-        MP2 = ''
+        HF = ""
+        MP2 = ""
         for line in eof(self.log, 0.2):
             line = line.split()
-            if 'E(0)=' in line:
+            if "E(0)=" in line:
                 HF = line[-1]
-            if 'E(MP2)=' in line:
+            if "E(MP2)=" in line:
                 MP2 = line[1]
 
         HF, MP2 = map(float, (HF, MP2))
@@ -266,11 +274,11 @@ store the iteration number.
         Returns DFT type (DFTTYP=...)
         """
         for line in self.read():
-            if 'DFTTYP' in line:
+            if "DFTTYP" in line:
                 line = line.split()
                 for val in line:
-                    if 'DFTTYP' in val:
-                        return val.split('=')[1].upper()
+                    if "DFTTYP" in val:
+                        return val.split("=")[1].upper()
 
     @property
     def _energy_type(self):
@@ -282,30 +290,30 @@ store the iteration number.
         mp2 = False
         scs = False
         for line in self.read():
-            if 'FMO' in line:
+            if "FMO" in line:
                 fmo = True
-            if 'MPLEVL' in line:
+            if "MPLEVL" in line:
                 mp2 = True
-            if 'SCS' in line:
+            if "SCS" in line:
                 scs = True
-            if 'DFT' in line:
+            if "DFT" in line:
                 dft = True
-            if 'RUN TITLE' in line:
-                break # by this point, all data required is specified
+            if "RUN TITLE" in line:
+                break  # by this point, all data required is specified
         types = {
-                 'fmo_scs': (fmo, scs),
-                 'fmo_mp2': (fmo, mp2),
-                 'fmo_dft': (fmo, dft),
-                 'fmo_hf': (fmo,),
-                 'scs': (scs,),
-                 'mp2': (mp2,),
-                 'dft': (dft,)
-                }
+            "fmo_scs": (fmo, scs),
+            "fmo_mp2": (fmo, mp2),
+            "fmo_dft": (fmo, dft),
+            "fmo_hf": (fmo,),
+            "scs": (scs,),
+            "mp2": (mp2,),
+            "dft": (dft,),
+        }
         for run, possible_runs in types.items():
             if all(r for r in possible_runs):
                 return run
         else:
-            return 'hf'  
+            return "hf"
 
     @property
     def method(self):
@@ -314,14 +322,14 @@ store the iteration number.
         i.e. instead of fmo_dft, this method actually returns the 
         dft functional used.
         """
-        if 'scs' in self._energy_type:
-            return 'Scaled MP2' # scs or srs
-        if 'mp2' in self._energy_type and 'scs' not in self._energy_type:
-            return 'MP2'
-        if 'dft' in self._energy_type:
+        if "scs" in self._energy_type:
+            return "Scaled MP2"  # scs or srs
+        if "mp2" in self._energy_type and "scs" not in self._energy_type:
+            return "MP2"
+        if "dft" in self._energy_type:
             return self.dft_type
-        if 'hf' in self._energy_type:
-            return 'HF'
+        if "hf" in self._energy_type:
+            return "HF"
 
     @property
     def solvent_calc(self):
@@ -332,9 +340,9 @@ store the iteration number.
         log file reports it.
         """
         for line in self.read():
-            if 'INPUT FOR PCM SOLVATION CALCULATION' in line:
+            if "INPUT FOR PCM SOLVATION CALCULATION" in line:
                 return True
-            if 'BEGINNING GEOMETRY SEARCH' in line:
+            if "BEGINNING GEOMETRY SEARCH" in line:
                 break
         return False
 
@@ -342,34 +350,34 @@ store the iteration number.
         """
         Returns HF, DFT, MP2 (non-FMO and FMO) values.
         """
-        if self._energy_type == 'fmo_scs':
-            HF, MP2 = self.fmo_mp2_data('SCS')
-            MP2_opp = 'NA'
-            MP2_same = 'NA'
-        elif self._energy_type == 'fmo_mp2':
-            HF, MP2 = self.fmo_mp2_data('MP2')
-            MP2_opp = 'NA'
-            MP2_same = 'NA'
-        elif self._energy_type in ('mp2', 'scs'):
+        if self._energy_type == "fmo_scs":
+            HF, MP2 = self.fmo_mp2_data("SCS")
+            MP2_opp = "NA"
+            MP2_same = "NA"
+        elif self._energy_type == "fmo_mp2":
+            HF, MP2 = self.fmo_mp2_data("MP2")
+            MP2_opp = "NA"
+            MP2_same = "NA"
+        elif self._energy_type in ("mp2", "scs"):
             if not self.solvent_calc:
                 HF, MP2_opp, MP2_same = self.non_fmo_mp2_data_gas()
-                MP2 = 'NA'
+                MP2 = "NA"
             else:
                 HF, MP2 = self.non_fmo_mp2_data_solvent()
-                MP2_opp = 'NA'
-                MP2_same = 'NA'
-        elif 'dft' in self._energy_type or 'hf' in self._energy_type:
+                MP2_opp = "NA"
+                MP2_same = "NA"
+        elif "dft" in self._energy_type or "hf" in self._energy_type:
             HF = self.total_energy
-            MP2 = 'NA'
-            MP2_opp = 'NA'
-            MP2_same = 'NA'
-            
-        return self.file, self.path, self.method, self.basis, HF, MP2, MP2_opp, MP2_same    
+            MP2 = "NA"
+            MP2_opp = "NA"
+            MP2_same = "NA"
+
+        return self.file, self.path, self.method, self.basis, HF, MP2, MP2_opp, MP2_same
 
     @property
     def multiplicity(self):
         for line in self.read():
-            if 'SPIN MULTIPLICITY' in line.upper(): # sometimes prints lower case
+            if "SPIN MULTIPLICITY" in line.upper():  # sometimes prints lower case
                 return int(line.split()[-1])
 
     #################
@@ -379,7 +387,7 @@ store the iteration number.
     @property
     def num_orbitals_occupied(self):
         for line in self.read():
-            if 'ORBITALS ARE OCCUPIED' in line:
+            if "ORBITALS ARE OCCUPIED" in line:
                 return int(line.split()[0])
 
     def _homo_lumo(self):
@@ -389,12 +397,12 @@ store the iteration number.
         found = False
         orbital_energies = []
         for line in self.read():
-            if 'EIGENVECTORS' in line:
+            if "EIGENVECTORS" in line:
                 found = True
-            if 'CPU' in line:
+            if "CPU" in line:
                 found = False
             if found:
-                if re.search('^(\s+-?[0-9]+.[0-9]+){1,5}$', line):
+                if re.search("^(\s+-?[0-9]+.[0-9]+){1,5}$", line):
                     orbital_energies += [float(i) for i in line.split()]
                     # save time
                     if len(orbital_energies) > self.num_orbitals_occupied + 1:
@@ -421,22 +429,25 @@ store the iteration number.
 
         if self.multiplicity == 1:
             homo, lumo, gap = self._homo_lumo_gap()
-            transition = 'HOMO-LUMO'
+            transition = "HOMO-LUMO"
         elif self.multiplicity == 2:
-            homo, lumo, gap = self._homo_lumo_gap() # here homo is somo
-            transition = 'SOMO-LUMO'
+            homo, lumo, gap = self._homo_lumo_gap()  # here homo is somo
+            transition = "SOMO-LUMO"
         else:
-            print(f'Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}')
-            
-        return {'File': self.file,
-                'Path': self.path,
-                'Multiplicity': self.multiplicity, 
-                'Transition': transition, 
-                'HOMO/SOMO (eV)': homo, 
-                'LUMO (eV)': lumo, 
-                'Gap (eV)': gap}
+            print(
+                f"Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}"
+            )
 
-            
+        return {
+            "File": self.file,
+            "Path": self.path,
+            "Multiplicity": self.multiplicity,
+            "Transition": transition,
+            "HOMO/SOMO (eV)": homo,
+            "LUMO (eV)": lumo,
+            "Gap (eV)": gap,
+        }
+
     ################################
     #                              #
     #     VIBRATIONAL ANALYSIS     #
@@ -450,7 +461,7 @@ store the iteration number.
 
     def vib_get_geom(self):
         pass
-    
+
     @property
     def frequencies(self):
         """
@@ -459,8 +470,8 @@ store the iteration number.
         'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
         """
         vibs = []
-        regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-        for line in self.eof(0.2): # last 20 % of file
+        regex = "[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$"
+        for line in self.eof(0.2):  # last 20 % of file
             if re.search(regex, line):
                 vibs.append(float(line.split()[1]))
         return vibs
@@ -471,10 +482,10 @@ store the iteration number.
         Returns intensities of all vibrations
         Checks output below this line:
         'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.'
-        """ 
+        """
         ints = []
-        regex = '[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$'
-        for line in self.eof(0.2): # last 20 % of file
+        regex = "[0-9]{1,9}?\s*[0-9]{1,9}\.[0-9]{1,9}\s*[A-Za-z](\s*[0-9]{1,9}\.[0-9]{1,9}){2}$"
+        for line in self.eof(0.2):  # last 20 % of file
             if re.search(regex, line):
                 ints.append(float(line.split()[-1]))
         return ints
@@ -483,13 +494,12 @@ store the iteration number.
         """Parses GAMESS inputs for the initial geometry"""
         atoms = []
         regex = "[A-Za-z]{1,2}(\s*\D?[0-9]{1,3}\.[0-9]{1,10}){4}"
-        inp = file[:-3] + 'inp'
-        if inp not in os.listdir('.'):
-            sys.exit(f'Need an input file in the same directory as {self.log}')
+        inp = file[:-3] + "inp"
+        if inp not in os.listdir("."):
+            sys.exit(f"Need an input file in the same directory as {self.log}")
         for line in read_file(inp):
             if re.search(regex, line):
                 sym, _, x, y, z = line.split()
                 x, y, z = map(float, (x, y, z))
-                atoms.append(Atom(symbol = sym, coords = (x, y, z)))
+                atoms.append(Atom(symbol=sym, coords=(x, y, z)))
         write_geom_input_for_thermo(atoms)
-
