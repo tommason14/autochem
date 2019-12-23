@@ -7,4 +7,4 @@ sett.input.meta.tddft="""\
   nroots 10"""
 sett.input.meta.cpcm="""\
   SMD true
-  SMDSolvent 'DMSO' """
+  SMDSolvent \"DMSO\" """
