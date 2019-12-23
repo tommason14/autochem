@@ -384,3 +384,75 @@ class GaussianResults(Results):
                 atoms.append(Atom(symbol=sym, coords=(x, y, z)))
 
         write_geom_input_for_thermo(atoms)
+
+    # TD-DFT Excited states
+
+    @property
+    def td_dft_wavelengths(self):
+        """
+        Returns a nested list of wavelengths for each 
+        iteration. For vertical excitations, the list
+        will just have one element, but for an 
+        excited state optimisation, there will be many 
+        iterations.
+        """
+        waves = []
+        waves_per_iter = []
+        found_region = False
+        for line in self.read():
+            if "Excitation energies and oscillator strengths" in line:
+                found_region = True
+            if found_region:
+                if "Excited State" in line:
+                    wave = float(line.split()[6])
+                    waves_per_iter.append(wave)
+            if "Leave Link" in line:
+                found_region = False
+                if len(waves_per_iter) > 0:
+                    waves.append(waves_per_iter)
+                    waves_per_iter = []
+        return waves
+
+    @property
+    def td_dft_intensities(self):
+        """
+        Returns a nested list of intensities, one for each iteration.
+        """
+        ints = []
+        ints_per_iter = []
+        found_region = False
+        for line in self.read():
+            if "Excitation energies and oscillator strengths" in line:
+                found_region = True
+            if found_region:
+                if "Excited State" in line:
+                    _int = float(line.split()[8].split("=")[1])
+                    ints_per_iter.append(_int)
+            if "Leave Link" in line:
+                found_region = False
+                if len(ints_per_iter) > 0:
+                    ints.append(ints_per_iter)
+                    ints_per_iter = []
+        return ints
+
+    @property
+    def td_dft_transition_energies(self):
+        """
+        Returns a nested list of energies of each transition in eV
+        """
+        vals = []
+        vals_per_iter = []
+        found_region = False
+        for line in self.read():
+            if "Excitation energies and oscillator strengths" in line:
+                found_region = True
+            if found_region:
+                if "Excited State" in line:
+                    val = float(line.split()[4])
+                    vals_per_iter.append(val)
+            if "Leave Link" in line:
+                found_region = False
+                if len(vals_per_iter) > 0:
+                    vals.append(vals_per_iter)
+                    vals_per_iter = []
+        return vals

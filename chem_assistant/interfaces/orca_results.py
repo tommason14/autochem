@@ -295,62 +295,73 @@ class OrcaResults(Results):
 
     # TD-DFT Excited states
 
-    # Also need to think about multiple iterations...
-    # Probably best handled in the external user script,
-
     @property
     def td_dft_wavelengths(self):
         """
-        Returns a list of wavelengths
+        Returns a nested list of wavelengths per iteration
         """
         waves = []
+        waves_per_iter = []
         found = False
         regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
-        for line in self.eof(0.1):
+        for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
-            if line is "\n":
-                found = False
             if found:
                 if re.search(regex, line):
-                    waves.append(line.split()[2])
+                    wave = float(line.split()[2])
+                    waves_per_iter.append(wave)
+            if line is "\n":
+                found = False
+                if len(waves_per_iter) > 0:
+                    waves.append(waves_per_iter)
+                    waves_per_iter = []
         return waves
 
     @property
     def td_dft_intensities(self):
         """
-        Returns a list of intensities
+        Returns a nested list of intensities
         """
         ints = []
+        ints_per_iter = []
         found = False
         regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
-        for line in self.eof(0.1):
+        for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
-            if line is "\n":
-                found = False
             if found:
                 if re.search(regex, line):
-                    ints.append(line.split()[4])
+                    intensity = float(line.split()[4])
+                    ints_per_iter.append(intensity)
+            if line is "\n":
+                found = False
+                if len(ints_per_iter) > 0:
+                    ints.append(ints_per_iter)
+                    ints_per_iter = []
         return ints
 
     @property
     def td_dft_transition_energies(self):
         """
-        Returns a list of energies of each transition, converted 
+        Returns a nested list of energies of each transition, converted 
         from cm-1 to eV
         """
+        inverse_cm_to_ev = 1 / 8065.6
         vals = []
+        vals_per_iter = []
         found = False
         regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
-        for line in self.eof(0.1):
+        for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
-            if line is "\n":
-                found = False
             if found:
                 if re.search(regex, line):
-                    vals.append(line.split()[1])
-        inverse_cm_to_ev = lambda x: float(x) / 8065.6
-        vals = map(inverse_cm_to_ev, vals)
+                    val = float(line.split()[1]) * inverse_cm_to_ev
+                    vals_per_iter.append(val)
+            if line is "\n":
+                found = False
+                if len(vals_per_iter) > 0:
+                    vals.append(vals_per_iter)
+                    vals_per_iter = []
         return vals

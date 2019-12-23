@@ -5,40 +5,42 @@ import sys
 import time
 
 __all__ = [
-'assign_molecules_from_dict_keys',
-'check_user_input',
-'consecutive',
-'eof',
-'get_files', 
-'get_type', 
-'list_of_dicts_to_one_level_dict',
-'module_exists', 
-'read_file', 
-'read_xyz', 
-'remove_nones_from_dict',
-'responsive_table', 
-'search_dict_recursively', 
-'sort_data',
-'sort_elements',
-'write_csv_from_dict', 
-'write_csv_from_nested', 
-'write_geom_input_for_thermo',
-'write_xyz'
+    "assign_molecules_from_dict_keys",
+    "check_user_input",
+    "consecutive",
+    "eof",
+    "get_files",
+    "get_log_type",
+    "list_of_dicts_to_one_level_dict",
+    "module_exists",
+    "read_file",
+    "read_xyz",
+    "remove_nones_from_dict",
+    "responsive_table",
+    "search_dict_recursively",
+    "sort_data",
+    "sort_elements",
+    "write_csv_from_dict",
+    "write_csv_from_nested",
+    "write_geom_input_for_thermo",
+    "write_xyz",
 ]
+
 
 def timeit(method):
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
-        if 'log_time' in kw:
-            name = kw.get('log_name', method.__name__.upper())
-            kw['log_time'][name] = int((te - ts) * 1000)
+        if "log_time" in kw:
+            name = kw.get("log_name", method.__name__.upper())
+            kw["log_time"][name] = int((te - ts) * 1000)
         else:
-            print('%r  %2.2f ms' % \
-                  (method.__name__, (te - ts) * 1000))
+            print("%r  %2.2f ms" % (method.__name__, (te - ts) * 1000))
         return result
+
     return timed
+
 
 def read_file(file):
     with open(file, "r") as f:
@@ -48,12 +50,18 @@ def read_file(file):
         except UnicodeDecodeError:
             pass
 
-def get_type(file):
+
+def get_log_type(file):
     for line in read_file(file):
-        if 'PSI4' in line:
-            return 'psi4'
-        elif 'GAMESS' in line:
-            return 'gamess'
+        if "PSI4" in line:
+            return "psi4"
+        elif "GAMESS" in line:
+            return "gamess"
+        elif "Gaussian" in line:
+            return "gaussian"
+        elif "O   R   C   A" in line:
+            return "orca"
+
 
 def read_xyz(using):
     """Reads coordinates of an xyz file and return a list of |Atom| objects, one for each atom"""
@@ -63,30 +71,35 @@ def read_xyz(using):
             line = coord.split()
             for val in PT.ptable.values():
                 if line[0] == val[0]:
-                    coords.append(Atom(line[0], coords = tuple(float(i) for i in line[1:4])))
+                    coords.append(
+                        Atom(line[0], coords=tuple(float(i) for i in line[1:4]))
+                    )
     return coords
 
-def write_xyz(atoms, filename = None):
+
+def write_xyz(atoms, filename=None):
     """
     Writes an xyz file using a list of |Atom| instances, or just a list of regular coordinates,
     with or without atomic numbers.
     """
     if filename is None:
-        raise ValueError('write_xyz: Must give a path to the output file')
+        raise ValueError("write_xyz: Must give a path to the output file")
     else:
         with open(filename, "w") as file:
-            file.write(str(len(atoms)) + '\n\n')
+            file.write(str(len(atoms)) + "\n\n")
             for atom in atoms:
                 if type(atom) is not Atom:
                     parts = atom.split()
-                    if len(parts) > 4: # includes atomic nums
+                    if len(parts) > 4:  # includes atomic nums
                         sym, *_, x, y, z = parts
                     else:
                         sym, x, y, z = parts
                     x, y, z = float(x), float(y), float(z)
                     file.write(f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
                 else:
-                    file.write(f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
+                    file.write(
+                        f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n"
+                    )
 
 
 def get_files(directory, ext, filepath_includes=None):
@@ -106,13 +119,12 @@ def get_files(directory, ext, filepath_includes=None):
     """
     import os
 
-
     file_list = []
     for path, dirs, files in os.walk(directory):
         for file in files:
             for e in ext:
-                if re.search(f'{e}$', file) and file != 'freq.out':
-                    # freq.out used for thermo calculations 
+                if re.search(f"{e}$", file) and file != "freq.out":
+                    # freq.out used for thermo calculations
                     # with the fortran code
                     if filepath_includes is not None:
                         if any(filepath_includes in string for string in (path, file)):
@@ -121,6 +133,7 @@ def get_files(directory, ext, filepath_includes=None):
                         file_list.append(os.path.join(path, file))
     return sorted(file_list)
 
+
 def module_exists(module_name):
     try:
         __import__(module_name)
@@ -128,6 +141,7 @@ def module_exists(module_name):
         return False
     else:
         return True
+
 
 def sort_elements(lst):
     """
@@ -141,8 +155,9 @@ def sort_elements(lst):
     for i in elements:
         atom = Atom(i)
         els.append((i, float(PT.get_atnum(atom))))
-    sorted_els = sorted(els, key = lambda val: val[1])
+    sorted_els = sorted(els, key=lambda val: val[1])
     return sorted_els
+
 
 def list_of_dicts_to_one_level_dict(lst):
     """
@@ -161,6 +176,7 @@ def list_of_dicts_to_one_level_dict(lst):
     Note that all dictionaries must have the same keys. Values can be ints, floats, strings or lists.
     Will break if values of the dicts of each list item are dicts.
     """
+
     def add_to_dict(lst_item, dictionary):
         for k, v in lst_item.items():
             if k not in dictionary:
@@ -171,33 +187,39 @@ def list_of_dicts_to_one_level_dict(lst):
                 dictionary[k].append(v)
         return dictionary
 
-    output = add_to_dict(lst[0], dict()) # initialise
+    output = add_to_dict(lst[0], dict())  # initialise
     for d in lst[1:]:
         output = add_to_dict(d, output)
     return output
-    
-def write_csv_from_dict(data, filename = None):
+
+
+def write_csv_from_dict(data, filename=None):
     """Write to file from dictionary"""
 
     import csv
 
     done = False
     while not done:
-        to_file = input('Print to csv? [Y/N] ')
-        if to_file.lower() in ('y', 'n'):
+        to_file = input("Print to csv? [Y/N] ")
+        if to_file.lower() in ("y", "n"):
             done = True
-            if to_file.lower() == 'y':
+            if to_file.lower() == "y":
                 if filename is None:
-                    filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
-                with open(filename, "w", encoding = 'utf-8-sig') as f:
+                    filename = check_user_input(
+                        "Filename",
+                        lambda item: item.endswith(".csv"),
+                        "Please give a filename ending in '.csv'",
+                    )
+                with open(filename, "w", encoding="utf-8-sig") as f:
                     writer = csv.writer(f)
                     writer.writerow(data.keys())
                     content = zip(*[data[key] for key in data.keys()])
-                    writer.writerows(content) 
-        else:   
+                    writer.writerows(content)
+        else:
             print("Please select 'Y' or 'N'")
 
-def write_csv_from_nested(data,*,col_names = None, return_name = False, filename = None):
+
+def write_csv_from_nested(data, *, col_names=None, return_name=False, filename=None):
     """
     Write to csv from nested data structure; list of tuples, list of lists. 
     
@@ -207,24 +229,29 @@ def write_csv_from_nested(data,*,col_names = None, return_name = False, filename
     import csv
 
     if type(col_names) not in (list, tuple):
-        raise AttributeError('Must pass in column names as a list or tuple of values')
+        raise AttributeError("Must pass in column names as a list or tuple of values")
 
     done = False
     while not done:
-        to_file = input('Print to csv? [Y/N] ')
-        if to_file.lower() in ('y', 'n'):
+        to_file = input("Print to csv? [Y/N] ")
+        if to_file.lower() in ("y", "n"):
             done = True
-            if to_file.lower() == 'y':
+            if to_file.lower() == "y":
                 if filename is None:
-                    filename = check_user_input('Filename', lambda item: item.endswith('.csv'), "Please give a filename ending in '.csv'")
-                with open(filename, "w", encoding = 'utf-8-sig') as f:
+                    filename = check_user_input(
+                        "Filename",
+                        lambda item: item.endswith(".csv"),
+                        "Please give a filename ending in '.csv'",
+                    )
+                with open(filename, "w", encoding="utf-8-sig") as f:
                     writer = csv.writer(f)
-                    writer.writerow(col_names)       
+                    writer.writerow(col_names)
                     writer.writerows(data)
                 if return_name:
                     return filename
-        else:   
+        else:
             print("Please select 'Y' or 'N'")
+
 
 def search_dict_recursively(d):
     ret = {}
@@ -261,7 +288,7 @@ def check_user_input(user_input, condition, if_error):
     correct = False
     while not correct:
         try:
-            item = input(user_input + ': ')
+            item = input(user_input + ": ")
         except ValueError:
             print(if_error)
         if not f(item):
@@ -270,46 +297,50 @@ def check_user_input(user_input, condition, if_error):
             correct = True
     return item
 
+
 def sort_data(data):
     """ 
     Sorts a dictionary into alphanumerical order based on key
     """
     collapsed = [[k, v] for k, v in data.items()]
-    sorted_data = sorted(collapsed, key = lambda kv: kv[0])
-    sorted_dict  = {}
+    sorted_data = sorted(collapsed, key=lambda kv: kv[0])
+    sorted_dict = {}
     for data in sorted_data:
         k, v = data
-        sorted_dict[k] = v # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
+        sorted_dict[
+            k
+        ] = v  # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
     return sorted_dict
+
 
 def assign_molecules_from_dict_keys(data):
     """ 
     Assign a cation and anion to each path.
     """
     for key in data.keys():
-        cation = ''
-        anion = ''
-        vals = key.split('/')
+        cation = ""
+        anion = ""
+        vals = key.split("/")
         for val in vals:
             # different names for the same anion
-            if val == 'ch':
-                val = 'choline'
-            if val == 'ac':
-                val = 'acetate'
-            if val == 'h2po4':
-                val = 'dhp' # in Molecules.Anions
-            if val == 'mesylate':
-                val = 'mes'
+            if val == "ch":
+                val = "choline"
+            if val == "ac":
+                val = "acetate"
+            if val == "h2po4":
+                val = "dhp"  # in Molecules.Anions
+            if val == "mesylate":
+                val = "mes"
             if val in Molecule.Cations:
                 cation = val
             elif val in Molecule.Anions:
                 anion = val
-        data[key]['cation'] = cation
-        data[key]['anion'] = anion
+        data[key]["cation"] = cation
+        data[key]["anion"] = anion
     return data
 
 
-def responsive_table(data, strings, min_width = 13):
+def responsive_table(data, strings, min_width=13):
     """
     Returns a table that is reponsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
@@ -325,17 +356,19 @@ def responsive_table(data, strings, min_width = 13):
     Can also give a minimum width, defaults to 13 spaces
     """
     num_cols = len(data.keys())
-    content = zip(*[data[key] for key in data.keys()]) # dict values into list of lists
+    content = zip(*[data[key] for key in data.keys()])  # dict values into list of lists
     # unknown number of arguments
     max_sizes = {}
     try:
         for k, v in data.items():
-            max_sizes[k] = len(max([str(val) for val in v], key = len))
+            max_sizes[k] = len(max([str(val) for val in v], key=len))
     except ValueError:
-        sys.exit('Error: No data is passed into chem_assistant.core.utils.responsive_table')   
+        sys.exit(
+            "Error: No data is passed into chem_assistant.core.utils.responsive_table"
+        )
 
     # create the thing to pass into .format()- can't have brackets like zip gives
-    formatting = [] 
+    formatting = []
     index = 0
     all_sizes = []
     for val in zip(data.keys(), max_sizes.values()):
@@ -348,32 +381,32 @@ def responsive_table(data, strings, min_width = 13):
         formatting += [entry, size]
         all_sizes.append(size)
         index += 1
-    line_length = sum(all_sizes) + num_cols * 3 - 1 # spaces in header
-    print('+' + '-' * line_length + '+')
-    output_string = '|' + " {:^{}} |" * len(data.keys())
+    line_length = sum(all_sizes) + num_cols * 3 - 1  # spaces in header
+    print("+" + "-" * line_length + "+")
+    output_string = "|" + " {:^{}} |" * len(data.keys())
     print(output_string.format(*formatting))
-    print('+' + '-' * line_length + '+')
+    print("+" + "-" * line_length + "+")
     for line in content:
-        formatting = []   
+        formatting = []
         for val in zip(line, all_sizes):
             entry, size = val
             # if not isinstance(entry, str):
             if isinstance(entry, float):
-                size = f'{size}.5f'
+                size = f"{size}.5f"
             formatting.append(entry)
             formatting.append(size)
         print(output_string.format(*formatting))
-    print('+' + '-' * line_length + '+')
+    print("+" + "-" * line_length + "+")
 
 
 def eof(file, percFile):
     # OPEN IN BYTES
     with open(file, "rb") as f:
-        f.seek(0, 2)                      # Seek @ EOF
-        fsize = f.tell()                  # Get size
+        f.seek(0, 2)  # Seek @ EOF
+        fsize = f.tell()  # Get size
         Dsize = int(percFile * fsize)
-        f.seek (max (fsize-Dsize, 0), 0)  # Set pos @ last n chars lines
-        lines = f.readlines()             # Read to end
+        f.seek(max(fsize - Dsize, 0), 0)  # Set pos @ last n chars lines
+        lines = f.readlines()  # Read to end
 
     # RETURN DECODED LINES
     for i in range(len(lines)):
@@ -394,8 +427,9 @@ def remove_nones_from_dict(orig_dict):
             d[k] = remove_nones_from_dict(v)
         else:
             if v is not None:
-                d[k] = v 
+                d[k] = v
     return d
+
 
 def consecutive(lst):
     """
@@ -407,11 +441,13 @@ def consecutive(lst):
                 return False
     return True
 
+
 def write_geom_input_for_thermo(atoms):
     """
     Writes 'geom.input' from the list of |Atom| objects passed in.
     """
-    with open('geom.input', 'w') as new:
+    with open("geom.input", "w") as new:
         for atom in atoms:
-            new.write(f"{atom.symbol:5s} {int(atom.atnum):3} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
-
+            new.write(
+                f"{atom.symbol:5s} {int(atom.atnum):3} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n"
+            )
