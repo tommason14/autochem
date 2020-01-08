@@ -98,6 +98,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.merged = self.defaults.merge(settings)  # merges inp, job data
             self.input = self.merged.input
             self.job = self.merged.job
+            self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
 
@@ -505,6 +506,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace("base_name", f"{self.base_name}")
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
+
+        if "time" in self.meta:
+            jobfile = jobfile.replace("24:00:00", self.meta.time)
+            
         self.write_file(jobfile, filetype="job")
 
     def make_run_dir(self):

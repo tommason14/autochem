@@ -105,6 +105,7 @@ cluster.
             self.merged = self.defaults.merge(settings)  # merges inp, job data
             self.input = self.merged.input
             self.job = self.merged.job
+            self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
         if "/" in using:
@@ -305,6 +306,9 @@ cluster.
         elif self.sc == "stm":
             job = job.replace("name", f"{self.base_name}")
 
+        if "time" in self.meta:
+            job = job.replace("24:00:00", self.meta.time)
+
         with open(cp_job, "w") as j:
             j.write(job)
 
@@ -340,6 +344,10 @@ cluster.
             jobfile = jobfile.replace("base_name", f"{self.base_name}")
         elif self.sc == "stm":
             jobfile = jobfile.replace("name", f"{self.base_name}")
+
+        if "time" in self.meta:
+            job = job.replace("24:00:00", self.meta.time)
+
         self.write_file(jobfile, filetype="job")
 
     def place_files_in_dir(self):

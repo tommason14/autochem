@@ -46,6 +46,7 @@ class OrcaJob(Job):
             self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings)  # merges inp, job data
             self.input = self.merged.input
+            self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
         if "/" in using:
@@ -99,6 +100,11 @@ class OrcaJob(Job):
                 jobfile[num] = "#SBATCH -c 1"
             # PBS?
         jobfile = "\n".join(jobfile)
+
+        # change job time
+        if "time" in self.meta:
+            jobfile = jobfile.replace("24:00:00", self.meta.time)
+
         self.write_file(jobfile, filetype="job")
 
     def place_files_in_dir(self):
