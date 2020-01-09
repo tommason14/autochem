@@ -29,9 +29,8 @@ class PsiResults(Results):
                 if re.search("[A-z]*\('[A-z0-9]*'\)", line):  # energy('mp2')
                     return line.split("(")[0]
                 else:  # optimize('scf', dertype='hess'......)
-                    return line.split("(")[
-                        0
-                    ]  # add to this later, using the collect additional data
+                    return line.split("(")[0]  
+                    # add to this later, using the collect additional data
 
     @property
     def method(self):
