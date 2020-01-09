@@ -11,6 +11,6 @@
 module load orca/4.2.1
 orcapath=$(dirname $(which orca))
 
-$orcapath/orca name.inp > name.log
+time $orcapath/orca name.inp > name.log
 
 find . -empty -delete
