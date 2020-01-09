@@ -35,7 +35,7 @@ When creating job files, all data for a job can be modified through the use of a
 
 Using a dummy system, `h.xyz`, we can see the default options like so:
 
-```{python}
+```python
 from chem_assistant import GamessJob
 
 gamess = GamessJob('h.xyz')
@@ -93,7 +93,7 @@ To change the parameters of the file, we use a `Settings` object.
 
 To run an open shell single point calculation:
 
-```{python}
+```python
 from chem_assistant import Settings, GamessJob
 
 sett = Settings()
