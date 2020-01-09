@@ -10,7 +10,7 @@
 
 export PROJECT="sn29"
 
-module load orca/4.0.1
+module load orca/4.2.1
 module load openmpi/1.10.7-mlx
 orcapath=$(dirname $(which orca))
 
