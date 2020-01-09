@@ -104,7 +104,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
         # Split each molecule on a bond?
         if bonds_to_split is None:
-            if "bonds_to_split" in self.merged:
+            if hasattr(self, 'merged') and "bonds_to_split" in self.merged:
                 bonds_to_split = self.merged.bonds_to_split
 
         super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split)
@@ -507,7 +507,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
 
-        if "time" in self.meta:
+        if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
             
         self.write_file(jobfile, filetype="job")

@@ -102,7 +102,7 @@ class OrcaJob(Job):
         jobfile = "\n".join(jobfile)
 
         # change job time
-        if "time" in self.meta:
+        if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
 
         self.write_file(jobfile, filetype="job")
