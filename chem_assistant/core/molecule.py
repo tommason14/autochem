@@ -23,8 +23,8 @@ class Molecule:
     Anions["dca"] = ['N', 'C', 'N', 'C', 'N']
     Anions["pf6"] = ['F', 'P', 'F', 'F', 'F', 'F', 'F']
     Anions["mes"] = ['S', 'O', 'O', 'O', 'C', 'H', 'H', 'H']
-    Anions["ntf2"] = ['F', 'F', 'F', 'F', 'F', 'N', 'S', 'S',
-                        'O', 'O', 'O', 'O', 'C', 'C', 'F']
+    Anions["ntf2"] = ['F', 'F', 'F', 'F', 'F', 'N', 'S', 'S'
+                        ,'O', 'O', 'O', 'O', 'C', 'C', 'F']
     Anions["bis-fsi"] = ['F', 'S', 'O', 'O', 'N', 'S', 'O', 'O', 'F']
     Anions["tos"] = ['C', 'C', 'C', 'C', 'H', 'H', 'H', 'H',
                         'H', 'H', 'H', 'S', 'O', 'O', 'O', 'C', 'C', 'C']
@@ -72,7 +72,8 @@ class Molecule:
     Cations['sodium'] = ['Na']
     Cations['potassium'] = ['K']
     Cations['styrene-trimethylammonium'] = ['H','C','H','C','H','C','C','H','C','H','C','C','H',
-                                            'C','H','C','H','H','N','C','H','H','H','C','H','H','H','C','H','H','H']
+                                            'C','H','C','H','H','N','C','H','H','H','C','H','H',
+                                            'H','C','H','H','H']
     Cations['maotmac'] = ['C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H','H','N',
                            'C','H','H','H','C','H','H','H','C','H','H','H']    
 
@@ -81,35 +82,55 @@ class Molecule:
     Neutrals['methane'] = ['C', 'H', 'H', 'H', 'H']
     Neutrals['ethane'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H']
     Neutrals['water'] = ['H', 'H', 'O']
-    Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H']
-    Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H']
-    Neutrals['dopamine-c-c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C','N','H','H','H','H','H','H','H','H','H']
+    Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C',
+                                         'C','C','N','H','H','H','H','H']
+    Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C',
+                                         'C','C','N','H','H','H','H','H','H','H']
+    Neutrals['dopamine-c-c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C',
+                                         'N','H','H','H','H','H','H','H','H','H']
     Neutrals['benzene'] = ['C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'] 
     Neutrals['acetone'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'O']
     Neutrals['dmso'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O']
     Neutrals['amps'] = ['H','C','H','C','H','C','O','N','H','C','C','H','H','H',
                         'C','H','H','H','C','H','H','S','O','H','O','O']
-    Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C','H','C','C','H','C','H','S','O','H','O','O']
+    Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C',
+                                              'H','C','C','H','C','H','S','O','H','O','O']
     
     # Dopamine "monomers"
-    Neutrals['dhica'] = ['O','C','C','C','N','H','C','C','C','C','C','O','H','H','H','H','C','H','O','O','H']
-    Neutrals['pezz-2a'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','C','O','H','O','O','H','O','H','H','H','H','H','H','H','H']
-    Neutrals['pezz-2b'] = ['C','C','C','C','C','C','C','C','N','O','H','O','H','H','H','H','C','N','C','C','H','C','H','C','C','C','C','H','H','O','O','H']
-    Neutrals['pezz-2c'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2d'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2e'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2f'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2g'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2h'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2i'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2j'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2k'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2l'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2m'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2n'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C','C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['dhica'] = ['O','C','C','C','N','H','C','C','C','C','C',
+                         'O','H','H','H','H','C','H','O','O','H']
+    Neutrals['pezz-2a'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','C','O','H','O','O','H','O','H','H','H','H','H','H','H','H']
+    Neutrals['pezz-2b'] = ['C','C','C','C','C','C','C','C','N','O','H','O','H','H',
+                           'H','H','C','N','C','C','H','C','H','C','C','C','C','H','H','O','O','H']
+    Neutrals['pezz-2c'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2d'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2e'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2f'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
+    Neutrals['pezz-2g'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2h'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2i'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2j'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
+    Neutrals['pezz-2k'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
+                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2l'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
+                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2m'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
+                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
+    Neutrals['pezz-2n'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
+                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
     Neutrals['quinone-methide'] = ['O','C','C','C','N','C','C','C','C','C','O','H','H','H','H','H']
     Neutrals['quinonimine-projct'] = ['O','C','C','C','N','C','H','C','H','C','C','C','O','H','H','H']
-    Neutrals['uncyclised-dopamine'] = ['C','C','C','C','C','C','H','H','H','C','C','H','H','N','H','H','H','H','O','H','O','H']
+    Neutrals['uncyclised-dopamine'] = ['C','C','C','C','C','C','H','H','H','C','C','H','H','N',
+                                       'H','H','H','H','O','H','O','H']
 
 
     Radicals = {'amps-dimer': ['H','O','S','O','O','C','H','H','C','C','H','H','H','C','H','H','H','N',
@@ -257,6 +278,7 @@ class Molecule:
                 string += f"{sym}{number}"
             return string
 
+    @property
     def mass(self):
         """
         Returns molecular mass in g mol⁻¹
@@ -264,6 +286,7 @@ class Molecule:
         formula = self.formula(as_dict=True)
         mass = 0
         for element, number in formula.items():
+            element = Atom(element) # PT.x requires Atom objects
             mass += PT.get_mass(element) * number
         return f"{mass:.2f} g mol⁻¹"
 
