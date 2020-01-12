@@ -86,7 +86,7 @@ class OrcaJob(Job):
         appropriate directory.
         """
         jobfile = self.get_job_template().replace(" name", f" {self.base_name}")
-        # need space due to `dirname` being used in script
+        # need space due to `dirname` being used in script to find orca path
 
         # replace cpus for parallelisation
         # and set cpus per task to 1
@@ -95,7 +95,10 @@ class OrcaJob(Job):
         for num, line in enumerate(jobfile):
             # SLURM
             if re.search("SBATCH -n(tasks)? [0-9]+", line):
-                jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
+                if hasattr(self, 'meta') and "nproc" in self.meta:
+                    jobfile[num] = f"#SBATCH -n {self.meta.nproc}"
+                else:
+                    jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
             if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
                 jobfile[num] = "#SBATCH -c 1"
             # PBS?
@@ -104,6 +107,12 @@ class OrcaJob(Job):
         # change job time
         if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
+
+        if hasattr(self, 'meta') and "mem" in self.meta:
+            mem = self.meta.mem[:-2]
+            jobfile = jobfile.replace(
+                "mem=64", f"mem={mem}"
+            )  # for m3/mon, mem=... doesn't appear for stm
 
         self.write_file(jobfile, filetype="job")
 
@@ -238,10 +247,6 @@ class OrcaJob(Job):
     #         mkdir(newdir)
     #     copyfile(self.xyz, newdir)
     #     move(f'{self.base_name}.job', newdir)
-
-    @property
-    def job_data(self):
-        return self.get_job_template().replace("name", self.base_name)
 
     @property
     def inp(self):
@@ -390,11 +395,16 @@ class OrcaJob(Job):
         - Massive: 16
         - Gadi: 46
 
-        Can also set manually with `sett.input.meta.pal='nprocs 20'`, for example.
+        Can also set manually with `sett.meta.nproc=20`
         """
         ret = ""
-        if "pal" not in self.input.meta:
+        if hasattr(self.input, 'meta') and "pal" in self.input.meta:
+            pass
+        elif hasattr(self, 'meta') and "nproc" in self.meta:
+            ret += f"%pal\n nprocs {self.meta.nproc}\nend"
+        else:
             ret += f"%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend"
+
         for key, val in self.input.meta.items():
             ret += f"\n\n%{key}\n{val}\nend"
         return ret

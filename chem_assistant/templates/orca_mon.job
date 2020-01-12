@@ -5,7 +5,7 @@
 #SBATCH -n 16
 #SBATCH -c 1
 #SBATCH --mem=64G
-#SBATCH -t 10:00:00
+#SBATCH -t 24:00:00
 #SBATCH -p comp,short
 #SBATCH -q partner
 
