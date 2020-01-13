@@ -102,9 +102,16 @@ class OrcaJob(Job):
             if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
                 jobfile[num] = "#SBATCH -c 1"
             # PBS?
+
+        # change partition
+        if hasattr(self, 'meta') and "partition" in self.meta:
+            for num, line in enumerate(jobfile):
+                if '#SBATCH -p' in line:
+                    jobfile[num] = f'#SBATCH -p {self.meta.partition}'        
+
         jobfile = "\n".join(jobfile)
 
-        # change job time
+        # change job time, memory and partition
         if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
 
@@ -113,6 +120,7 @@ class OrcaJob(Job):
             jobfile = jobfile.replace(
                 "mem=64", f"mem={mem}"
             )  # for m3/mon, mem=... doesn't appear for stm
+
 
         self.write_file(jobfile, filetype="job")
 
