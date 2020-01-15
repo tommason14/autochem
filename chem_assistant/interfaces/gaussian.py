@@ -71,17 +71,43 @@ class GaussJob(Job):
 
     @property
     def job_data(self):
+        def _change_partition(self, jobfile, search_term):
+            for num, line in enumerate(jobfile):
+                if search_term in line:
+                    jobfile[num] = f'{search_term}{self.meta.partition}'
+            return jobfile
+
         job = self.get_job_template().replace("name", self.base_name)
-        if "time" in self.meta:
-            job = job.replace("24:00:00", self.meta.time)
-        if "mem" in self.meta:
-            mem = self.meta.mem[:-2]
-            job = job.replace(
-                "mem=32", f"mem={mem}"
-            )  # for m3/mon, mem=... doesn't appear for stm
-        if "nproc" in self.meta:
-            job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.nproc}")
-            # for m3/mon, specified as -c, so we're safe here
+        if hasattr(self, 'meta'):
+            if "time" in self.meta:
+                job = job.replace("24:00:00", self.meta.time)
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                if self.sc in ('mas', 'mon'):
+                    job = job.replace("mem=32", f"mem={mem}")
+                if self.sc == 'gadi':
+                    job = job.replace("mem=96", f"mem={mem}")
+            if "nproc" in self.meta:
+                if self.sc in super().SLURM_HOSTS:
+                    job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.nproc}")
+                    # for stampede, specified as -c, so it won't change there, which is
+                    # what we want as you are charged for the whole node there!
+                else:
+                    job = job.replace('npcus=48', f'npcus={self.meta.nproc}')
+            if "partition" in self.meta:
+                jobfile = job.split('\n')
+                if self.sc in super().SLURM_HOSTS:
+                    jobfile = self._change_partition(jobfile, search_term = '#SBATCH -p ')
+                    # might be --partition=
+                    jobfile = self._change_partition(jobfile, search_term = '#SBATCH --partition=')
+                else:
+                    jobfile = self._change_partition(jobfile, search_term = '#PBS -l ncpus=')
+            # pbs
+            if self.sc in ('rjn', 'gadi'):
+                if 'jobfs' in self.meta:
+                    jobfs = self.meta.jobfs.replace('GB', '')
+                    job = job.replace('jobfs=200GB', f'jobfs={jobfs}')
+
         return job
 
     @property

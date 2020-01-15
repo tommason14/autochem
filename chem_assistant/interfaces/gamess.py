@@ -342,7 +342,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                             if len(group) == 1:
                                 indat_string += f"{group[0]},"
                             else:
-                                # indat_string += f'{group[0]},-{group[-1]},'
                                 # if '-', then add to next element
                                 for i, val in enumerate(group):
                                     if val == "-":

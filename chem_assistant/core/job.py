@@ -18,6 +18,10 @@ molecular dynamics. This class also creates job files in the same directory as t
     * ``using`` -- coordinates of chemical system, in xyz format
 
     """
+
+    SLURM_HOSTS = ('stm', 'mas', 'mon')
+    PBS_HOSTS = ('rjn', 'gadi')
+
     def __init__(self, using = None, run_dir = None, frags_in_subdir = False, user_settings=None,
     bonds_to_split = None, **kwargs): 
         # allows for fmo=True, even if nothing done with the arguments

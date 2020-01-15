@@ -100,7 +100,7 @@ class OrcaJob(Job):
                 else:
                     jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
             if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
-                jobfile[num] = "#SBATCH -c 1"
+                jobfile[num] = "#SBATCH -c 1" #parallel jobs, N tasks, N cpus
             # PBS?
 
         # change partition
@@ -111,7 +111,7 @@ class OrcaJob(Job):
 
         jobfile = "\n".join(jobfile)
 
-        # change job time, memory and partition
+        # change job time, memory
         if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
 
