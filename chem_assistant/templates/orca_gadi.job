@@ -9,4 +9,6 @@
 
 module load orca/4.2.1
 
-$ORCA_PATH/orca name.inp > name.log
+time $ORCA_PATH/orca name.inp > name.log
+
+find . -empty -delete

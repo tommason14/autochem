@@ -4,6 +4,7 @@
 #PBS -l mem=96GB
 #PBS -l ncpus=48
 #PBS -l jobfs=200GB
+#PBS -l software=gaussian
 #PBS -l wd
 
 module load gaussian/g16c01
