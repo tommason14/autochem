@@ -71,21 +71,21 @@ class GaussJob(Job):
 
     @property
     def job_data(self):
-        def _change_partition(self, jobfile, search_term):
+        def _change_partition(jobfile, partition, search_term):
             for num, line in enumerate(jobfile):
                 if search_term in line:
-                    jobfile[num] = f'{search_term}{self.meta.partition}'
+                    jobfile[num] = f"{search_term}{partition}"
             return jobfile
 
         job = self.get_job_template().replace("name", self.base_name)
-        if hasattr(self, 'meta'):
+        if hasattr(self, "meta"):
             if "time" in self.meta:
                 job = job.replace("24:00:00", self.meta.time)
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
-                if self.sc in ('mas', 'mon'):
+                if self.sc in ("mas", "mon"):
                     job = job.replace("mem=32", f"mem={mem}")
-                if self.sc == 'gadi':
+                if self.sc == "gadi":
                     job = job.replace("mem=96", f"mem={mem}")
             if "nproc" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
@@ -93,20 +93,22 @@ class GaussJob(Job):
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
                 else:
-                    job = job.replace('npcus=48', f'npcus={self.meta.nproc}')
+                    job = job.replace("npcus=48", f"npcus={self.meta.nproc}")
             if "partition" in self.meta:
-                jobfile = job.split('\n')
+                jobfile = job.split("\n")
                 if self.sc in super().SLURM_HOSTS:
-                    jobfile = self._change_partition(jobfile, search_term = '#SBATCH -p ')
+                    jobfile = _change_partition(jobfile, self.meta.partition, search_term="#SBATCH -p ")
                     # might be --partition=
-                    jobfile = self._change_partition(jobfile, search_term = '#SBATCH --partition=')
+                    jobfile = _change_partition(
+                        jobfile, self.meta.partition, search_term="#SBATCH --partition="
+                    )
                 else:
-                    jobfile = self._change_partition(jobfile, search_term = '#PBS -l ncpus=')
+                    jobfile = _change_partition(jobfile, self.meta.partition, search_term="#PBS -l ncpus=")
             # pbs
-            if self.sc in ('rjn', 'gadi'):
-                if 'jobfs' in self.meta:
-                    jobfs = self.meta.jobfs.replace('GB', '')
-                    job = job.replace('jobfs=200GB', f'jobfs={jobfs}')
+            if self.sc in ("rjn", "gadi"):
+                if "jobfs" in self.meta:
+                    jobfs = self.meta.jobfs.replace("GB", "")
+                    job = job.replace("jobfs=200GB", f"jobfs={jobfs}")
 
         return job
 
@@ -197,18 +199,14 @@ class GaussJob(Job):
         #P wB97XD/cc-pVDZ opt=(ts,noeigentest,calcfc) freq SCF=tight SCRF=(SMD,solvent=water) INT=(grid=ultrafine)
         from data stored in self.input
         """
-        return (
-            f"#P {self.input.method}/{self.input.basis}"
-            f"{self.formatted_run}{self.additional_params}"
-        )
+        return f"#P {self.input.method}/{self.input.basis}" f"{self.formatted_run}{self.additional_params}"
 
     @property
     def coord_info(self):
         self.find_charge_and_mult()
         info = [f"{self.input.charge} {self.input.mult}"]
         info += [
-            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}"
-            for atom in self.mol.coords
+            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}" for atom in self.mol.coords
         ]
         return "\n".join(info)
 
