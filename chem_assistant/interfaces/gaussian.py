@@ -104,6 +104,7 @@ class GaussJob(Job):
                     )
                 else:
                     jobfile = _change_partition(jobfile, self.meta.partition, search_term="#PBS -l ncpus=")
+                job = "\n".join(jobfile)
             # pbs
             if self.sc in ("rjn", "gadi"):
                 if "jobfs" in self.meta:
@@ -140,12 +141,14 @@ class GaussJob(Job):
         """
         Include data such as memory and number of cpus in the Gaussian file.
         """
+        excluded_properties = ('time', 'partition') 
+        # input by user for scheduler
         meta = []
         if self.sc == "stm":
             self.meta.mem = "160gb"
             self.meta.nproc = 46
         for k, v in self.meta.items():
-            if k is not "time":
+            if k not in excluded_properties:
                 meta.append(f"%{k}={v}")
 
         return "\n".join(meta).replace("name", self.base_name)
