@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -P k96
+#PBS -l mem=48GB
+#PBS -l ncpus=16
+#PBS -l jobfs=10Gb
+#PBS -l walltime=4:00:00
+#PBS -l wd
+
+module load psi4/1.3.2
+
+setenv OMP_NUM_THREADS $PBS_NCPUS
+setenv MKL_NUM_THREADS $PBS_NCPUS
+
+psi4 name.inp name.out
