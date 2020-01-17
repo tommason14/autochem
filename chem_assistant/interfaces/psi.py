@@ -108,10 +108,9 @@ cluster.
             self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
+            self.meta = self.defaults.meta  # just to save hasattr(self, 'meta') further down
         if "/" in using:
-            self.title = using.split("/")[-1][
-                :-4
-            ]  # say using = ../xyz_files/file.xyz -->
+            self.title = using.split("/")[-1][:-4]  # say using = ../xyz_files/file.xyz -->
         else:
             self.title = using[:-4]
 
@@ -133,9 +132,7 @@ cluster.
         charge = f"{self.input.charge} {self.input.mult}\n"
         atoms = ""
         for atom in self.mol.coords:
-            atoms += (
-                f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
-            )
+            atoms += f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
         units = f"units {self.input.molecule.units}\n"
         sym = f"symmetry {self.input.molecule.symmetry}\n"
         reorient = "no_reorient\n"
@@ -201,9 +198,7 @@ cluster.
                 # for data in self.input.run[k].values():
                 #     for k1, v1 in data.items():
                 #         res.append((k1, v1))
-        res = sorted(
-            res, key=lambda val: val[0]
-        )  # sort by the first item of tuple, the number
+        res = sorted(res, key=lambda val: val[0])  # sort by the first item of tuple, the number
         string = f"{res[0][1]}('{res[0][2]}'"
         for val in res[1:]:
             string += f", {val[1]}='{val[2]}'"
@@ -257,9 +252,7 @@ cluster.
             self.mol.separate()
         for frag in self.mol.fragments.values():
             for atom in frag["atoms"]:
-                atoms.append(
-                    f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}"
-                )
+                atoms.append(f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}")
             atoms.append("--")
         atoms = "\n".join(atoms[:-1]) + "\n"
         units = f"units {self.input.molecule.units}\n"
@@ -308,6 +301,17 @@ cluster.
 
         if "time" in self.meta:
             job = job.replace("24:00:00", self.meta.time)
+
+        # pbs, also needs adding in normal job file and for slurm
+        if self.sc in super().PBS_HOSTS:
+            if "nproc" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.nproc}")
+            if "jobfs" in self.meta:
+                jobfs = self.meta.jobfs[:-2]  # drop units
+                job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                job = job.replace("mem=64GB", f"mem={mem}GB")
 
         with open(cp_job, "w") as j:
             j.write(job)
@@ -417,9 +421,7 @@ cluster.
                 frag_settings.input.molecule.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.molecule.multiplicity = data["multiplicity"]
-                job = PsiJob(
-                    using=name + str(".xyz"), settings=frag_settings, run_dir=True
-                )
+                job = PsiJob(using=name + str(".xyz"), settings=frag_settings, run_dir=True)
                 chdir(parent_dir)
                 count += 1
         if hasattr(self.mol, "ionic"):
@@ -437,8 +439,6 @@ cluster.
                 frag_settings = self.defaults
             frag_settings.input.molecule.charge = self.mol.ionic["charge"]
             if self.mol.ionic["multiplicity"] != 1:
-                frag_settings.input.molecule.multiplicity = self.mol.ionic[
-                    "multiplicity"
-                ]
+                frag_settings.input.molecule.multiplicity = self.mol.ionic["multiplicity"]
             job = PsiJob(using="ionic.xyz", settings=frag_settings, run_dir=True)
             chdir(parent_dir)

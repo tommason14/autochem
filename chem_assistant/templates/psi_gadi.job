@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -P k96
-#PBS -l mem=48GB
+#PBS -l mem=64GB
 #PBS -l ncpus=16
-#PBS -l jobfs=10Gb
+#PBS -l jobfs=10GB
 #PBS -l walltime=4:00:00
 #PBS -l wd
 
