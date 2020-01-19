@@ -227,28 +227,42 @@ store the iteration number.
             basis, basis
         )  # if self.basis not in dict, return self.basis
 
-    def non_fmo_mp2_data_gas(self):
+    def non_fmo_mp2_gas_data_for_spec(self):
         """
         Returns value of E(0) as HF, E(2S) as the opposite spin energy and
         E(2T) as same spin energy. Then user can scale energies accordingly.
+        If looking at optimisations, only the overall correlation energy is printed.
         """
         HF = ""
         MP2_opp = ""
         MP2_same = ""
         for line in eof(self.log, 0.2):
             line = line.split()
-            # print(line)
             if "E(0)=" in line:
                 HF = line[-1]
             if "E(2S)=" in line:
                 MP2_opp = line[-1]
             if "E(2T)=" in line:
                 MP2_same = line[-1]
-
         HF, MP2_opp, MP2_same = map(float, (HF, MP2_opp, MP2_same))
         return HF, MP2_opp, MP2_same
 
-    def non_fmo_mp2_data_solvent(self):
+    def non_fmo_mp2_gas_data_for_opt(self):
+        """
+        Returns value of E(0) as HF, E(MP2) as the overall MP2 energy.
+        """
+        HF = ""
+        MP2 = ""
+        for line in eof(self.log, 0.2):
+            line = line.split()
+            if "E(0)=" in line:
+                HF = line[-1]
+            if "E(MP2)=" in line:
+                MP2 = line[1]
+        HF, MP2 = map(float, (HF,MP2))
+        return HF, MP2
+
+    def non_fmo_mp2_solvent_data(self):
         """
         Returns value of E(0) as HF, E(MP2) as the MP2 energy. 
         When solvent is added, GAMESS doesn't print the individual correlation
@@ -360,10 +374,15 @@ store the iteration number.
             MP2_same = "NA"
         elif self._energy_type in ("mp2", "scs"):
             if not self.solvent_calc:
-                HF, MP2_opp, MP2_same = self.non_fmo_mp2_data_gas()
-                MP2 = "NA"
+                if self.is_spec():
+                    HF, MP2_opp, MP2_same = self.non_fmo_mp2_gas_data_for_spec()
+                    MP2 = "NA"
+                if self.is_optimisation():
+                    HF, MP2 = self.non_fmo_mp2_gas_data_for_opt()
+                    MP2_opp = "NA"
+                    MP2_same = "NA"
             else:
-                HF, MP2 = self.non_fmo_mp2_data_solvent()
+                HF, MP2 = self.non_fmo_mp2_solvent_data
                 MP2_opp = "NA"
                 MP2_same = "NA"
         elif "dft" in self._energy_type or "hf" in self._energy_type:
@@ -426,18 +445,14 @@ store the iteration number.
         Note that ⍺ orbitals are selected, and the ⍺ and β electrons give
         different homo-lumo gaps.
         """
-
+        
         if self.multiplicity == 1:
-            homo, lumo, gap = self._homo_lumo_gap()
             transition = "HOMO-LUMO"
-        elif self.multiplicity == 2:
-            homo, lumo, gap = self._homo_lumo_gap()  # here homo is somo
-            transition = "SOMO-LUMO"
         else:
-            print(
-                f"Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}"
-            )
-
+            transition = "SOMO-LUMO"
+        
+        homo, lumo, gap = self._homo_lumo_gap() 
+            
         return {
             "File": self.file,
             "Path": self.path,

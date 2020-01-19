@@ -127,15 +127,11 @@ class PsiResults(Results):
         """
 
         if self.multiplicity == 1:
-            homo, lumo, gap = self._homo_lumo_gap()
             transition = "HOMO-LUMO"
-        elif self.multiplicity == 2:
-            homo, lumo = self._homo_lumo_gap()  # here homo is somo
-            transition = "SOMO-LUMO"
         else:
-            print(
-                f"Error: Only singlet/doublet multiplicities have been accounted for. Ignoring {self.log}"
-            )
+            transition = "SOMO-LUMO"
+        
+        homo, lumo, gap = self._homo_lumo_gap()
 
         return {
             "File": self.file,
