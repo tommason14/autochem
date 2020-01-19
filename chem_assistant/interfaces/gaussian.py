@@ -86,7 +86,7 @@ class GaussJob(Job):
                 if self.sc in ("mas", "mon"):
                     job = job.replace("mem=32", f"mem={mem}")
                 if self.sc == "gadi":
-                    job = job.replace("mem=96", f"mem={mem}")
+                    job = job.replace("mem=192", f"mem={mem}")
             if "nproc" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.nproc}")
