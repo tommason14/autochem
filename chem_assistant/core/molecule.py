@@ -669,7 +669,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     all_assigned = True
         if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
             self.group_frags_together()
-        # self.add_ionic_network()
+        self.add_ionic_network()
         if hasattr(self, 'fragments_after_merge'):
             self.fragments = self.fragments_after_merge
         if self.split_on_bonds:
