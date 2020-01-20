@@ -228,29 +228,15 @@ cluster.
         """
         Make a counterpoise corrected HF input file and place in a separate directory.
         """
-        # make new PsiJob object, the only thing that changes is atoms, and directory name
-        # class PsiJob_CP(PsiJob):
-        #
-        #   def convert_atoms_to_cp(self):
-        #
-        #       if not hasattr(self.mol, 'fragments'):
-        #           self.mol.separate()
-        #       for frag in self.mol.fragments.values():
-        #           for atom in frag['atoms']:
-        #               atoms.append(f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}")
-        #           atoms.append('--')
-        #       atoms = "\n".join(atoms[:-1]) + '\n'
-        #       return atoms
-
         self.find_charge_and_mult()
         comment = f"# PSI4 Calc: {self.title}\n\n"
         mem = f"memory {self.input.memory}\n\n"
         mol = "molecule complex {\n"
-        charge = f"{self.input.charge} {self.input.mult}\n"
         atoms = []
         if not hasattr(self.mol, "fragments"):
             self.mol.separate()
         for frag in self.mol.fragments.values():
+            atoms.append(f"{frag['charge']} {frag['multiplicity']}")
             for atom in frag["atoms"]:
                 atoms.append(f" {atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}")
             atoms.append("--")
@@ -260,7 +246,7 @@ cluster.
         reorient = "no_reorient\n"
         end = "}\n"
 
-        data = [comment, mem, mol, charge, atoms, units, reorient, sym, end]
+        data = [comment, mem, mol, atoms, units, reorient, sym, end]
 
         # add in user options
         for key, value in self.input.molecule.items():
