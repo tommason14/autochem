@@ -3,7 +3,7 @@
 #PBS -l mem=64GB
 #PBS -l ncpus=16
 #PBS -l jobfs=10GB
-#PBS -l walltime=4:00:00
+#PBS -l walltime=3:00:00
 #PBS -l wd
 
 module load psi4/1.3.2

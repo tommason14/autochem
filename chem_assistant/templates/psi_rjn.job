@@ -3,7 +3,7 @@
 #PBS -l mem=48GB
 #PBS -l ncpus=16
 #PBS -l jobfs=10Gb
-#PBS -l walltime=4:00:00
+#PBS -l walltime=3:00:00
 #PBS -l wd
 
 module load psicode/4.0b5.1

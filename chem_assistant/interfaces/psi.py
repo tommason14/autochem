@@ -286,8 +286,15 @@ cluster.
             job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
-            job = job.replace("24:00:00", self.meta.time)
+            job = job.replace("03:00:00", self.meta.time)
 
+        if self.sc in super().SLURM_HOSTS:
+            if "nproc" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.nproc}")
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                job = job.replace("mem=64GB", f"mem={mem}GB")
+            
         # pbs, also needs adding in normal job file and for slurm
         if self.sc in super().PBS_HOSTS:
             if "nproc" in self.meta:
