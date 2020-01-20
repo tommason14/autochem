@@ -295,7 +295,6 @@ cluster.
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
             
-        # pbs, also needs adding in normal job file and for slurm
         if self.sc in super().PBS_HOSTS:
             if "nproc" in self.meta:
                 job = job.replace("ncpus=16", f"ncpus={self.meta.nproc}")
@@ -330,20 +329,37 @@ cluster.
         jobfile = self.get_job_template()
         # modify
         if self.sc == "mgs":
-            jobfile = jobfile.replace("name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "rjn":
             # should alter the job time as they never need 4 hours-
             # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
-            jobfile = jobfile.replace("name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "mas":
-            jobfile = jobfile.replace("base_name", f"{self.base_name}")
+            job = job.replace("base_name", f"{self.base_name}")
         elif self.sc == "mon":
-            jobfile = jobfile.replace("base_name", f"{self.base_name}")
+            job = job.replace("base_name", f"{self.base_name}")
         elif self.sc == "stm":
-            jobfile = jobfile.replace("name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
-            job = job.replace("24:00:00", self.meta.time)
+            job = job.replace("03:00:00", self.meta.time)
+
+        if self.sc in super().SLURM_HOSTS:
+            if "nproc" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.nproc}")
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                job = job.replace("mem=64GB", f"mem={mem}GB")
+            
+        if self.sc in super().PBS_HOSTS:
+            if "nproc" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.nproc}")
+            if "jobfs" in self.meta:
+                jobfs = self.meta.jobfs[:-2]  # drop units
+                job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                job = job.replace("mem=64GB", f"mem={mem}GB")
 
         self.write_file(jobfile, filetype="job")
 
