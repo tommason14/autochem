@@ -326,7 +326,7 @@ cluster.
 
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-        jobfile = self.get_job_template()
+        job = self.get_job_template()
         # modify
         if self.sc == "mgs":
             job = job.replace("name", f"{self.base_name}")
@@ -361,7 +361,7 @@ cluster.
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
 
-        self.write_file(jobfile, filetype="job")
+        self.write_file(job, filetype="job")
 
     def place_files_in_dir(self):
         """
