@@ -505,6 +505,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace("base_name", f"{self.base_name}")
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
+        elif self.sc == "gadi":
+            jobfile = jobfile.replace("name", f"{self.base_name}")
 
         if hasattr(self, 'meta') and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
