@@ -46,7 +46,7 @@ store the iteration number.
 
     def completed(self):
         found = False
-        for line in eof(self.log, 0.1):
+        for line in self.eof(0.1):
             if "EXECUTION OF GAMESS TERMINATED NORMALLY" in line:
                 found = True
         return found
@@ -183,7 +183,7 @@ store the iteration number.
         """
         HF = ""
         MP2 = ""
-        for line in eof(self.log, 0.2):  # last values only
+        for line in self.eof(0.2):  # last values only
             if "Euncorr HF" in line:
                 HF = line.split()[-1]
             if f"E corr {mp2_type}" in line:
@@ -236,7 +236,7 @@ store the iteration number.
         HF = ""
         MP2_opp = ""
         MP2_same = ""
-        for line in eof(self.log, 0.2):
+        for line in self.eof(0.2):
             line = line.split()
             if "E(0)=" in line:
                 HF = line[-1]
@@ -253,7 +253,7 @@ store the iteration number.
         """
         HF = ""
         MP2 = ""
-        for line in eof(self.log, 0.2):
+        for line in self.eof(0.2):
             line = line.split()
             if "E(0)=" in line:
                 HF = line[-1]
@@ -272,7 +272,7 @@ store the iteration number.
         """
         HF = ""
         MP2 = ""
-        for line in eof(self.log, 0.2):
+        for line in self.eof(0.2):
             line = line.split()
             if "E(0)=" in line:
                 HF = line[-1]
@@ -382,7 +382,7 @@ store the iteration number.
                     MP2_opp = "NA"
                     MP2_same = "NA"
             else:
-                HF, MP2 = self.non_fmo_mp2_solvent_data
+                HF, MP2 = self.non_fmo_mp2_solvent_data()
                 MP2_opp = "NA"
                 MP2_same = "NA"
         elif "dft" in self._energy_type or "hf" in self._energy_type:
