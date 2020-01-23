@@ -284,7 +284,7 @@ def get_h_bonds(dir):
                 'Molecule2', 'Atom2', 'Length', 'Angle')
         for index, value in enumerate(keys):
             data[value] = [val[index] for val in output]
-        responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=6)
+        responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=9)
         print()
         write_csv_from_nested(output, col_names=(
 'File', 'Path', 'Molecule1', 'Atom1', 'Molecule2', 

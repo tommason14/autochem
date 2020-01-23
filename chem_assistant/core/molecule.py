@@ -832,6 +832,23 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         def find_bonds(self):
 
+            def is_imid_c2_h(atom):
+                """
+                Checks if a C2-H proton of imidazolium is found
+                """
+                connectors = {}
+                if atom.symbol == 'H':
+                    for alpha in atom.connected_atoms: # alpha = one atom away, beta = two away
+                        for beta in alpha.connected_atoms:
+                            if beta.symbol not in connectors:
+                                connectors[beta.symbol] = 1
+                            else:
+                                connectors[beta.symbol] += 1
+                            if alpha.symbol == 'C' and 'N' in connectors and connectors['N'] == 2:
+                                return True
+                return False
+
+
 
             def valid_atoms(atom1, atom2):
                 """
@@ -852,9 +869,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     if atom.symbol not in h_bonders:
                         return False
                     if atom.symbol == 'H':
+                        if is_imid_c2_h(atom): # exception
+                            return True
                         for a in atom.connected_atoms:
                             if a.symbol not in h_bonders:
                                 return False
+                            
                 return True
 
             def within_hbond_distance(atom1, atom2):

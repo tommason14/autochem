@@ -53,15 +53,12 @@ def interatomic_dist(mol, i, j):
     if dist < 2.2 and not i.symbol == j.symbol == 'H': # two hydrogens were being found...
         if i_mol in ca.Molecule.Cations and j_mol is 'water':
             if not_alkyl(i) or imid_c2_h(i):
-                # print('Cation-water', f'{i_mol} ({i.symbol}, {i.index})', f'water ({j.symbol}, {j.index})', f'{dist:.2f}')
                 return 'Cation-Water', dist
         if i_mol in ca.Molecule.Anions and j_mol is 'water':
             if not_alkyl(i):
-                # print('Anion-water', f'{i_mol} ({i.symbol}, {i.index})', f'water ({j.symbol}, {j.index})', f'{dist:.2f}')
                 return 'Anion-Water', dist
         if i_mol in ca.Molecule.Cations and j_mol in ca.Molecule.Anions:
             if not_alkyl(i) or imid_c2_h(i):
-                # print('Cation-Anion', f'{i_mol} ({i.symbol}, {i.index})', f'{j_mol} ({j.symbol}, {j.index})',f'{dist:.2f}')
                 return 'Cation-Anion', dist
         if i_mol is 'water' and j_mol is 'water':
             return 'Water-Water', dist
