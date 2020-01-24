@@ -823,11 +823,11 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         for mol in self.mol_dict.values():
             mol.sort(key = lambda atom: atom.index)
 
-    def find_h_bonds(self):
+    def find_h_bonds(self, distance=2.0):
         """
         Gives hydrogen bonding data back to the user. Checks for suitable
         connected atoms and bond lengths of less than 2 Å, and bond angles of
-        45° either side of linear.
+        45° either side of linear. Users can also provide an optional distance.
         """
 
         def find_bonds(self):
@@ -866,25 +866,23 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 h_bonders = ['O', 'F', 'H', 'N']
 
                 for atom in (atom1, atom2):
-                    if atom.symbol not in h_bonders:
-                        return False
-                    if atom.symbol == 'H':
+                    if atom.symbol is 'H':
                         if is_imid_c2_h(atom): # exception
                             return True
+                    if atom.symbol not in h_bonders:
+                        return False
                         for a in atom.connected_atoms:
                             if a.symbol not in h_bonders:
                                 return False
                             
                 return True
 
-            def within_hbond_distance(atom1, atom2):
+            def within_hbond_distance(atom1, atom2, dist):
                 """
                 Checks that atoms are within hydrogen-bonding distances, set to
-                2 Å.
+                2 Å by default.
                 """
-                H_BOND_DIST = 2.0
-
-                return atom1.distance_to(atom2) < H_BOND_DIST
+                return atom1.distance_to(atom2) < dist
 
             def bond_angle(atom1, atom2):
                 """
@@ -911,11 +909,16 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 return 225 > bond_angle(atom1, atom2) > 145
 
 
-            def valid_bond(atom1, atom2):
+            def valid_bond(atom1, atom2, dist):
                 """
                 Checks that two atoms forms a valid hydrogen bond.
                 """
-                if within_hbond_distance(atom1, atom2) and \
+                # if any(x.symbol is 'H' and \
+                #   self.fragments[x.mol]['name'] == 'c4mim' \
+                #   and is_imid_c2_h(x) \
+                #   for x in (atom1, atom2)) and atom1.distance_to(atom2) < 3:
+                #     print(atom1, atom2)
+                if within_hbond_distance(atom1, atom2, dist) and \
                 within_angle_tolerance(atom1, atom2) and \
                 valid_atoms(atom1, atom2):
                     return True
@@ -931,9 +934,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     if i != j:
                         for atom1 in mol: 
                             for atom2 in mol2: 
-                                if valid_bond(atom1, atom2):
-                                    pair = [atom1.index, atom2.index]
-                                    pair.sort() 
+                                if valid_bond(atom1, atom2, distance):
+                                    pair = sorted([atom1.index, atom2.index])
                                     if pair not in counted:
                                         dist = atom1.distance_to(atom2)
                                         angle = bond_angle(atom1, atom2)
