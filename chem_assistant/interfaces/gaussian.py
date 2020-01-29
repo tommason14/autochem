@@ -89,24 +89,30 @@ class GaussJob(Job):
                     job = job.replace("mem=192", f"mem={mem}")
             if "nproc" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
-                    job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.nproc}")
+                    job = job.replace(
+                        "cpus-per-task=16", f"cpus-per-task={self.meta.nproc}"
+                    )
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
                 else:
                     job = job.replace("npcus=48", f"npcus={self.meta.nproc}")
             if "partition" in self.meta:
-                jobfile = job.split("\n")
                 if self.sc in super().SLURM_HOSTS:
-                    jobfile = _change_partition(jobfile, self.meta.partition, search_term="#SBATCH -p ")
+                    jobfile = job.split("\n")
+                    jobfile = _change_partition(
+                        jobfile, self.meta.partition, search_term="#SBATCH -p "
+                    )
                     # might be --partition=
                     jobfile = _change_partition(
                         jobfile, self.meta.partition, search_term="#SBATCH --partition="
                     )
+                    job = "\n".join(jobfile)
                 else:
-                    jobfile = _change_partition(jobfile, self.meta.partition, search_term="#PBS -l ncpus=")
-                job = "\n".join(jobfile)
-            # pbs
-            if self.sc in ("rjn", "gadi"):
+                    job = job.replace(
+                        "#PBS -l wd", "#PBS -q {self.meta.partition}\n#PBS -l wd"
+                    )
+
+            if self.sc in super().PBS_HOSTS:
                 if "jobfs" in self.meta:
                     jobfs = self.meta.jobfs.replace("GB", "")
                     job = job.replace("jobfs=200GB", f"jobfs={jobfs}")
@@ -141,7 +147,7 @@ class GaussJob(Job):
         """
         Include data such as memory and number of cpus in the Gaussian file.
         """
-        excluded_properties = ('time', 'partition') 
+        excluded_properties = ("time", "partition")
         # input by user for scheduler
         meta = []
         if self.sc == "stm":
@@ -202,14 +208,18 @@ class GaussJob(Job):
         #P wB97XD/cc-pVDZ opt=(ts,noeigentest,calcfc) freq SCF=tight SCRF=(SMD,solvent=water) INT=(grid=ultrafine)
         from data stored in self.input
         """
-        return f"#P {self.input.method}/{self.input.basis}" f"{self.formatted_run}{self.additional_params}"
+        return (
+            f"#P {self.input.method}/{self.input.basis}"
+            f"{self.formatted_run}{self.additional_params}"
+        )
 
     @property
     def coord_info(self):
         self.find_charge_and_mult()
         info = [f"{self.input.charge} {self.input.mult}"]
         info += [
-            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}" for atom in self.mol.coords
+            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}"
+            for atom in self.mol.coords
         ]
         return "\n".join(info)
 

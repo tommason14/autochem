@@ -49,6 +49,7 @@ class OrcaJob(Job):
             self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
+            self.meta = self.defaults.meta
         if "/" in using:
             self.title = using.split("/")[-1][:-4]
         else:
@@ -91,36 +92,46 @@ class OrcaJob(Job):
         # replace cpus for parallelisation
         # and set cpus per task to 1
         # create list for ease of manipulation
-        jobfile = jobfile.split("\n")
-        for num, line in enumerate(jobfile):
-            # SLURM
-            if re.search("SBATCH -n(tasks)? [0-9]+", line):
-                if hasattr(self, 'meta') and "nproc" in self.meta:
-                    jobfile[num] = f"#SBATCH -n {self.meta.nproc}"
-                else:
-                    jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
-            if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
-                jobfile[num] = "#SBATCH -c 1" #parallel jobs, N tasks, N cpus
-            # PBS?
-
-        # change partition
-        if hasattr(self, 'meta') and "partition" in self.meta:
+        if self.sc in super().SLURM_HOSTS:
+            jobfile = jobfile.split("\n")
             for num, line in enumerate(jobfile):
-                if '#SBATCH -p' in line:
-                    jobfile[num] = f'#SBATCH -p {self.meta.partition}'        
+                # SLURM
+                if re.search("SBATCH -n(tasks)? [0-9]+", line):
+                    if hasattr(self, "meta") and "nproc" in self.meta:
+                        jobfile[num] = f"#SBATCH -n {self.meta.nproc}"
+                    else:
+                        jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
+                if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
+                    jobfile[num] = "#SBATCH -c 1"  # parallel jobs, N tasks, N cpus
+            # change partition
+            if hasattr(self, "meta") and "partition" in self.meta:
+                for num, line in enumerate(jobfile):
+                    if "#SBATCH -p" in line:
+                        jobfile[num] = f"#SBATCH -p {self.meta.partition}"
 
-        jobfile = "\n".join(jobfile)
+            jobfile = "\n".join(jobfile)
 
-        # change job time, memory
-        if hasattr(self, 'meta') and "time" in self.meta:
-            jobfile = jobfile.replace("24:00:00", self.meta.time)
+            # change job time, memory
+            if hasattr(self, "meta") and "time" in self.meta:
+                jobfile = jobfile.replace("24:00:00", self.meta.time)
 
-        if hasattr(self, 'meta') and "mem" in self.meta:
-            mem = self.meta.mem[:-2]
-            jobfile = jobfile.replace(
-                "mem=64", f"mem={mem}"
-            )  # for m3/mon, mem=... doesn't appear for stm
-
+            if hasattr(self, "meta") and "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                jobfile = jobfile.replace(
+                    "mem=64", f"mem={mem}"
+                )  # for m3/mon, mem=... doesn't appear for stm
+        else:
+            if "time" in self.meta:
+                jobfile = jobfile.replace("24:00:00", self.meta.time)
+            if "mem" in self.meta:
+                mem = self.meta.mem[:-2]
+                jobfile = jobfile.replace("mem=192", f"mem={mem}")
+            if "partition" in self.meta:
+                jobfile = jobfile.replace(
+                    "#PBS -l wd", "#PBS -q {self.meta.partition}\n#PBS -l wd"
+                )
+            if "nprocs" in self.meta:
+                jobfile = jobfile.replace("ncpus=48", "ncpus={self.meta.nprocs}")
 
         self.write_file(jobfile, filetype="job")
 
@@ -406,9 +417,9 @@ class OrcaJob(Job):
         Can also set manually with `sett.meta.nproc=20`
         """
         ret = ""
-        if hasattr(self.input, 'meta') and "pal" in self.input.meta:
+        if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
-        elif hasattr(self, 'meta') and "nproc" in self.meta:
+        elif hasattr(self, "meta") and "nproc" in self.meta:
             ret += f"%pal\n nprocs {self.meta.nproc}\nend"
         else:
             ret += f"%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend"
