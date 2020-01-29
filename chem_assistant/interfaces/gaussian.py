@@ -114,7 +114,7 @@ class GaussJob(Job):
 
             if self.sc in super().PBS_HOSTS:
                 if "jobfs" in self.meta:
-                    jobfs = self.meta.jobfs.replace("GB", "")
+                    jobfs = self.meta.jobfs.upper().replace("GB", "")
                     job = job.replace("jobfs=200GB", f"jobfs={jobfs}")
 
         return job

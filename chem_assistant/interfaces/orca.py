@@ -132,6 +132,9 @@ class OrcaJob(Job):
                 )
             if "nprocs" in self.meta:
                 jobfile = jobfile.replace("ncpus=48", "ncpus={self.meta.nprocs}")
+            if "jobfs" in self.meta:
+                jobfs = self.meta.jobfs.upper().replace("GB", "")
+                jobfile = jobfile.replace("jobfs=200GB", f"jobfs={jobfs}")
 
         self.write_file(jobfile, filetype="job")
 
