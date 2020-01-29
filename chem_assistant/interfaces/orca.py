@@ -29,7 +29,7 @@ class OrcaJob(Job):
     >>> s.input.solvent.molecule='water'
     """
 
-    _procs = {"stm": 46, "mon": 16, "mas": 16, "gadi": 46, "mgs": 24}
+    _procs = {"stm": 46, "mon": 16, "mas": 16, "gadi": 48, "mgs": 24}
 
     def __init__(
         self,
@@ -97,8 +97,8 @@ class OrcaJob(Job):
             for num, line in enumerate(jobfile):
                 # SLURM
                 if re.search("SBATCH -n(tasks)? [0-9]+", line):
-                    if hasattr(self, "meta") and "nproc" in self.meta:
-                        jobfile[num] = f"#SBATCH -n {self.meta.nproc}"
+                    if hasattr(self, "meta") and "nprocs" in self.meta:
+                        jobfile[num] = f"#SBATCH -n {self.meta.nprocs}"
                     else:
                         jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
                 if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
@@ -131,10 +131,10 @@ class OrcaJob(Job):
                     "#PBS -l wd", "#PBS -q {self.meta.partition}\n#PBS -l wd"
                 )
             if "nprocs" in self.meta:
-                jobfile = jobfile.replace("ncpus=48", "ncpus={self.meta.nprocs}")
+                jobfile = jobfile.replace("ncpus=48", f"ncpus={self.meta.nprocs}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs.upper().replace("GB", "")
-                jobfile = jobfile.replace("jobfs=200GB", f"jobfs={jobfs}")
+                jobfile = jobfile.replace("jobfs=200GB", f"jobfs={jobfs}GB")
 
         self.write_file(jobfile, filetype="job")
 
@@ -415,15 +415,15 @@ class OrcaJob(Job):
         - Magnus: 24
         - Monarch: 16
         - Massive: 16
-        - Gadi: 46
+        - Gadi: 48
 
         Can also set manually with `sett.meta.nproc=20`
         """
         ret = ""
         if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
-        elif hasattr(self, "meta") and "nproc" in self.meta:
-            ret += f"%pal\n nprocs {self.meta.nproc}\nend"
+        elif hasattr(self, "meta") and "nprocs" in self.meta:
+            ret += f"%pal\n nprocs {self.meta.nprocs}\nend"
         else:
             ret += f"%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend"
 

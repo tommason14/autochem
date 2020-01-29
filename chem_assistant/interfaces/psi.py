@@ -289,15 +289,15 @@ cluster.
             job = job.replace("03:00:00", self.meta.time)
 
         if self.sc in super().SLURM_HOSTS:
-            if "nproc" in self.meta:
-                job = job.replace("-c 16", f"-c {self.meta.nproc}")
+            if "nprocs" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.nprocs}")
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
             
         if self.sc in super().PBS_HOSTS:
-            if "nproc" in self.meta:
-                job = job.replace("ncpus=16", f"ncpus={self.meta.nproc}")
+            if "nprocs" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.nprocs}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs[:-2]  # drop units
                 job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")
@@ -345,15 +345,15 @@ cluster.
             job = job.replace("03:00:00", self.meta.time)
 
         if self.sc in super().SLURM_HOSTS:
-            if "nproc" in self.meta:
-                job = job.replace("-c 16", f"-c {self.meta.nproc}")
+            if "nprocs" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.nprocs}")
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
             
         if self.sc in super().PBS_HOSTS:
-            if "nproc" in self.meta:
-                job = job.replace("ncpus=16", f"ncpus={self.meta.nproc}")
+            if "nprocs" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.nprocs}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs[:-2]  # drop units
                 job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")

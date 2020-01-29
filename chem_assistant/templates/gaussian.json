@@ -1,6 +1,6 @@
 {
   "meta": {
-    "nproc": 16,
+    "nprocs": 16,
     "mem": "32gb",
     "chk": "name.chk"
   },

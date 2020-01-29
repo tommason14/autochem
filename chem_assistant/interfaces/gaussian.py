@@ -23,7 +23,7 @@ class GaussJob(Job):
     
     This command produces 'benzene.job', containing both input data and 
     job scheduler information.
-    For meta data, number of processors (nproc), memory (mem) etc, use sett.meta.nproc=46.
+    For meta data, number of processors (nprocs), memory (mem) etc, use sett.meta.nprocs=46.
     """
 
     def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):
@@ -87,15 +87,15 @@ class GaussJob(Job):
                     job = job.replace("mem=32", f"mem={mem}")
                 if self.sc == "gadi":
                     job = job.replace("mem=192", f"mem={mem}")
-            if "nproc" in self.meta:
+            if "nprocs" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     job = job.replace(
-                        "cpus-per-task=16", f"cpus-per-task={self.meta.nproc}"
+                        "cpus-per-task=16", f"cpus-per-task={self.meta.nprocs}"
                     )
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
-                else:
-                    job = job.replace("npcus=48", f"npcus={self.meta.nproc}")
+                else:  # gadi
+                    job = job.replace("npcus=48", f"npcus={self.meta.nprocs}")
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     jobfile = job.split("\n")
@@ -115,7 +115,7 @@ class GaussJob(Job):
             if self.sc in super().PBS_HOSTS:
                 if "jobfs" in self.meta:
                     jobfs = self.meta.jobfs.upper().replace("GB", "")
-                    job = job.replace("jobfs=200GB", f"jobfs={jobfs}")
+                    job = job.replace("jobfs=200GB", f"jobfs={jobfs}GB")
 
         return job
 
@@ -152,10 +152,13 @@ class GaussJob(Job):
         meta = []
         if self.sc == "stm":
             self.meta.mem = "160gb"
-            self.meta.nproc = 46
+            self.meta.nprocs = 46
         for k, v in self.meta.items():
             if k not in excluded_properties:
-                meta.append(f"%{k}={v}")
+                if k is "nprocs":
+                    meta.append(f"%nproc={v}")
+                else:
+                    meta.append(f"%{k}={v}")
 
         return "\n".join(meta).replace("name", self.base_name)
 
