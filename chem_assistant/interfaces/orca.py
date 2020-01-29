@@ -128,7 +128,7 @@ class OrcaJob(Job):
                 jobfile = jobfile.replace("mem=192", f"mem={mem}")
             if "partition" in self.meta:
                 jobfile = jobfile.replace(
-                    "#PBS -l wd", f"#PBS -q {self.meta.partition}\n#PBS -l wd"
+                    "#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}"
                 )
             if "nprocs" in self.meta:
                 jobfile = jobfile.replace("ncpus=48", f"ncpus={self.meta.nprocs}")
