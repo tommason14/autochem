@@ -26,7 +26,7 @@ __all__ = [
     "homo_lumo_gaps",
     "energies",
     "print_freqs",
-    "print_freqs_to_tsv",
+    "print_freqs_to_csv",
     "energy_table",
     "search_for_coords",
     "thermochemistry",
@@ -262,9 +262,9 @@ def print_freqs(dir, output):
     write_csv_from_dict(data, filename=output)
 
 
-def print_freqs_to_tsv(dir):
+def print_freqs_to_csv(dir):
     """
-    Writes a tab-separated file of frequencies and intensities for each frequency calculation
+    Writes a comma-separated file of frequencies and intensities for each frequency calculation
     in the current directory
     """
     for f in os.listdir(dir):
@@ -272,11 +272,11 @@ def print_freqs_to_tsv(dir):
             calc = file_as_results_class(f)
             if calc.is_hessian():
                 print(f"Extracting freqs from {calc.log}")
-                with open(f"{calc.basename}.ir.data.tsv", "w") as f:
-                    f.write("Freq\tIntensity\n")
+                with open(f"{calc.basename}.ir.data.csv", "w") as f:
+                    f.write("Frequencies (cm-1),Intensities\n")
                     for val in zip(calc.frequencies, calc.intensities):
                         freq, intensity = val
-                        f.write(f"{freq}\t{intensity}\n")
+                        f.write(f"{freq},{intensity}\n")
 
 
 def get_h_bonds(dir):
