@@ -6,6 +6,6 @@
 #PBS -l walltime=24:00:00
 #PBS -l wd
 
-module load gamess/19-srs
+module load gamess/2019-09-R2
 
-rungms.gadi.ln name.inp $PBS_NCPUS > name.log
+rungms name.inp $PBS_NCPUS > name.log
