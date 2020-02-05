@@ -99,7 +99,9 @@ def energies(dir, filepath_includes):
         calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
-            if calc.completed():  # add provision for energies of opts only if equilibrium found
+            if (
+                calc.completed()
+            ):  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian() or need_gauss_energy(calc):
                     print(log)
                     data = calc.get_data()
@@ -295,7 +297,9 @@ def get_h_bonds(dir):
         return True
 
     distance = check_user_input(
-        "Distance (Å) [2]", lambda item: can_cast_as_float(item) or item is "", "Please enter a number"
+        "Distance (Å) [2]",
+        lambda item: can_cast_as_float(item) or item is "",
+        "Please enter a number",
     )
 
     if distance is "":
@@ -318,14 +322,32 @@ def get_h_bonds(dir):
     print()
     if len(output) > 0:
         data = {}
-        keys = ("File", "Path", "Molecule1", "Atom1", "Molecule2", "Atom2", "Length", "Angle")
+        keys = (
+            "File",
+            "Path",
+            "Molecule1",
+            "Atom1",
+            "Molecule2",
+            "Atom2",
+            "Length",
+            "Angle",
+        )
         for index, value in enumerate(keys):
             data[value] = [val[index] for val in output]
         responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=9)
         print()
         write_csv_from_nested(
             output,
-            col_names=("File", "Path", "Molecule1", "Atom1", "Molecule2", "Atom2", "Length", "Angle"),
+            col_names=(
+                "File",
+                "Path",
+                "Molecule1",
+                "Atom1",
+                "Molecule2",
+                "Atom2",
+                "Length",
+                "Angle",
+            ),
             filename="hbonds.csv",
         )
 
@@ -371,7 +393,9 @@ def charges(dir, output):
                 if re.search(atom_regex, line):
                     sym, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append([logfile, Atom(sym, coords=(x, y, z))])  # new key for each coord
+                    res.append(
+                        [logfile, Atom(sym, coords=(x, y, z))]
+                    )  # new key for each coord
             found = False
             counter = 0
             for line in eof(logfile, 0.20):
@@ -386,7 +410,9 @@ def charges(dir, output):
             coordinates = [atom[1] for atom in res]
             mol = Molecule(atoms=coordinates)
             mol.separate()
+            print(mol.coords)
             for atom, r in zip(mol.coords, res):
+                print(r)
                 path, _, charge = r
                 results.append(
                     [
@@ -415,7 +441,9 @@ def charges(dir, output):
                 if re.search(atom_regex, line):
                     sym, atnum, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append([path, Atom(sym, coords=(x, y, z))])  # new key for each coord
+                    res.append(
+                        [path, Atom(sym, coords=(x, y, z))]
+                    )  # new key for each coord
             found = False
             counter = 0
             for line in read_file(logfile):
