@@ -158,7 +158,7 @@ class GaussJob(Job):
             self.meta.nprocs = 48 
         for k, v in self.meta.items():
             if k not in excluded_properties:
-                if k is "nprocs":
+                if k == "nprocs":
                     meta.append(f"%nproc={v}")
                 else:
                     meta.append(f"%{k}={v}")
