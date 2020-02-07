@@ -81,8 +81,8 @@ class GaussJob(Job):
         if hasattr(self, "meta"):
             if "time" in self.meta:
                 job = job.replace("24:00:00", self.meta.time)
-            if "mem" in self.meta:
-                mem = self.meta.mem[:-2]
+            if "nodemem" in self.meta:
+                mem = self.meta.nodemem[:-2]
                 if self.sc in ("mas", "mon"):
                     job = job.replace("mem=32", f"mem={mem}")
                 if self.sc == "gadi":
