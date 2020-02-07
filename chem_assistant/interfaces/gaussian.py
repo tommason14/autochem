@@ -147,7 +147,7 @@ class GaussJob(Job):
         """
         Include data such as memory and number of cpus in the Gaussian file.
         """
-        excluded_properties = ("time", "partition")
+        excluded_properties = ("time", "partition", "nodemem")
         # input by user for scheduler
         meta = []
         if self.sc == "stm":
