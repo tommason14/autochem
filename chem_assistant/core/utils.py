@@ -20,6 +20,7 @@ __all__ = [
     "search_dict_recursively",
     "sort_data",
     "sort_elements",
+    "timeit",
     "write_csv_from_dict",
     "write_csv_from_nested",
     "write_geom_input_for_thermo",
