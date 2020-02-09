@@ -94,7 +94,7 @@ class GaussJob(Job):
                     )
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
-                else:  # gadi
+                if self.sc == 'gadi':
                     job = job.replace("npcus=48", f"npcus={self.meta.nprocs}")
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
