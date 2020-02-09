@@ -153,9 +153,6 @@ class GaussJob(Job):
         if self.sc == "stm":
             self.meta.mem = "160gb"
             self.meta.nprocs = 46
-        if self.sc == "gadi":
-            self.meta.mem = "160gb"
-            self.meta.nprocs = 48 
         for k, v in self.meta.items():
             if k not in excluded_properties:
                 if k == "nprocs":
