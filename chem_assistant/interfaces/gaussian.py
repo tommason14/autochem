@@ -96,7 +96,6 @@ class GaussJob(Job):
                     # what we want as you are charged for the whole node there!
                 else:  # gadi
                     job = job.replace("ncpus=48", f"ncpus={self.meta.nprocs}")
-                print(job)
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     jobfile = job.split("\n")
