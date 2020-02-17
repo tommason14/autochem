@@ -341,7 +341,7 @@ def assign_molecules_from_dict_keys(data):
     return data
 
 
-def responsive_table(data, strings, min_width=13):
+def responsive_table(data, strings, min_width=13, decimal_places=5):
     """
     Returns a table that is reponsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
@@ -354,7 +354,8 @@ def responsive_table(data, strings, min_width=13):
                  'col2': ['One', 'Two', 'Three', 'Four']}
         >>> responsive_table(d, strings = [2])
 
-    Can also give a minimum width, defaults to 13 spaces
+    Can also give a minimum width, defaults to 13 spaces. A `decimal_places` parameter
+    can be passed in to define the number of decimal places of floats.
     """
     num_cols = len(data.keys())
     content = zip(*[data[key] for key in data.keys()])  # dict values into list of lists
@@ -393,7 +394,7 @@ def responsive_table(data, strings, min_width=13):
             entry, size = val
             # if not isinstance(entry, str):
             if isinstance(entry, float):
-                size = f"{size}.5f"
+                size = f"{size}.{decimal_places}f"
             formatting.append(entry)
             formatting.append(size)
         print(output_string.format(*formatting))
