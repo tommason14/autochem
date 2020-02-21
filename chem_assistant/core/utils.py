@@ -8,6 +8,7 @@ __all__ = [
     "assign_molecules_from_dict_keys",
     "check_user_input",
     "consecutive",
+    "df_from_namedtuples",
     "eof",
     "get_files",
     "get_log_type",
@@ -26,6 +27,30 @@ __all__ = [
     "write_geom_input_for_thermo",
     "write_xyz",
 ]
+
+
+def df_from_namedtuples(definition, lst):
+    """
+    Pass in the namedtuple created and a list of
+    objects made using the namedtuple, and this
+    function returns a dataframe.
+    
+    Usage:
+        >>> nt = namedtuple('nt', 'one two')
+        >>> one = nt(10, 20)
+        >>> two = nt(30,40)
+        >>> df_from_namedtuples(nt, [one,two])
+    Returns:
+        one	two
+        0	10	20
+        1	30	40
+    """
+
+    data = {v: [] for v in definition._fields}
+    for val in lst:
+        for k, v in val._asdict().items():
+            data[k].append(v)
+    return pd.DataFrame(data)
 
 
 def timeit(method):
