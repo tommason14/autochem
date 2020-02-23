@@ -101,10 +101,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.meta = self.merged.meta
         else:
             self.input = self.defaults.input
+            self.meta = self.defaults.meta
 
         # Split each molecule on a bond?
         if bonds_to_split is None:
-            if hasattr(self, 'merged') and "bonds_to_split" in self.merged:
+            if hasattr(self, "merged") and "bonds_to_split" in self.merged:
                 bonds_to_split = self.merged.bonds_to_split
 
         super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split)
@@ -476,9 +477,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace(
                 "mem=125gb", f"mem={4 * 16 * num_frags}gb"
             )  # 4gb cpus
-            jobfile = jobfile.replace(
-                "jobfs=150gb", f"jobfs={4 * 16 * num_frags + 20}gb"
-            )
+            jobfile = jobfile.replace("jobfs=150gb", f"jobfs={4 * 16 * num_frags + 20}gb")
             return jobfile
         return job
 
@@ -489,6 +488,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace("-N 1", f"-N {num_frags}")
             jobfile = jobfile.replace("-n 22", f"-n {22 * num_frags}")
         return jobfile
+
+    def change_gadi_job(self, job):
+        return (
+            job.replace("name", f"{self.base_name}")
+            .replace("mem=96", f"mem={self.meta.mem[:-2]}")
+            .replace("ncpus=48", f"ncpus={self.meta.ncpus}")
+            .replace("jobfs=100", f"jobfs={self.meta.jobfs.upper().replace('GB', '')}")
+        )
 
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
@@ -506,11 +513,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
         elif self.sc == "gadi":
-            jobfile = jobfile.replace("name", f"{self.base_name}")
+            jobfile = self.change_gadi_job(jobfile)
 
-        if hasattr(self, 'meta') and "time" in self.meta:
+        if hasattr(self, "meta") and "time" in self.meta:
             jobfile = jobfile.replace("24:00:00", self.meta.time)
-            
+
         self.write_file(jobfile, filetype="job")
 
     def make_run_dir(self):
