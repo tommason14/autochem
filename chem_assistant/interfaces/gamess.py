@@ -490,13 +490,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         return jobfile
 
     def change_gadi_job(self, job):
-        return (
+        job = (
             job.replace("name", f"{self.base_name}")
             # can now give as number or string with gb
             .replace("mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}")
             .replace("ncpus=48", f"ncpus={self.meta.ncpus}")
             .replace("jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}")
+            # partition
         )
+        if 'partition' in self.meta:
+            job = job.replace('#PBS -l wd', '#PBS -l wd\n#PBS -q {self.meta.partition}')
+        return job
 
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
