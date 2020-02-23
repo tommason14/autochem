@@ -492,9 +492,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     def change_gadi_job(self, job):
         return (
             job.replace("name", f"{self.base_name}")
-            .replace("mem=96", f"mem={self.meta.mem[:-2]}")
+            # can now give as number or string with gb
+            .replace("mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}")
             .replace("ncpus=48", f"ncpus={self.meta.ncpus}")
-            .replace("jobfs=100", f"jobfs={self.meta.jobfs.upper().replace('GB', '')}")
+            .replace("jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}")
         )
 
     def create_job(self):
