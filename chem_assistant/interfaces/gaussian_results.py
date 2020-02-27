@@ -344,7 +344,7 @@ class GaussianResults(Results):
         }
 
     @property
-    def vibrations(self):
+    def frequencies(self):
         vibs = []
         for line in self.read():
             if "Frequencies --" in line:
