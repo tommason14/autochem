@@ -275,7 +275,7 @@ def print_freqs_to_csv(dir):
             if calc.is_hessian():
                 print(f"Extracting freqs from {calc.log}")
                 with open(f"{calc.basename}.ir.data.csv", "w") as f:
-                    f.write("Frequencies (cm-1),Intensities\n")
+                    f.write("Frequencies,Intensities\n")
                     for val in zip(calc.frequencies, calc.intensities):
                         freq, intensity = val
                         f.write(f"{freq},{intensity}\n")
