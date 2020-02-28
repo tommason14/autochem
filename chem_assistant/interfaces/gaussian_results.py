@@ -46,6 +46,13 @@ class GaussianResults(Results):
         if not opt and not freq:
             return "spec"
 
+    def errored(self):
+        found = False
+        for line in self.eof(0.01):
+            if "Error termination" in line:
+                return True
+        return False
+
     def completed(self):
         found = False
         for line in self.eof(0.01):
@@ -330,9 +337,9 @@ class GaussianResults(Results):
             transition = "HOMO-LUMO"
         else:
             transition = "SOMO-LUMO"
-        
+
         homo, lumo, gap = self._homo_lumo_gap()
-        
+
         return {
             "File": self.file,
             "Path": self.path,
