@@ -1,5 +1,6 @@
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
+import pandas as pd
 import re
 import sys
 import time
