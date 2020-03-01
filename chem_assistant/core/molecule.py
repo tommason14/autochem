@@ -626,6 +626,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             for k, v in self.fragments.items():
                 if v['name'] == f and f in groups:
                     merge_keys.append(k)
+
         new_key = max(self.fragments.keys()) + 1
         merged_atoms = []
         merged_charge = 0

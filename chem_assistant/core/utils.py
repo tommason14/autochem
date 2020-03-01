@@ -1,5 +1,6 @@
 from .atom import Atom
 from .periodic_table import PeriodicTable as PT
+import os
 import pandas as pd
 import re
 import sys
@@ -7,6 +8,7 @@ import time
 
 __all__ = [
     "assign_molecules_from_dict_keys",
+    "cd",
     "check_user_input",
     "consecutive",
     "df_from_namedtuples",
@@ -29,6 +31,10 @@ __all__ = [
     "write_xyz",
 ]
 
+def cd(path):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    os.chdir(path)
 
 def df_from_namedtuples(definition, lst):
     """
