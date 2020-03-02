@@ -86,7 +86,8 @@ store the iteration number.
                     if "RUNTYP=" in p:
                         return p.split("=")[1].lower()
 
-    def get_fmo_level(self):
+    @property
+    def fmo_level(self):
         """Returns level of FMO calculation ran"""
         for line in self.read():
             if "NBODY" in line:
@@ -169,6 +170,14 @@ store the iteration number.
     #      AB INITIO ENERGIES      #
     #                              #
     ################################
+
+    # DFT printouts seem to depend on the version we use ?????
+
+    @property
+    def version(self):
+        for line in self.read():
+            if "GAMESS VERSION =" in line:
+                return " ".join(line.split()[4:-1])
 
     def fmo_mp2_data(self, mp2_type):
         """
@@ -259,7 +268,7 @@ store the iteration number.
                 HF = line[-1]
             if "E(MP2)=" in line:
                 MP2 = line[1]
-        HF, MP2 = map(float, (HF,MP2))
+        HF, MP2 = map(float, (HF, MP2))
         return HF, MP2
 
     def non_fmo_mp2_solvent_data(self):
@@ -293,6 +302,21 @@ store the iteration number.
                 for val in line:
                     if "DFTTYP" in val:
                         return val.split("=")[1].upper()
+
+    @property
+    def fmo_dft_energy(self):
+        """
+        Returns the FMO energy stored as Euncorr(2)/Euncorr(3)
+        """
+        if "2019" in self.version:
+            energy = ""
+            fmo = self.fmo_level
+            # issues with opening the same file twice, so store fmo level
+            # before looking for the line
+            for line in self.eof(0.1):
+                if f"Euncorr({fmo})=" in line:
+                    energy = line.split()[-1]
+            return float(energy)
 
     @property
     def _energy_type(self):
@@ -385,6 +409,11 @@ store the iteration number.
                 HF, MP2 = self.non_fmo_mp2_solvent_data()
                 MP2_opp = "NA"
                 MP2_same = "NA"
+        elif self._energy_type == "fmo_dft":
+            HF = self.fmo_dft_energy
+            MP2 = "NA"
+            MP2_opp = "NA"
+            MP2_same = "NA"
         elif "dft" in self._energy_type or "hf" in self._energy_type:
             HF = self.total_energy
             MP2 = "NA"
@@ -445,14 +474,14 @@ store the iteration number.
         Note that ⍺ orbitals are selected, and the ⍺ and β electrons give
         different homo-lumo gaps.
         """
-        
+
         if self.multiplicity == 1:
             transition = "HOMO-LUMO"
         else:
             transition = "SOMO-LUMO"
-        
-        homo, lumo, gap = self._homo_lumo_gap() 
-            
+
+        homo, lumo, gap = self._homo_lumo_gap()
+
         return {
             "File": self.file,
             "Path": self.path,
