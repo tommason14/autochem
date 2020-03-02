@@ -9,8 +9,7 @@
 #SBATCH -A Water-and-Ion-Intera
 
 module load orca/4.2.1
-orcapath=$(dirname $(which orca))
 
-time $orcapath/orca name.inp > name.log
+time $ORCA_PATH/orca name.inp > name.log
 
 find . -empty -delete
