@@ -9,8 +9,7 @@
       "scftyp": "rhf",
       "runtyp": "optimize",
       "maxit": 200,
-      "ispher": 1,
-      "icharg": 0
+      "ispher": 1
     },
     "statpt": {
       "nstep": 500
