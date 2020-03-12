@@ -172,13 +172,9 @@ class GaussianResults(Results):
         lines = []
         found = False
         for line in self.read():
-            if "Leave Link" in line:
-                found = True
-                continue
             if "Symbolic" in line:
                 break
-            if found:
-                lines.append(line)
+            lines.append(line)
         return lines[-2].strip()
 
     @property
@@ -187,7 +183,7 @@ class GaussianResults(Results):
         Returns the #P line of the input file.
         """
         for line in self.read():
-            if re.search("^\s*?#P", line):
+            if re.search("^\s*?#P", line.upper()):
                 return line.lower()
 
     @property
