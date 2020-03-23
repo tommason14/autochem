@@ -98,6 +98,7 @@ class GaussianResults(Results):
         # and if optimization completed found, they are equil coords
         # else rerun
         calcall = True if "calcall" else False in self.user_commands
+        # tddft = True if "td" in self.user_commands else False
         found_equil = False
         found_some = False
         regex = "^(\s+[0-9]+){3}(\s+-?[0-9]{1,3}.[0-9]+){3}$"
@@ -110,7 +111,7 @@ class GaussianResults(Results):
             else:
                 break
         MOLECULE_PARENT_DIR = "/".join(par_dir)
-        if not calcall:
+        if not calcall:  # and not tddft:
             for line in self.read():
                 if "Optimization completed" in line:
                     found_equil = True
@@ -139,6 +140,7 @@ class GaussianResults(Results):
                 coords = coords_found
             else:
                 some_coords = coords_found
+
         if len(coords) > 0:
             print("Found equilibrium!")
             newdir = os.path.join(MOLECULE_PARENT_DIR, "spec")
@@ -181,10 +183,26 @@ class GaussianResults(Results):
     def user_commands(self):
         """
         Returns the #P line of the input file.
+        Now accounts for more than one line.
         """
+        lines = []
+        found = False
         for line in self.read():
-            if re.search("^\s*?#P", line.upper()):
-                return line.lower()
+            if re.search("^\s*?#P?", line.upper()):
+                found = True
+            if found:
+                if "------" in line:
+                    break
+                lines.append(line)
+        formatted = []
+        # drop leading spaces and trailing newlines
+        for line in lines:
+            if line.startswith(" "):
+                line = line[1:]
+            if line.endswith("\n"):
+                line = line.replace("\n", "")
+            formatted.append(line)
+        return "".join(formatted)
 
     @property
     def method(self):
