@@ -1,10 +1,11 @@
-from .atom import Atom
-from .periodic_table import PeriodicTable as PT
+import csv
 import os
 import pandas as pd
 import re
 import sys
 import time
+from .atom import Atom
+from .periodic_table import PeriodicTable as PT
 
 __all__ = [
     "assign_molecules_from_dict_keys",
@@ -31,10 +32,12 @@ __all__ = [
     "write_xyz",
 ]
 
+
 def cd(path):
     if not os.path.exists(path):
         os.mkdir(path)
     os.chdir(path)
+
 
 def df_from_namedtuples(definition, lst):
     """
@@ -228,8 +231,6 @@ def list_of_dicts_to_one_level_dict(lst):
 
 def write_csv_from_dict(data, filename=None):
     """Write to file from dictionary"""
-
-    import csv
 
     done = False
     while not done:

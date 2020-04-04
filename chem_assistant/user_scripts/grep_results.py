@@ -42,8 +42,16 @@ def search_for_coords(dir):
     """
 
     def checked_before(r):
-        filepath = os.listdir(r.path)
-        return "rerun" in filepath or "spec" in filepath
+        """
+        check that no rerun or spec for that particular file has been created before
+        """
+        reruns = False
+        equils = False
+        if "rerun" in os.listdir(r.path):
+            reruns = any(f"{r.title}" in f for f in os.listdir(f"{r.path}/rerun"))
+        if "spec" in os.listdir(r.path):
+            equils = any(f"{r.title}" in f for f in os.listdir(f"{r.path}/spec"))
+        return reruns or equils
 
     for log in get_files(dir, (".log", ".out")):
         r = file_as_results_class(log)
