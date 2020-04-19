@@ -197,5 +197,5 @@ def thermo_data(file, mult, temp):
     setup_and_run_fortran_script(file, mult, temp)
     fort = read_fort()    
     data = grep_data(fort)
-    # cleanup()
+    cleanup()
     return data
