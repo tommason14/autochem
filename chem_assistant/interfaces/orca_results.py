@@ -27,18 +27,24 @@ class OrcaResults(Results):
         """
         opt = False
         freq = False
+        td = False
         if "opt" in self.user_commands:
             opt = True
         if "freq" in self.user_commands:
             freq = True
-        if opt and not freq:
+        if "td" in self.user_commands:
+            td = True
+        if opt and not freq and not td:
             return "opt"
         if opt and freq:
             return "opt-freq"
+        if td and opt:
+            return "es-opt"
+        if td:
+            return "vert"
         if freq and not opt:
             return "freq"
-        if not opt and not freq:
-            return "spec"
+        return "spec"
 
     def completed(self):
         for line in self.eof(0.05):
