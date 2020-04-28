@@ -82,6 +82,7 @@ class Molecule:
     Neutrals['methane'] = ['C', 'H', 'H', 'H', 'H']
     Neutrals['ethane'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H']
     Neutrals['water'] = ['H', 'H', 'O']
+    Neutrals['acetic acid'] = ['C', 'H', 'H', 'H', 'C', 'O', 'O', 'H'] 
     Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C',
                                          'C','C','N','H','H','H','H','H']
     Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C',
