@@ -197,7 +197,7 @@ def one_level_dict(res):
     output['Intensity (au)'] = ints
     return output
 
-def fluorescence_data(dir, output):
+def fluorescence_data(dir, output, autosave=False):
     cutoff = user_choice()
     files = get_fluorescence_logs(dir)
     if len(files) > 0:
@@ -209,6 +209,6 @@ def fluorescence_data(dir, output):
             col_names = ['Config', 'Root', 'Iteration', 
                          'Transition Energies (eV)', 
                          'Wavelength (nm)', 'Intensity (au)'], 
-            filename=output)
+            filename=output, autosave=autosave)
     else:
         print('No relevant log files')

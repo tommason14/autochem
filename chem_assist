@@ -4,51 +4,157 @@ import argparse
 import sys
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--copy-xyz', help='Copy all xyz files recursively from the current directory to the relative path given here', action='store')
-# TODO- need to re-write pretty much all functions in library to accept a depth parameter! 
-# parser.add_argument('--depth', 
+parser.add_argument(
+    "--copy-xyz",
+    help="Copy all xyz files recursively from the current directory to the relative path given here",
+    action="store",
+)
+# TODO- need to re-write pretty much all functions in library to accept a depth parameter!
+# parser.add_argument('--depth',
 #                     help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
-#                     action='store', type=int) 
-parser.add_argument('--freqs', help='Print frequencies and intensities to a csv. Works recursively.', action='store_true')
-parser.add_argument('--freqs-to-csv', help='Print frequencies and intensities as a comma-separated file for GAMESS hessian/Gaussian frequency jobs', action='store_true')
-parser.add_argument('--fluorescence', help='Pull fluorescence data recursively from Gaussian log files', action='store_true')
-parser.add_argument('--charges', help='Recursivley pull geodesic charges from GAMESS calculations, and Mulliken charges from Gaussian calculations.', action='store_true')
-parser.add_argument('-g', '--group', help="""\
+#                     action='store', type=int)
+parser.add_argument(
+    "--freqs",
+    help="Print frequencies and intensities to a csv. Works recursively.",
+    action="store_true",
+)
+parser.add_argument(
+    "--freqs-to-csv",
+    help="Print frequencies and intensities as a comma-separated file for GAMESS hessian/Gaussian frequency jobs",
+    action="store_true",
+)
+parser.add_argument(
+    "--fluorescence",
+    help="Pull fluorescence data recursively from Gaussian log files",
+    action="store_true",
+)
+parser.add_argument(
+    "--charges",
+    help="Recursivley pull geodesic charges from GAMESS calculations, and Mulliken charges from Gaussian calculations.",
+    action="store_true",
+)
+parser.add_argument(
+    "-g",
+    "--group",
+    help="""\
 Pandas command to apply groups to the csv passed into --weight.
 Refer to the dataframe as df.
 Example command: `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`.
 Can also be used to group fragments together when printing out molecules with the -p/--print-frags flag.
-ie. `chem_assist -p -g 'lithium-sacchrinate'`""", action='store', type=str)
-parser.add_argument('--homo-lumo', 
-                    help='Returns homo-lumo gaps for single points recursively. Can give csv filename with -o',
-                    action='store_true')
-parser.add_argument('--soft', help='Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`', action='store')
-parser.add_argument('--with-ionic', help='Use with --interaction-energies to indicate that a purely ionic network is present', action='store_true')
-parser.add_argument('-b', '--hydrogen-bonds', help='Finds hydrogen bonds between molecules in every xyz in the current directory', action='store_true')
-parser.add_argument('-c', '--interaction-energies', help='Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script', action='store')
-parser.add_argument('-d', '--dir-tree-from-files', help='Creates a directory tree with relevant job scripts from a directory called "files"', action='store_true')
-parser.add_argument('-e', '--equil-coords', help='Searches for equilibrium coordinates recursively', action='store_true')
-parser.add_argument('-f', '--free-energies', help='Calculates free energies from a csv produced by running `chem_assist -t`. Also asks for a csv containing the interaction energies from single point energy calculations, written using `chem_assist -c`, preferably in the same directory as the thermo data csv', action='store')
-parser.add_argument('-l', '--select', help='Use with -r or -t to select certain files, or limit the selection i.e, use `-l spec` to limit the output to only include files with spec in their path')
-parser.add_argument('-m', '--mult', help='Multiplicity used with --thermochem', action='store')
-parser.add_argument('-o', '--output', help='Use with --interaction-energies to give filename of csv to save data to.', action='store')
-parser.add_argument('-p', '--print-frags', help='Prints fragments for every xyz file in the current directory', action='store_true')
-parser.add_argument('-r', '--results', help='Finds results of output files with the extension of log or out. Note: also navigates subdirectories', action='store_true')
-parser.add_argument('-s', '--settings', help='Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett', action='store')
-parser.add_argument('-t', '--thermochem', help='Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory. The value passed in is temperature in Kelvin.', action='store')
-parser.add_argument('-v', '--verbose', help='Prints additional information when used with -p, or prints formatted table if used with --interaction-energies', action='store_true')
-parser.add_argument('-w', '--weight', help='Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups', action='store')
+ie. `chem_assist -p -g 'lithium-sacchrinate'`""",
+    action="store",
+    type=str,
+)
+parser.add_argument(
+    "--homo-lumo",
+    help="Returns homo-lumo gaps for single points recursively. Can give csv filename with -o",
+    action="store_true",
+)
+parser.add_argument(
+    "--soft",
+    help="Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`",
+    action="store",
+)
+parser.add_argument(
+    "--with-ionic",
+    help="Use with --interaction-energies to indicate that a purely ionic network is present",
+    action="store_true",
+)
+parser.add_argument(
+    "-b",
+    "--hydrogen-bonds",
+    help="Finds hydrogen bonds between molecules in every xyz in the current directory",
+    action="store_true",
+)
+parser.add_argument(
+    "-c",
+    "--interaction-energies",
+    help="Automating the process of calculating interaction energies. Takes a csv as input- only works if the csv passed in was created using this script",
+    action="store",
+)
+parser.add_argument(
+    "-d",
+    "--dir-tree-from-files",
+    help='Creates a directory tree with relevant job scripts from a directory called "files"',
+    action="store_true",
+)
+parser.add_argument(
+    "-e",
+    "--equil-coords",
+    help="Searches for equilibrium coordinates recursively",
+    action="store_true",
+)
+parser.add_argument(
+    "-f",
+    "--free-energies",
+    help="Calculates free energies from a csv produced by running `chem_assist -t`. Also asks for a csv containing the interaction energies from single point energy calculations, written using `chem_assist -c`, preferably in the same directory as the thermo data csv",
+    action="store",
+)
+parser.add_argument(
+    "-l",
+    "--select",
+    help="Use with -r or -t to select certain files, or limit the selection i.e, use `-l spec` to limit the output to only include files with spec in their path",
+)
+parser.add_argument(
+    "-m", "--mult", help="Multiplicity used with --thermochem", action="store"
+)
+parser.add_argument(
+    "-o",
+    "--output",
+    help="Use with --interaction-energies to give filename of csv to save data to.",
+    action="store",
+)
+parser.add_argument(
+    "-p",
+    "--print-frags",
+    help="Prints fragments for every xyz file in the current directory",
+    action="store_true",
+)
+parser.add_argument(
+    "-r",
+    "--results",
+    help="Finds results of output files with the extension of log or out. Note: also navigates subdirectories",
+    action="store_true",
+)
+parser.add_argument(
+    "-s",
+    "--settings",
+    help="Indicates a file with settings relevant to the calculation required. In the file, must have a Settings object called sett",
+    action="store",
+)
+parser.add_argument(
+    "-t",
+    "--thermochem",
+    help="Runs thermochemical analysis of frequency calculations. Also acts on subdirectories of the current directory. The value passed in is temperature in Kelvin.",
+    action="store",
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    help="Prints additional information when used with -p, or prints formatted table if used with --interaction-energies",
+    action="store_true",
+)
+parser.add_argument(
+    "-w",
+    "--weight",
+    help="Apply boltzmann weightings according to total energy of the csv passed in. Apply a group with --group, and pass in a pandas command to generate different groups",
+    action="store",
+)
 args = parser.parse_args()
+
 
 def imported_settings():
     from importlib import import_module
+
     # imports from cwd not working on stampede for some reason
     # so hack to add dir to pythonpath
     import os
+
     sys.path.append(os.getcwd())
-    file_to_import = args.settings[:-3] 
+    file_to_import = args.settings[:-3]
     imported = import_module(file_to_import)
     return imported.sett
+
 
 # if no arguments passed
 if len(sys.argv) == 1:
@@ -56,89 +162,142 @@ if len(sys.argv) == 1:
 
 if args.freqs:
     from chem_assistant.user_scripts.grep_results import print_freqs
+
+    autosave = True
     if not args.output:
-        args.output = 'freqs.csv'
-    print_freqs('.', output=args.output)
+        autosave = False
+        args.output = "freqs.csv"
+    print_freqs(".", output=args.output, autosave=autosave)
 
 if args.freqs_to_csv:
     from chem_assistant.user_scripts.grep_results import print_freqs_to_csv
-    print_freqs_to_csv('.')
+
+    print_freqs_to_csv(".")
 
 if args.homo_lumo:
     from chem_assistant.user_scripts.grep_results import homo_lumo_gaps
+
+    autosave = True
     if not args.output:
-        args.output = 'homo_lumo.csv'
-    homo_lumo_gaps('.', output=args.output)
+        autosave = False
+        args.output = "homo_lumo.csv"
+    homo_lumo_gaps(".", output=args.output, autosave=autosave)
 
 if args.thermochem:
     if not args.mult:
-        args.mult = '1'
+        args.mult = "1"
+    autosave = True
     if not args.output:
-        args.output = 'thermo.csv'
+        autosave = False
+        args.output = "thermo.csv"
     from chem_assistant.user_scripts.grep_results import thermochemistry
-    thermochemistry('.', string_to_find=args.select, mult=args.mult, temp=args.thermochem, output=args.output)
+
+    thermochemistry(
+        ".",
+        string_to_find=args.select,
+        mult=args.mult,
+        temp=args.thermochem,
+        output=args.output,
+        autosave=autosave,
+    )
 
 if args.free_energies:
-    from chem_assistant.user_scripts.free_energy_interactions import calculate_free_energy_interactions
+    from chem_assistant.user_scripts.free_energy_interactions import (
+        calculate_free_energy_interactions,
+    )
+
     calculate_free_energy_interactions(args.free_energies)
 
 if args.results:
     from chem_assistant.user_scripts.grep_results import energy_table
+
+    autosave = True
     if not args.output:
-        args.output='energies.csv'
-    energy_table('.', file_name=args.output, string_to_find=args.select)
+        autosave = False
+        args.output = "energies.csv"
+    energy_table(
+        ".", file_name=args.output, string_to_find=args.select, autosave=autosave
+    )
 
 if args.settings:
     settings = imported_settings()
 
 if args.dir_tree_from_files:
     from chem_assistant.user_scripts.make_dir_tree import xyz_to_tree
+
     if args.settings:
         settings = imported_settings()
         xyz_to_tree(settings)
     else:
         from chem_assistant.core.settings import Settings
-        settings = Settings() # Settings instance required
+
+        settings = Settings()  # Settings instance required
         xyz_to_tree(settings)
-        
+
 if args.equil_coords:
     from chem_assistant.user_scripts.grep_results import search_for_coords
-    search_for_coords('.')
+
+    search_for_coords(".")
 
 if args.hydrogen_bonds:
     from chem_assistant.user_scripts.grep_results import get_h_bonds
-    get_h_bonds('.')
+
+    autosave = True
+    if not args.output:
+        autosave = False
+        args.output = "hbonds.csv"
+    get_h_bonds(".", output=args.output, autosave=autosave)
 
 if args.interaction_energies:
     from chem_assistant.user_scripts.int_energies import calculate_interaction_energies
+
     if not args.output:
-        args.output = 'ints.csv'
-    calculate_interaction_energies(args.interaction_energies, ionic_present=args.with_ionic, pretty_print=args.verbose, software=args.soft, output=args.output)
-    
+        args.output = "ints.csv"
+    calculate_interaction_energies(
+        args.interaction_energies,
+        ionic_present=args.with_ionic,
+        pretty_print=args.verbose,
+        software=args.soft,
+        output=args.output,
+    )
+
 if args.print_frags:
     from chem_assistant.user_scripts.check_frags import print_frags
-    print_frags('.', verbose=args.verbose, grouping=args.group)
+
+    print_frags(".", verbose=args.verbose, grouping=args.group)
 
 if args.weight:
     from chem_assistant.user_scripts.int_energies import apply_boltzmann_weightings
+
     if not args.group:
         args.group = "df['Config']"
+    autosave = True
     if not args.output:
-        args.output = 'weighted.csv'
-    apply_boltzmann_weightings(args.weight, args.group, output=args.output)
+        autosave = False
+        args.output = "weighted.csv"
+    apply_boltzmann_weightings(
+        args.weight, args.group, output=args.output, autosave=autosave
+    )
 
 if args.charges:
     from chem_assistant.user_scripts.grep_results import charges
+
+    autosave = True
     if not args.output:
-        args.output = 'charges.csv'
-    charges('.', output=args.output)
+        autosave = False
+        args.output = "charges.csv"
+    charges(".", output=args.output, autosave=autosave)
 
 if args.fluorescence:
     from chem_assistant.user_scripts.fluorescence import fluorescence_data
+
+    autosave = True
     if not args.output:
-        args.output = 'fluorescence.csv'
-    fluorescence_data('.', output=args.output)
+        autosave = False
+        args.output = "fluorescence.csv"
+    fluorescence_data(".", output=args.output, autosave=autosave)
 
 if args.copy_xyz:
     from chem_assistant.user_scripts.structures import copy_xyz_tree
-    copy_xyz_tree('.', args.copy_xyz)
+
+    copy_xyz_tree(".", args.copy_xyz)
