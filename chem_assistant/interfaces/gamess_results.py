@@ -45,11 +45,9 @@ store the iteration number.
     ################################
 
     def completed(self):
-        found = False
-        for line in self.eof(0.1):
-            if "EXECUTION OF GAMESS TERMINATED NORMALLY" in line:
-                found = True
-        return found
+        return any(
+            "EXECUTION OF GAMESS TERMINATED NORMALLY" in line for line in self.eof(0.1)
+        )
 
         ####NEEDS WORK####
         # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
