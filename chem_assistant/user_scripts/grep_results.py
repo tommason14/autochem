@@ -119,7 +119,7 @@ def energies(dir, filepath_includes):
     return output
 
 
-def energy_table(dir, file_name, string_to_find):
+def energy_table(dir, file_name, string_to_find, autosave=None):
     """
     Prints energies of all log/out files in current and any sub directories to the screen,
     with the option of saving to csv.
@@ -157,10 +157,10 @@ def energy_table(dir, file_name, string_to_find):
         sys.exit("No optimisations or single points found")
 
     responsive_table(table_data, strings=[1, 2, 3], min_width=12)
-    write_csv_from_dict(table_data, filename=file_name)
+    write_csv_from_dict(table_data, filename=file_name, autosave=autosave)
 
 
-def homo_lumo_gaps(dir, output):
+def homo_lumo_gaps(dir, output, autosave=None):
     """
     Returns HOMO-LUMO or SOMO-LUMO gaps for each single point calculation
     found in any subdirectory. Currently restricted to single points for
@@ -181,11 +181,11 @@ def homo_lumo_gaps(dir, output):
         sys.exit("Error: No single points found")
     info = list_of_dicts_to_one_level_dict(info)
     responsive_table(info, strings=[1, 2, 4])
-    write_csv_from_dict(info, filename=output)
+    write_csv_from_dict(info, filename=output, autosave=autosave)
     return info
 
 
-def thermochemistry(dir, string_to_find, mult, temp, output):
+def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
     """
     Returns thermochemical data for all the relevant hessian log files in the given directory and
     subdirectories. Saves to csv file.
@@ -249,10 +249,10 @@ def thermochemistry(dir, string_to_find, mult, temp, output):
         strings=[1],
         min_width=10,
     )
-    name = write_csv_from_dict(collected, filename=output)
+    name = write_csv_from_dict(collected, filename=output, autosave=autosave)
 
 
-def print_freqs(dir, output):
+def print_freqs(dir, output, autosave=None):
     """
     Writes frequencies and intensities of GAMESS/Gaussian frequency calculations
     to a csv. Works recursively through the file system.
@@ -269,7 +269,7 @@ def print_freqs(dir, output):
                 data["Intensities"] += calc.intensities
                 data["File"] += [calc.log] * len(calc.frequencies)
     responsive_table(data, strings=[1])
-    write_csv_from_dict(data, filename=output)
+    write_csv_from_dict(data, filename=output, autosave=autosave)
 
 
 def print_freqs_to_csv(dir):
@@ -289,7 +289,7 @@ def print_freqs_to_csv(dir):
                         f.write(f"{freq},{intensity}\n")
 
 
-def get_h_bonds(dir):
+def get_h_bonds(dir, output=None, autosave=None):
     """
     Searches the current directory for xyz files, then attempts to split them
     into fragments, reporting any intermolecular bonding involving
@@ -357,6 +357,7 @@ def get_h_bonds(dir):
                 "Angle",
             ),
             filename="hbonds.csv",
+            autosave=autosave
         )
 
 
@@ -376,7 +377,7 @@ def file_is_gaussian(file):
     return False
 
 
-def charges(dir, output):
+def charges(dir, output, autosave=None):
     """
     Recursively pulls geodesic charges from GAMESS calculations.
     Pulls mulliken charges from Gaussian calculations.
@@ -488,4 +489,4 @@ def charges(dir, output):
         data[value] = [val[index] for val in results]
     responsive_table(data, strings=[1, 3, 8], min_width=10)
 
-    write_csv_from_nested(results, col_names=keys, filename=output)
+    write_csv_from_nested(results, col_names=keys, filename=output, autosave=autosave)

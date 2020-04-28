@@ -229,31 +229,36 @@ def list_of_dicts_to_one_level_dict(lst):
     return output
 
 
-def write_csv_from_dict(data, filename=None):
+def write_csv_from_dict(data, filename=None, autosave=False):
     """Write to file from dictionary"""
+    write = True if autosave else False
+    if not autosave:
+        done = False
+        while not done:
+            to_file = input("Print to csv? [Y/N] ")
+            if to_file.lower() in ("y", "n"):
+                done = True
+                if to_file.lower() == "y":
+                    write = True
+                    if filename is None:
+                        filename = check_user_input(
+                            "Filename",
+                            lambda item: item.endswith(".csv"),
+                            "Please give a filename ending in '.csv'",
+                        )
+            else:
+                print("Please select 'Y' or 'N'")
+    if write:
+        with open(filename, "w", encoding="utf-8-sig") as f:
+            writer = csv.writer(f)
+            writer.writerow(data.keys())
+            content = zip(*[data[key] for key in data.keys()])
+            writer.writerows(content)
 
-    done = False
-    while not done:
-        to_file = input("Print to csv? [Y/N] ")
-        if to_file.lower() in ("y", "n"):
-            done = True
-            if to_file.lower() == "y":
-                if filename is None:
-                    filename = check_user_input(
-                        "Filename",
-                        lambda item: item.endswith(".csv"),
-                        "Please give a filename ending in '.csv'",
-                    )
-                with open(filename, "w", encoding="utf-8-sig") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(data.keys())
-                    content = zip(*[data[key] for key in data.keys()])
-                    writer.writerows(content)
-        else:
-            print("Please select 'Y' or 'N'")
 
-
-def write_csv_from_nested(data, *, col_names=None, return_name=False, filename=None):
+def write_csv_from_nested(
+    data, *, col_names=None, return_name=False, filename=None, autosave=False
+):
     """
     Write to csv from nested data structure; list of tuples, list of lists. 
     
@@ -265,26 +270,51 @@ def write_csv_from_nested(data, *, col_names=None, return_name=False, filename=N
     if type(col_names) not in (list, tuple):
         raise AttributeError("Must pass in column names as a list or tuple of values")
 
-    done = False
-    while not done:
-        to_file = input("Print to csv? [Y/N] ")
-        if to_file.lower() in ("y", "n"):
-            done = True
-            if to_file.lower() == "y":
-                if filename is None:
-                    filename = check_user_input(
-                        "Filename",
-                        lambda item: item.endswith(".csv"),
-                        "Please give a filename ending in '.csv'",
-                    )
-                with open(filename, "w", encoding="utf-8-sig") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(col_names)
-                    writer.writerows(data)
-                if return_name:
-                    return filename
-        else:
-            print("Please select 'Y' or 'N'")
+    write = True if autosave else False
+    if not autosave:
+        done = False
+        while not done:
+            to_file = input("Print to csv? [Y/N] ")
+            if to_file.lower() in ("y", "n"):
+                done = True
+                if to_file.lower() == "y":
+                    write = True
+                    if filename is None:
+                        filename = check_user_input(
+                            "Filename",
+                            lambda item: item.endswith(".csv"),
+                            "Please give a filename ending in '.csv'",
+                        )
+            else:
+                print("Please select 'Y' or 'N'")
+    if write:
+        with open(filename, "w", encoding="utf-8-sig") as f:
+            writer = csv.writer(f)
+            writer.writerow(col_names)
+            writer.writerows(data)
+    if return_name:
+        return filename
+
+    # done = False
+    # while not done:
+    #     to_file = input("Print to csv? [Y/N] ")
+    #     if to_file.lower() in ("y", "n"):
+    #         done = True
+    #         if to_file.lower() == "y":
+    #             if filename is None:
+    #                 filename = check_user_input(
+    #                     "Filename",
+    #                     lambda item: item.endswith(".csv"),
+    #                     "Please give a filename ending in '.csv'",
+    #                 )
+    #             with open(filename, "w", encoding="utf-8-sig") as f:
+    #                 writer = csv.writer(f)
+    #                 writer.writerow(col_names)
+    #                 writer.writerows(data)
+    #             if return_name:
+    #                 return filename
+    #     else:
+    #         print("Please select 'Y' or 'N'")
 
 
 def search_dict_recursively(d):
