@@ -38,6 +38,18 @@ store the iteration number.
     def __init__(self, log):
         super().__init__(log)
 
+    
+    @property
+    def title(self):
+        found = False
+        for line in self.read():    
+            if found:
+                if re.search('[A-Za-z0-9]', line):
+                    return line
+            if 'RUN TITLE' in line:
+                found = True
+ 
+    
     ################################
     #                              #
     #      CHECK IF COMPLETED      #
