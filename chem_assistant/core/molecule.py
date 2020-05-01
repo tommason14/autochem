@@ -867,6 +867,9 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 # h-bonders)
                 h_bonders = ['O', 'F', 'H', 'N']
 
+                # can't have two hydrogens
+                if all(atom.symbol is 'H' for atom in (atom1, atom2)):
+                    return False                
                 for atom in (atom1, atom2):
                     if atom.symbol is 'H':
                         if is_imid_c2_h(atom): # exception
