@@ -5,8 +5,6 @@
 #SBATCH --tasks-per-node=16
 #SBATCH --ntasks=16
 #SBATCH --cpus-per-task=1
-#SBATCH --mail-type=all
-#SBATCH --mail-user=thomas.mason1+monarch@monash.edu
 #SBATCH --partition=comp,short
 #SBATCH --qos=partner
 

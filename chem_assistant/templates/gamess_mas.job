@@ -6,8 +6,6 @@
 #SBATCH --ntasks=32
 #SBATCH --cpus-per-task=1
 #SBATCH --tasks-per-node=16
-#SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --mail-user=thomas.mason1@monash.edu
 #SBATCH --partition=m3i
 
 export PROJECT="sn29"
