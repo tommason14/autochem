@@ -119,7 +119,7 @@ def energies(dir, filepath_includes):
     return output
 
 
-def energy_table(dir, file_name, string_to_find, autosave=None):
+def energy_table(dir, file_name, string_to_find=None, autosave=None):
     """
     Prints energies of all log/out files in current and any sub directories to the screen,
     with the option of saving to csv.
@@ -160,7 +160,7 @@ def energy_table(dir, file_name, string_to_find, autosave=None):
     write_csv_from_dict(table_data, filename=file_name, autosave=autosave)
 
 
-def homo_lumo_gaps(dir, output, autosave=None):
+def homo_lumo_gaps(dir, output, string_to_find=None, autosave=None):
     """
     Returns HOMO-LUMO or SOMO-LUMO gaps for each single point calculation
     found in any subdirectory. Currently restricted to single points for
@@ -168,7 +168,7 @@ def homo_lumo_gaps(dir, output, autosave=None):
     would have to check the log files first.
     """
     info = []
-    for log in get_files(dir, (".out", ".log")):
+    for log in get_files(dir, (".out", ".log"), filepath_includes=string_to_find):
         calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
@@ -252,7 +252,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
     name = write_csv_from_dict(collected, filename=output, autosave=autosave)
 
 
-def print_freqs(dir, output, autosave=None):
+def print_freqs(dir, output, string_to_find=None, autosave=None):
     """
     Writes frequencies and intensities of GAMESS/Gaussian frequency calculations
     to a csv. Works recursively through the file system.
@@ -261,7 +261,7 @@ def print_freqs(dir, output, autosave=None):
     data["File"] = []
     data["Frequencies"] = []
     data["Intensities"] = []
-    for file in get_files(dir, ["log", "out"]):
+    for file in get_files(dir, ["log", "out"], filepath_includes=string_to_find):
         if "slurm" not in file:
             calc = file_as_results_class(file)
             if calc.is_hessian():
@@ -289,7 +289,7 @@ def print_freqs_to_csv(dir):
                         f.write(f"{freq},{intensity}\n")
 
 
-def get_h_bonds(dir, output=None, autosave=None):
+def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
     """
     Searches the current directory for xyz files, then attempts to split them
     into fragments, reporting any intermolecular bonding involving
@@ -317,7 +317,7 @@ def get_h_bonds(dir, output=None, autosave=None):
 
     print("\n", " " * 15, "HYDROGEN BOND DATA\n")
     output = []
-    for file in get_files(dir, ["xyz"]):
+    for file in get_files(dir, ["xyz"], filepath_includes=string_to_find):
         path, f = os.path.split(file)
         print("Checking", file[2:])
         mol = Molecule(using=file)
@@ -377,7 +377,7 @@ def file_is_gaussian(file):
     return False
 
 
-def charges(dir, output, autosave=None):
+def charges(dir, output, string_to_find=None, autosave=None):
     """
     Recursively pulls geodesic charges from GAMESS calculations.
     Pulls mulliken charges from Gaussian calculations.
@@ -389,7 +389,7 @@ def charges(dir, output, autosave=None):
 
     results = []
 
-    files = get_files(dir, ["log"])
+    files = get_files(dir, ["log"], filepath_includes=string_to_find)
     for logfile in files:
         if file_is_gaussian(logfile):
             res = []

@@ -167,7 +167,7 @@ if args.freqs:
     if not args.output:
         autosave = False
         args.output = "freqs.csv"
-    print_freqs(".", output=args.output, autosave=autosave)
+    print_freqs(".", output=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.freqs_to_csv:
     from chem_assistant.user_scripts.grep_results import print_freqs_to_csv
@@ -181,7 +181,7 @@ if args.homo_lumo:
     if not args.output:
         autosave = False
         args.output = "homo_lumo.csv"
-    homo_lumo_gaps(".", output=args.output, autosave=autosave)
+    homo_lumo_gaps(".", output=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.thermochem:
     if not args.mult:
@@ -246,7 +246,7 @@ if args.hydrogen_bonds:
     if not args.output:
         autosave = False
         args.output = "hbonds.csv"
-    get_h_bonds(".", output=args.output, autosave=autosave)
+    get_h_bonds(".", output=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.interaction_energies:
     from chem_assistant.user_scripts.int_energies import calculate_interaction_energies
@@ -276,7 +276,7 @@ if args.weight:
         autosave = False
         args.output = "weighted.csv"
     apply_boltzmann_weightings(
-        args.weight, args.group, output=args.output, autosave=autosave
+        args.weight, args.group, output=args.output
     )
 
 if args.charges:
@@ -286,7 +286,7 @@ if args.charges:
     if not args.output:
         autosave = False
         args.output = "charges.csv"
-    charges(".", output=args.output, autosave=autosave)
+    charges(".", output=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.fluorescence:
     from chem_assistant.user_scripts.fluorescence import fluorescence_data
@@ -295,7 +295,7 @@ if args.fluorescence:
     if not args.output:
         autosave = False
         args.output = "fluorescence.csv"
-    fluorescence_data(".", output=args.output, autosave=autosave)
+    fluorescence_data(".", output=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.copy_xyz:
     from chem_assistant.user_scripts.structures import copy_xyz_tree

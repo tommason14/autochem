@@ -115,21 +115,3 @@ molecular dynamics. This class also creates job files in the same directory as t
         with open(job_file) as f:
             job = f.read()       
             return job
-
-    # def create_job(self):
-    #     """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
-    #     jobfile = self.get_job_template()
-    #     # modify
-    #     if str(self.sc) == 'mgs':
-    #         jobfile = self.change_mgs_job(jobfile)
-    #         jobfile = jobfile.replace('name', f'{self.base_name}') 
-    #     elif str(self.sc) == 'rjn':
-    #         jobfile = self.change_rjn_job(jobfile)
-    #         jobfile = jobfile.replace('name', f'{self.base_name}') 
-    #     elif str(self.sc) == 'mas':
-    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-    #     elif str(self.sc) == 'mon':
-    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-    #     elif str(self.sc) == 'stm':
-    #         jobfile = jobfile.replace('base_name', f'{self.base_name}') 
-    #     self.write_file(jobfile, filetype='job')

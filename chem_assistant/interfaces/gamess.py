@@ -141,7 +141,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             fmo_data = self.fmo_formatting()
             self.input.fmo = fmo_data
             self.input.fmoprp.maxit = 200
-            self.input.gddi.ngroup = len(self.mol.fragments)
+            # if ngroup not defined
+            if 'ngroup' not in self.input.gddi:
+                self.input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
         if self.fmo:
@@ -215,7 +217,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if self.input.basis.gbasis.lower() == basis:
                     self.input.mp2.scsopo = opp
                     break
-        if self.fmo and "pcm" in self.input:
+        if self.fmo and "pcm" in self.input and not isinstance(self.input.pcm, str):
             self.input.pcm.ifmo = -1
 
     def parse_settings(self):

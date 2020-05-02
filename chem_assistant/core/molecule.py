@@ -918,11 +918,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 """
                 Checks that two atoms forms a valid hydrogen bond.
                 """
-                # if any(x.symbol is 'H' and \
-                #   self.fragments[x.mol]['name'] == 'c4mim' \
-                #   and is_imid_c2_h(x) \
-                #   for x in (atom1, atom2)) and atom1.distance_to(atom2) < 3:
-                #     print(atom1, atom2)
                 if within_hbond_distance(atom1, atom2, dist) and \
                 within_angle_tolerance(atom1, atom2) and \
                 valid_atoms(atom1, atom2):

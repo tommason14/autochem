@@ -102,6 +102,7 @@ cluster.
             # optimisation, for example
             if "run" in settings.input.keys():
                 del self.defaults.input.run
+            self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings)  # merges inp, job data
             self.input = self.merged.input
             self.job = self.merged.job
@@ -125,6 +126,7 @@ cluster.
 
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
+        
         self.find_charge_and_mult()
         comment = f"# PSI4 Calc: {self.title}\n\n"
         mem = f"memory {self.input.memory}\n\n"
