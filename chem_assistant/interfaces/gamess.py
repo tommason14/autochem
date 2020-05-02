@@ -142,7 +142,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.input.fmo = fmo_data
             self.input.fmoprp.maxit = 200
             # if ngroup not defined
-            if 'ngroup' not in self.input.gddi:
+            if "ngroup" not in self.input.gddi:
                 self.input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
@@ -492,15 +492,18 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         return jobfile
 
     def change_gadi_job(self, job):
-        job = (
-            job.replace("name", f"{self.base_name}")
-            # can now give as number or string with gb
-            .replace("mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}")
-            .replace("ncpus=48", f"ncpus={self.meta.ncpus}")
-            .replace(
+        job = job.replace("name", f"{self.base_name}")
+        # can now give as number or string with gb
+        if "mem" in self.meta:
+            job = job.replace(
+                "mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
+            )
+        if "ncpus" in self.meta:
+            job = job.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
+        if "jobfs" in self.meta:
+            job = job.replace(
                 "jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}"
             )
-        )
         if "partition" in self.meta:
             job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
         return job
@@ -515,9 +518,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace("name", f"{self.base_name}")
         elif self.sc == "mon":
-            jobfile = jobfile.replace("base_name", f"{self.base_name}")
+            jobfile = jobfile.replace("=name", f"={self.base_name}")
+            jobfile = jobfile.replace(" name", f" {self.base_name}")
         elif self.sc == "mas":
-            jobfile = jobfile.replace("base_name", f"{self.base_name}")
+            jobfile = jobfile.replace("=name", f"={self.base_name}")
+            jobfile = jobfile.replace(" name", f" {self.base_name}")
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
         elif self.sc == "gadi":

@@ -281,9 +281,9 @@ cluster.
             # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
             job = job.replace("name", f"{self.base_name}")
         elif self.sc == "mas":
-            job = job.replace("base_name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "mon":
-            job = job.replace("base_name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "stm":
             job = job.replace("name", f"{self.base_name}")
 
@@ -337,10 +337,12 @@ cluster.
             # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
             job = job.replace("name", f"{self.base_name}")
         elif self.sc == "mas":
-            job = job.replace("base_name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "mon":
-            job = job.replace("base_name", f"{self.base_name}")
+            job = job.replace("name", f"{self.base_name}")
         elif self.sc == "stm":
+            job = job.replace("name", f"{self.base_name}")
+        elif self.sc == "gadi":
             job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:

@@ -1,6 +1,6 @@
 #!/bin/env bash
 #SBATCH --account=sn29
-#SBATCH --job-name=base_name
+#SBATCH --job-name=name
 #SBATCH --time=24:00:00
 #SBATCH --mem=64G
 #SBATCH --ntasks=32
@@ -11,4 +11,4 @@
 export PROJECT="sn29"
 module load gamess/16srs1-v2
 
-rungms.m3 base_name.inp 00 $SLURM_NTASKS > base_name.log
+rungms.m3 name.inp 00 $SLURM_NTASKS > name.log
