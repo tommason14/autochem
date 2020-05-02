@@ -399,7 +399,7 @@ To produce counterpoise corrected jobs, use `PsiJob(..., cp=True)`.
 ### Job information
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
-For ORCA, options include `nprocs`, `mem`, `time`, `partition`, and `jobfs` (PBS
+For PSI4, options include `nprocs`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
 ## ORCA
