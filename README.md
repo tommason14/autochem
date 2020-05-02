@@ -76,7 +76,7 @@ Using this method, options such as `frags_in_subdir=True` can be used, or
 named according to their run types (optimisations are named `opt`, single points
 are named `spec` and frequency calculations are named `hess`).
 
-1. Store the parameters of the `Settings` object in a python file, then run from
+2. Store the parameters of the `Settings` object in a python file, then run from
    the command line:
 
 ```python
@@ -365,6 +365,31 @@ sett.input.charge=2
 sett.input.mult=3
 sett.input.run = {'optimize': 'scf'}
 sett.input.run.additional = {'dertype': 'energy'}
+```
+which produces:
+```
+# PSI4 Calc: xyz
+
+memory 60gb
+
+molecule complex {
+2 3
+ C       -3.94373    0.13147    0.12554
+ C       -2.80294   -0.70993    0.69713
+ ...
+units angstrom
+no_reorient
+symmetry c1
+}
+
+set globals {
+    S_ORTHOGONALIZATION canonical
+    basis aug-cc-pVTZ
+    freeze_core True
+    guess sad
+    scf_type DF
+}
+optimize('scf', dertype='energy')
 ```
 
 ### Counterpoise correction
