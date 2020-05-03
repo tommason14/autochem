@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as f:
     long_desc = f.read()
@@ -7,7 +7,7 @@ setup(
     name="autochem",
     version="0.0.1",
     description="Automates creation and post-processing of quantum chemical calculations",
-    package_dir={"": "autochem"},
+    packages=find_packages(),
     py_modules=['autochem'],
     python_requires=">=3.6",
     scripts=["bin/chem_assist"],
