@@ -26,7 +26,7 @@ Use this code for:
   - calculates free energies
 
 Also exportable as a python package, and can be easily extended. See the
-[examples](examples/) section for more details.
+[examples](https://github.com/tommason14/monash_automation/tree/master/examples) for more details.
 
 Currently set up for the following supercomputers:
 - Gadi (Canberra)
@@ -98,7 +98,7 @@ takes in every xyz file in the current directory and creates jobs using
 parameters from the `Settings` object in `settings.py`. 
 Note: using this method, the `Settings` object must be called `sett`.
 
-Example settings can be found in the [settings_files](settings_files/)
+Example settings can be found in the [settings_files](https://github.com/tommason14/monash_automation/tree/master/settings_files)
 directory.
 
 Methods of defining input and job parameters for each software are different, and

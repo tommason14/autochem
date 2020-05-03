@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="autochem",
-    version="0.0.1",
+    version="0.0.2",
     description="Automates creation and post-processing of quantum chemical calculations",
     packages=find_packages(),
     py_modules=['autochem'],
