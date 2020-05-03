@@ -97,8 +97,8 @@ class OrcaJob(Job):
             for num, line in enumerate(jobfile):
                 # SLURM
                 if re.search("SBATCH -n(tasks)? [0-9]+", line):
-                    if hasattr(self, "meta") and "nprocs" in self.meta:
-                        jobfile[num] = f"#SBATCH -n {self.meta.nprocs}"
+                    if hasattr(self, "meta") and "ncpus" in self.meta:
+                        jobfile[num] = f"#SBATCH -n {self.meta.ncpus}"
                     else:
                         jobfile[num] = f"#SBATCH -n {OrcaJob._procs[self.sc]}"
                 if re.search("SBATCH -c(pus-per-task)? [0-9]+", line):
@@ -130,8 +130,8 @@ class OrcaJob(Job):
                 jobfile = jobfile.replace(
                     "#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}"
                 )
-            if "nprocs" in self.meta:
-                jobfile = jobfile.replace("ncpus=48", f"ncpus={self.meta.nprocs}")
+            if "ncpus" in self.meta:
+                jobfile = jobfile.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs.upper().replace("GB", "")
                 jobfile = jobfile.replace("jobfs=200GB", f"jobfs={jobfs}GB")
@@ -417,13 +417,13 @@ class OrcaJob(Job):
         - Massive: 16
         - Gadi: 48
 
-        Can also set manually with `sett.meta.nproc=20`
+        Can also set manually with `sett.meta.ncpus=20`
         """
         ret = ""
         if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
-        elif hasattr(self, "meta") and "nprocs" in self.meta:
-            ret += f"%pal\n nprocs {self.meta.nprocs}\nend"
+        elif hasattr(self, "meta") and "ncpus" in self.meta:
+            ret += f"%pal\n nprocs {self.meta.ncpus}\nend"
         else:
             ret += f"%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend"
 

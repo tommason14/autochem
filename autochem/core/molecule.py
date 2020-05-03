@@ -368,6 +368,14 @@ class Molecule:
                 charge = 2
                 mult = 1
                 mol_type = 'dication'
+            elif db == Molecule.Anion_radicals:
+                charge = -1
+                mult = 2
+                mol_type = 'anion-radical'
+            elif db == Molecule.Cation_radicals:
+                charge = 1
+                mult = 2
+                mol_type = 'cation-radical'
             elif db == Molecule.Dication_radicals:
                 charge = 2
                 mult = 2
@@ -395,6 +403,8 @@ class Molecule:
             Molecule.Anions,
             Molecule.Neutrals,
             Molecule.Radicals,
+            Molecule.Anion_radicals,
+            Molecule.Cation_radicals,
             Molecule.Dications,
             Molecule.Dication_radicals):
             self.fragments = check_dict(self.fragments, symbols, db)
@@ -423,6 +433,11 @@ class Molecule:
                     for atom in self.fragments[key]['atoms']:
                         atom.mol = key
 
+    def give_atoms_a_fragment_name(self):
+        for num, frag in self.fragments.items(): 
+            for atom in frag['atoms']:
+                atom.fragment = f"{frag['name']}_{num}"   
+    
     def sort_fragments_by_index(self):
         """
         Sorts self.fragments according to the index of the atoms in each fragment.
@@ -677,6 +692,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     all_assigned = True
         if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
             self.group_frags_together()
+        self.give_atoms_a_fragment_name()
         self.add_ionic_network()
         if hasattr(self, 'fragments_after_merge'):
             self.fragments = self.fragments_after_merge
@@ -856,7 +872,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                                 return True
                 return False
 
-
+            def is_alkyl(atom):
+                if atom.symbol == 'H':
+                    for a in atom.connected_atoms:
+                        if a.symbol == 'C':
+                            return True
+                return False
 
             def valid_atoms(atom1, atom2):
                 """
@@ -873,13 +894,16 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 # h-bonders)
                 h_bonders = ['O', 'F', 'H', 'N']
 
-                # can't have two hydrogens
-                if all(atom.symbol is 'H' for atom in (atom1, atom2)):
+                # can't have two hydrogens for example
+                # if all(atom.symbol is 'H' for atom in (atom1, atom2)):
+                if atom1.symbol == atom2.symbol:
                     return False                
                 for atom in (atom1, atom2):
                     if atom.symbol is 'H':
                         if is_imid_c2_h(atom): # exception
                             return True
+                        if is_alkyl(atom):
+                            return False
                     if atom.symbol not in h_bonders:
                         return False
                         for a in atom.connected_atoms:

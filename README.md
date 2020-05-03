@@ -63,7 +63,7 @@ sett.input.td='nstates=10,root=9'
 sett.input.scrf='smd,solvent=n,n-DiMethylFormamide'
 # define job scheduler parameters
 sett.meta.mem='160gb'
-sett.meta.nprocs=48
+sett.meta.ncpus=48
 sett.meta.nodemem='192GB'
 sett.meta.time='24:00:00'
 sett.meta.jobfs='400gb'
@@ -88,7 +88,7 @@ sett.input.td='nstates=10,root=9'
 sett.input.scrf='smd,solvent=n,n-DiMethylFormamide'
 
 sett.meta.mem='160gb'
-sett.meta.nprocs=48
+sett.meta.ncpus=48
 sett.meta.nodemem='192GB'
 sett.meta.time='24:00:00'
 sett.meta.jobfs='400gb'
@@ -303,7 +303,7 @@ coords...
 ### Job information
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
-For GAUSSIAN, options include `nprocs`, `mem` (%mem=... in the input file),
+For GAUSSIAN, options include `ncpus`, `mem` (%mem=... in the input file),
 `nodemem` (defining memory for the scheduler), `partition`, `time` and `jobfs` (PBS only).
 
 ## PSI4
@@ -402,7 +402,7 @@ To produce counterpoise corrected jobs, use `PsiJob(..., cp=True)`.
 ### Job information
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
-For PSI4, options include `nprocs`, `mem`, `time`, `partition`, and `jobfs` (PBS
+For PSI4, options include `ncpus`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
 ## ORCA
@@ -455,7 +455,7 @@ end
 ### Job information
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
-For ORCA, options include `nproc`, `mem`, `time`, `partition`, and `jobfs` (PBS
+For ORCA, options include `ncpus`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
 ## Inputs for all molecules in an xyz file

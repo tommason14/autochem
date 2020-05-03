@@ -23,7 +23,7 @@ class GaussJob(Job):
     
     This command produces 'benzene.job', containing both input data and 
     job scheduler information.
-    For meta data, number of processors (nprocs), memory (mem) etc, use sett.meta.nprocs=46.
+    For meta data, number of processors (ncpus), memory (mem) etc, use sett.meta.ncpus=46.
     """
 
     def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):
@@ -87,15 +87,15 @@ class GaussJob(Job):
                     job = job.replace("mem=32", f"mem={mem}")
                 if self.sc == "gadi":
                     job = job.replace("mem=192", f"mem={mem}")
-            if "nprocs" in self.meta:
+            if "ncpus" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     job = job.replace(
-                        "cpus-per-task=16", f"cpus-per-task={self.meta.nprocs}"
+                        "cpus-per-task=16", f"cpus-per-task={self.meta.ncpus}"
                     )
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
                 else:  # gadi
-                    job = job.replace("ncpus=48", f"ncpus={self.meta.nprocs}")
+                    job = job.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     jobfile = job.split("\n")
@@ -152,10 +152,10 @@ class GaussJob(Job):
         meta = []
         if self.sc == "stm":
             self.meta.mem = "160gb"
-            self.meta.nprocs = 46
+            self.meta.ncpus = 46
         for k, v in self.meta.items():
             if k not in excluded_properties:
-                if k == "nprocs":
+                if k == "ncpus":
                     meta.append(f"%nproc={v}")
                 else:
                     meta.append(f"%{k}={v}")

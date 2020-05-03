@@ -33,6 +33,7 @@ class Atom:
         self.bonds = bonds or []
         self.connected_atoms = []
         self.h_bonded_to = []
+        self.fragment = None
 
         if coords is None:
             self.coords = [0, 0, 0]
@@ -55,6 +56,9 @@ class Atom:
 
     def __repr__(self):
         """Unambiguous representation of an |Atom| instance"""
+        if self.fragment is not None:
+            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
+ Index: {self.index} Mol: {self.fragment}"
         if hasattr(self, 'index') and not hasattr(self, 'mol'):
             return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
  Index: {self.index} "
