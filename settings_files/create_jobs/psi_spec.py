@@ -1,4 +1,4 @@
-from chem_assistant import PsiJob
+from autochem import PsiJob
 import glob
 
 xyz=glob.glob('*xyz')[0]

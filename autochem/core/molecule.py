@@ -3,6 +3,7 @@ from .atom import Atom
 from .utils import sort_elements
 
 import re
+import os
 import numpy as np
 import math
 import itertools
@@ -146,7 +147,9 @@ class Molecule:
                                   'C','H','H','C','H','H','C','H','C','C','H','C','H','C','H','C','H',
                                   'C','S','O','H','O','O','H']
     Dications = dict()
-                                                   
+    Anion_radicals = dict()
+    Cation_radicals = dict()   
+
     Dication_radicals = {'maotmac-dimer-hydrogenated-rad' : 
         ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H',
          'C','H','H','O','C','O','C','C','H','H','H','C','H','H','C','C',
@@ -160,10 +163,13 @@ class Molecule:
         **Neutrals,
         **Radicals,
         **Dications,
+        **Anion_radicals,
+        **Cation_radicals,
         **Dication_radicals
         }
 
     def __init__(self, using = None, atoms = None, group = None, bonds_to_split = None):
+        self.check_user_additions()
         if using is not None:
             self.xyz = using
             self.coords = self.read_xyz(self.xyz)
@@ -360,7 +366,7 @@ class Molecule:
                 mol_type = 'radical'
             elif db == Molecule.Dications:
                 charge = 2
-                mult = 0
+                mult = 1
                 mol_type = 'dication'
             elif db == Molecule.Dication_radicals:
                 charge = 2
@@ -972,8 +978,9 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
             for bond in h_bonds:
                 one, two, dist, angle = bond
-                mol_one_name = self.fragments[one.mol]['name']
-                mol_two_name = self.fragments[two.mol]['name']
+                # dmso_1
+                mol_one_name = f"{self.fragments[one.mol]['name']}_{one.mol}"
+                mol_two_name = f"{self.fragments[two.mol]['name']}_{two.mol}"
             
                 group1 = find_molecule_type(mol_one_name)
                 group2 = find_molecule_type(mol_two_name)
@@ -1014,3 +1021,83 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
     def get_multiplicity(cls, fragment_dict):
         return 2 if any('radical' in frag['type'] for frag in fragment_dict.values()) else 1
         # extend multiplicity for biradicals etc...
+
+    def mol_template(self):
+        lines = [
+            "# Molecules should be laid out in four lines as follows:\n",
+            "# name=<NAME>\n",
+            "# charge=<CHARGE>\n",
+            "# multiplicity=<MULTIPLICITY>\n",
+            "# atoms=<list of individual atoms in any order>\n",
+            "# hashed and blank lines are not read by python,\n",
+            '# and names should contain no spaces\n'
+            "# below is an example for hydrogen peroxide:\n\n",
+            "name=h2o2\n",
+            "charge=0\n",
+            "multiplicity=1\n",
+            "atoms=O,H,H,O\n"
+            ]
+        return lines
+
+
+    def check_user_additions(self):
+        """
+        Reads ~/.config/autochem/molecules.txt for 
+        any additional molecules
+        """
+        confdir = os.path.expanduser('~/.config/autochem/')
+        if not os.path.exists(confdir):
+            os.makedirs(confdir, exist_ok=True)
+        userfile = os.path.join(confdir, 'molecules.txt')
+        # CREATE TEMPLATE FILE IF NOT EXISTS
+        if not os.path.isfile(userfile):
+            open(userfile, 'w+').writelines(self.mol_template())
+        # READ USER MOLECULES IF FILE EXISTS
+        else:
+            name   = False
+            charge = False
+            mult   = False
+            atoms  = False
+            with open(userfile, 'r+') as f:
+                for line in f:
+                    # GET RID OF EXTRA SPACES AND ANYTHING AFTER A HASH
+                    line = line.strip()
+                    line = line.split('#')[0]
+                    # SPLIT INTO DESCRIPTOR AND VALUE
+                    line = line.split('=')
+                    # FIND IF ONE OF THE DESCRIPTORS AND ASSIGN VALUE
+                    if 'name' in line[0]:
+                        name = line[1]
+                    elif 'charge' in line[0]:
+                        charge = int(line[1])
+                    elif 'multiplicity' in line[0]:
+                        mult = int(line[1])
+                    elif 'atoms' in line[0]:
+                        atoms = line[1].split(',')
+                        for i in range(len(atoms)):
+                            atoms[i] = atoms[i].strip()
+
+                    # ONCE ALL DEFINED ADD TO DICTIONARY
+                    if not name is False and not charge is False:
+                        if not mult is False and not atoms is False:
+                            if charge is 0 and mult is 1:
+                                Molecule.Neutrals[name] = atoms
+                            elif charge is -1 and mult is 1:
+                                Molecule.Anions[name] = atoms
+                            if charge is 1 and mult is 1:
+                                Molecule.Cations[name] = atoms
+                            if charge is 0 and mult is 2:
+                                Molecule.Radicals[name] = atoms
+                            if charge is -1 and mult is 2:
+                                Molecule.Anion_radicals[name] = atoms
+                            if charge is 1 and mult is 2:
+                                Molecule.Cation_radicals[name] = atoms
+                            if charge is 2 and mult is 1:
+                                Molecule.Dications[name] = atoms
+                            if charge is 2 and mult is 2:
+                                Molecule.Dication_radicals[name] = atoms
+                            # RESET VARS
+                            name   = False
+                            charge = False
+                            mult   = False
+                            atoms  = False

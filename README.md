@@ -1,4 +1,4 @@
-# Monash Automation
+# autochem
 
 # Overview
 
@@ -49,7 +49,7 @@ Users have various options when choosing how to create input and job files:
    and run the job using a python class. For example:
 
 ```python
-from chem_assistant import GaussJob, Settings
+from autochem import GaussJob, Settings
 from glob import glob
 
 xyz = glob('*xyz')[0] # find the xyz file to run
@@ -98,6 +98,9 @@ takes in every xyz file in the current directory and creates jobs using
 parameters from the `Settings` object in `settings.py`. 
 Note: using this method, the `Settings` object must be called `sett`.
 
+Example settings can be found in the [settings_files](settings_files/)
+directory.
+
 Methods of defining input and job parameters for each software are different, and
 outlined below.
 
@@ -106,7 +109,7 @@ outlined below.
 Using a dummy system, `h.xyz`, we can see the default options like so:
 
 ```python
-from chem_assistant import GamessJob
+from autochem import GamessJob
 
 gamess = GamessJob('h.xyz')
 
@@ -164,7 +167,7 @@ To change the parameters of the file, we use a `Settings` object.
 To run an open shell single point calculation:
 
 ```python
-from chem_assistant import Settings, GamessJob
+from autochem import Settings, GamessJob
 
 sett = Settings()
 sett.input.contrl.runtyp='energy'
@@ -199,7 +202,7 @@ we have to include some parameters to the `$ELPOT` (electric potential)
 section, and remove the MP2 default settings:
 
 ```python
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
 sett.input.basis.gbasis='cct'
@@ -233,7 +236,7 @@ To run DFT calculations, remove the MP2 defaults and then add the appropriate
 settings:
 
 ```python
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
 sett.input.mp2=None
@@ -272,7 +275,7 @@ inside the `Settings` object and deciding which output to choose accordingly.
 The following `Settings` file:
 
 ```python
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
 sett.input.opt='ts,noeigentest,calcfc'
@@ -324,7 +327,7 @@ set globals {
 ```
 The default settings are as follows:
 ```python
-from chem_assistant import PsiJob
+from autochem import PsiJob
 psi = PsiJob('file.xyz')
 print(psi.input)
 ```
@@ -356,7 +359,7 @@ to produce `optimize('scf', dertype='energy')`.
 
 A possible `Settings` object may look like:
 ```python
-from chem_assistant import Settings
+from autochem import Settings
 
 sett = Settings()
 sett.input.memory='60gb'
@@ -416,7 +419,7 @@ to produce a job that will run on 48 cpus.
 This is acheived by the following `Settings` file:
 
 ```python
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
 sett.input.run='wB97X-D3 aug-cc-pVTZ RIJCOSX'
@@ -547,3 +550,15 @@ In addition, other information can be found:
   `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
   (Experimental, use with caution)
   
+# Adding additional molecules to the database
+
+Add molecules to the `~/.config/autochem/molecules.txt` file, 
+using the format of:
+```
+name=dihydrogen_citrate
+charge=-1
+multiplicity=1
+atoms=C,C,C,H,H,O,O,C,O,C,C,H,H,O,H,O,H,H,O,O
+```
+
+Make sure that names do not contain spaces.

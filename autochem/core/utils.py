@@ -156,7 +156,7 @@ def get_files(directory, ext, filepath_includes=None):
     import os
 
     file_list = []
-    for path, dirs, files in os.walk(directory):
+    for path, _, files in os.walk(directory):
         for file in files:
             for e in ext:
                 if re.search(f"{e}$", file) and file != "freq.out":
@@ -295,28 +295,6 @@ def write_csv_from_nested(
     if return_name:
         return filename
 
-    # done = False
-    # while not done:
-    #     to_file = input("Print to csv? [Y/N] ")
-    #     if to_file.lower() in ("y", "n"):
-    #         done = True
-    #         if to_file.lower() == "y":
-    #             if filename is None:
-    #                 filename = check_user_input(
-    #                     "Filename",
-    #                     lambda item: item.endswith(".csv"),
-    #                     "Please give a filename ending in '.csv'",
-    #                 )
-    #             with open(filename, "w", encoding="utf-8-sig") as f:
-    #                 writer = csv.writer(f)
-    #                 writer.writerow(col_names)
-    #                 writer.writerows(data)
-    #             if return_name:
-    #                 return filename
-    #     else:
-    #         print("Please select 'Y' or 'N'")
-
-
 def search_dict_recursively(d):
     ret = {}
     for k, v in d.items():
@@ -406,7 +384,7 @@ def assign_molecules_from_dict_keys(data):
 
 def responsive_table(data, strings, min_width=13, decimal_places=5):
     """
-    Returns a table that is reponsive in size to every column.
+    Returns a table that is responsive in size to every column.
     Requires a dictionary to be passed in, with the keys referring to
     the headers of the table.
     Also pass in the number of each column that should be a string, starting
@@ -429,7 +407,7 @@ def responsive_table(data, strings, min_width=13, decimal_places=5):
             max_sizes[k] = len(max([str(val) for val in v], key=len))
     except ValueError:
         sys.exit(
-            "Error: No data is passed into chem_assistant.core.utils.responsive_table"
+            "Error: No data is passed into autochem.core.utils.responsive_table"
         )
 
     # create the thing to pass into .format()- can't have brackets like zip gives

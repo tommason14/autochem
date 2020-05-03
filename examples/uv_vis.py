@@ -11,7 +11,7 @@ but only because of the NA given for the root. This can easily be
 changed.
 """
 
-from chem_assistant import GaussianResults, OrcaResults, get_log_type
+from autochem import GaussianResults, OrcaResults, get_log_type
 from glob import glob
 
 

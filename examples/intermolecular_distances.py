@@ -12,10 +12,10 @@ of imidazolium cations is accounted for- in fact this will be the only atom
 from imidazolium atoms contributing to these bonds.
 """
 
-import chem_assistant as ca
+import autochem as ca
 import glob
 
-files = glob.glob('*xyz') # or import the get_files() function from chem_assistant: get_files('.', 'xyz')
+files = glob.glob('*xyz') # or import the get_files() function from autochem: get_files('.', 'xyz')
 
 
 def imid_c2_h(atom):

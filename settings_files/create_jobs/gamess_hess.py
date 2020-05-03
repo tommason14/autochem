@@ -1,4 +1,4 @@
-from chem_assistant import Settings, GamessJob
+from autochem import Settings, GamessJob
 import glob
 
 xyz=glob.glob('*xyz')[0]

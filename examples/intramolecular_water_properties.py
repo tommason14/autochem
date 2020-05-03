@@ -1,4 +1,4 @@
-import chem_assistant as ca
+import autochem as ca
 import glob
 
 files = glob.glob('*xyz')

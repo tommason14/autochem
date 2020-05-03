@@ -1,4 +1,4 @@
-from chem_assistant import Settings, OrcaJob
+from autochem import Settings, OrcaJob
 import glob
 
 xyz=glob.glob('*xyz')[0]

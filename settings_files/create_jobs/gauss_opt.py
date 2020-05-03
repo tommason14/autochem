@@ -1,4 +1,4 @@
-from chem_assistant import GaussJob, Settings
+from autochem import GaussJob, Settings
 import glob
 
 xyz=glob.glob('*xyz')[0]

@@ -1,4 +1,4 @@
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
 sett.input.run='wB97X-D3 aug-cc-pVTZ RIJCOSX CPCM'

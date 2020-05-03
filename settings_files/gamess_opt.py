@@ -1,3 +1,3 @@
-from chem_assistant import Settings
+from autochem import Settings
 
 sett=Settings()
