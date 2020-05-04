@@ -55,7 +55,8 @@ class OrcaJob(Job):
         else:
             self.title = using[:-4]
 
-        self.xyzfile = using.split("/")[-1]
+        # self.xyzfile = using.split("/")[-1]
+        self.xyzfile = using
 
         self.file_basename()
         self.get_sc()  # required to be called here as func uses sett.supercomp if provided
