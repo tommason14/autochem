@@ -412,7 +412,7 @@ along with more detailed commands given as
 ```
 %pal
   nprocs 48
-%end
+end
 ```
 to produce a job that will run on 48 cpus.
 
