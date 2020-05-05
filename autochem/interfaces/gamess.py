@@ -409,6 +409,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         return string
 
+    @property
+    def _job_runtype(self):
+        """
+        Used to determine the rungms script used on gadi for FMO-SRS-MP2 runs.
+        Probably will be extended in future to clean up code.
+        """
+        if 'gddi' in self.input and self.input.gddi.ngroup > 1:
+            return 'fmo_ln'
+        else:
+            return 'standard'
+
     def make_inp(self):
         inp = self.header
         inp += " $DATA\n"
@@ -506,6 +517,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             )
         if "partition" in self.meta:
             job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
+        # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi.ln
+        # default is set to use logical node        
+        if self._job_runtype is 'standard':
+            job = job.replace('rungms.gadi.ln', 'rungms.gadi')
         return job
 
     def create_job(self):

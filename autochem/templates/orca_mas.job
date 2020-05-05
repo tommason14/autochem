@@ -10,8 +10,7 @@
 
 export PROJECT="sn29"
 
-module load orca/4.2.1
-module load openmpi/1.10.7-mlx
+module load orca/4.2.1-216
 
 time $ORCA_ROOT/orca name.inp > name.log
 
