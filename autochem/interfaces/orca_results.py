@@ -144,7 +144,7 @@ class OrcaResults(Results):
                 newdir = os.path.join(self.path, "rerun")
                 if not os.path.isdir(newdir):
                     os.mkdir(newdir)
-                write_xyz(some_coords, os.path.join(newdir, f"{self.title}-rerun.xyz"))
+                write_xyz(coords, os.path.join(newdir, f"{self.title}-rerun.xyz"))
             else:
                 print("No iterations were cycled through!")
 
