@@ -295,7 +295,7 @@ if args.fluorescence:
     if not args.output:
         autosave = False
         args.output = "fluorescence.csv"
-    fluorescence_data(".", output=args.output, string_to_find=args.select, autosave=autosave)
+    fluorescence_data(".", output=args.output, autosave=autosave)
 
 if args.copy_xyz:
     from autochem.scripts.structures import copy_xyz_tree
