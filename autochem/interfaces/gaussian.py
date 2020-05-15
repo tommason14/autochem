@@ -35,8 +35,13 @@ class GaussJob(Job):
             self.merged = self.defaults.merge(settings)
             self.meta = self.merged.meta
             self.input = self.merged.input
+            self.frag = Settings()
+            self.frag.meta = self.merged.frag.meta
         else:
             self.input = self.defaults.input
+            self.meta = self.defaults.meta
+            self.frag = Settings()
+            self.frag.meta = self.merged.frag.meta
         self.input = self.input.remove_none_values()
         if "/" in using:
             self.title = using.split("/")[-1][:-4]
@@ -109,7 +114,7 @@ class GaussJob(Job):
                     job = "\n".join(jobfile)
                 else:
                     job = job.replace(
-                        "#PBS -l wd", "#PBS -q {self.meta.partition}\n#PBS -l wd"
+                        "#PBS -l wd", f"#PBS -q {self.meta.partition}\n#PBS -l wd"
                     )
 
             if self.sc in super().PBS_HOSTS:
@@ -225,6 +230,85 @@ class GaussJob(Job):
             for atom in self.mol.coords
         ]
         return "\n".join(info)
+
+    def create_inputs_for_fragments(self):
+        """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
+            .
+            ├── frags
+            │   ├── acetate0
+            │   │   ├── acetate0.xyz
+            │   │   └── spec.inp
+            │   ├── acetate1
+            │   │   ├── acetate1.xyz
+            │   │   └── spec.inp
+            │   ├── choline2
+            │   │   ├── choline2.xyz
+            │   │   └── spec.inp
+            │   ├── choline3
+            │   │   ├── choline3.xyz
+            │   │   └── spec.inp
+            │   └── water4
+            │       ├── spec.inp
+            │       └── water4.xyz
+            ├── spec.inp
+        """
+        # not necessarily any splitting prior to this
+        self.is_complex = False
+
+        self.mol.separate()  # creating frags
+        # look over self.mol.fragments, generate inputs- make a settings object with the desired features
+
+        # after separation- create another frag with the ionic cluster!
+
+        # make subdir if not already there
+        subdirectory = join(getcwd(), "frags")
+        if not exists(subdirectory):
+            mkdir(subdirectory)
+
+        parent_dir = getcwd()
+        count = 0  # avoid overwriting files by iterating with a number
+        for frag, data in self.mol.fragments.items():
+            if data["frag_type"] == "frag":
+                # make a directory inside the subdir for each fragment
+                name = f"{data['name']}_{count}"  # i.e. acetate0, acetate1, choline2, choline3, water4
+                if not exists(join(subdirectory, name)):
+                    mkdir(join(subdirectory, name))  # ./frags/water4/
+                chdir(join(subdirectory, name))
+                Molecule.write_xyz(
+                    self, atoms=data["atoms"], filename=name + str(".xyz")
+                )  # using the method, but with no class
+
+                # use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
+                if hasattr(self, "merged"):
+                    frag_settings = self.merged
+                else:
+                    frag_settings = self.defaults
+                # for job info, use self.frag.meta
+                frag_settings = frag_settings.merge(self.frag)
+                frag_settings.input.charge = data["charge"]
+                if data["multiplicity"] != 1:
+                    frag_settings.input.mult = data["multiplicity"]
+                job = GaussJob(using=name + str(".xyz"), settings=frag_settings)
+                chdir(parent_dir)
+                count += 1
+        if hasattr(self.mol, "ionic"):
+            # only 1 ionic network
+            subdir_ionic = join(getcwd(), "ionic")
+            if not exists(subdir_ionic):
+                mkdir(subdir_ionic)
+            chdir(subdir_ionic)
+            write_xyz(atoms=self.mol.ionic["atoms"], filename="ionic.xyz")
+
+            # re-use settings from complex
+            if hasattr(self, "merged"):
+                frag_settings = self.merged
+            else:
+                frag_settings = self.defaults
+            frag_settings.input.charge = self.mol.ionic["charge"]
+            if self.mol.ionic["multiplicity"] != 1:
+                frag_settings.input.mult = self.mol.ionic["multiplicity"]
+            job = GaussJob(using="ionic.xyz", settings=frag_settings)
+            chdir(parent_dir)
 
 
 def gauss_print(d, value):

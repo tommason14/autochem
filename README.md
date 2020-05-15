@@ -262,7 +262,11 @@ using the command line (`chem_assist -d`), FMO jobs can also be chosen.
 ### Job information
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
-For GAMESS, options include `ncpus`, `mem`, `partition`, `time` and `jobfs` (PBS only).
+For GAMESS, options include `ncpus`, `mem`, `partition`, `time` and `jobfs` (PBS
+only).
+
+To give information on job information for each fragment when choosing
+`GamessJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
 
 ## GAUSSIAN
 
@@ -304,7 +308,11 @@ coords...
 
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
 For GAUSSIAN, options include `ncpus`, `mem` (%mem=... in the input file),
-`nodemem` (defining memory for the scheduler), `partition`, `time` and `jobfs` (PBS only).
+`nodemem` (defining memory for the scheduler), `partition`, `time` and `jobfs`
+(PBS only).
+
+To give information on job information for each fragment when choosing
+`PsiJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
 
 ## PSI4
 
@@ -405,6 +413,9 @@ Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
 For PSI4, options include `ncpus`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
+To give information on job information for each fragment when choosing
+`PsiJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
+
 ## ORCA
 
 ORCA jobs rely on settings given as `!wB97X-D3 aug-cc-pVDZ RIJCOSX`, 
@@ -458,14 +469,20 @@ Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
 For ORCA, options include `ncpus`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
+To give information on job information for each fragment when choosing
+`PsiJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
+
 ## Inputs for all molecules in an xyz file
 
 All calculations have the option of producing files for each molecule in the
 system. To do this, pass in a `frags_in_subdir` option. For example,
-`GaussJob('file.xyz', frags_in_subdir=True, settings=sett)`.
+`GamessJob('file.xyz', frags_in_subdir=True, settings=sett)`.
 
 When running from the command line with `chem_assist -d`, input files can 
 also be created for all molecules in the system.
+
+In `Settings` files, to specify job parameters type `sett.frag.meta...`, whereas
+job parameters for the entire complex are given as `self.meta...`
 
 Note that an ionic cluster will also be produced i.e. the original xyz file 
 with all neutral molecules removed.

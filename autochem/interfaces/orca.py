@@ -47,9 +47,13 @@ class OrcaJob(Job):
             self.merged = self.defaults.merge(settings)  # merges inp, job data
             self.input = self.merged.input
             self.meta = self.merged.meta
+            self.frag = Settings()
+            self.frag.meta = self.merged.frag.meta
         else:
             self.input = self.defaults.input
             self.meta = self.defaults.meta
+            self.frag = Settings()
+            self.frag.meta = self.defaults.frag.meta
         if "/" in using:
             self.title = using.split("/")[-1][:-4]
         else:
@@ -203,6 +207,8 @@ class OrcaJob(Job):
                     frag_settings = self.merged
                 else:
                     frag_settings = self.defaults
+                # for job info, use self.frag.meta
+                frag_settings = frag_settings.merge(self.frag)
                 frag_settings.input.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.mult = data["multiplicity"]

@@ -15,5 +15,12 @@
       "guess": "sad",
       "S_ORTHOGONALIZATION": "canonical"
     }
+  },
+  "frag": {
+    "meta": {
+      "ncpus": 16,
+      "mem": "32gb",
+      "time": "2:00:00"
+    }
   }
 }

@@ -107,9 +107,13 @@ cluster.
             self.input = self.merged.input
             self.job = self.merged.job
             self.meta = self.merged.meta
+            self.frag = Settings()
+            self.frag.meta = self.merged.frag.meta
         else:
             self.input = self.defaults.input
             self.meta = self.defaults.meta  # just to save hasattr(self, 'meta') further down
+            self.frag = Settings()
+            self.frag.meta = self.defaults.frag.meta
         if "/" in using:
             self.title = using.split("/")[-1][:-4]  # say using = ../xyz_files/file.xyz -->
         else:
@@ -346,18 +350,18 @@ cluster.
             job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
-            job = job.replace("03:00:00", self.meta.time)
+            job = job.replace("3:00:00", self.meta.time)
 
         if self.sc in super().SLURM_HOSTS:
-            if "nprocs" in self.meta:
-                job = job.replace("-c 16", f"-c {self.meta.nprocs}")
+            if "ncpus" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.ncpus}")
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
             
         if self.sc in super().PBS_HOSTS:
-            if "nprocs" in self.meta:
-                job = job.replace("ncpus=16", f"ncpus={self.meta.nprocs}")
+            if "ncpus" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.ncpus}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs[:-2]  # drop units
                 job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")
@@ -431,6 +435,8 @@ cluster.
                     frag_settings = self.merged
                 else:
                     frag_settings = self.defaults
+                # for job info, use self.frag.meta
+                frag_settings = frag_settings.merge(self.frag)
                 frag_settings.input.molecule.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.molecule.multiplicity = data["multiplicity"]

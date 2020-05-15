@@ -28,5 +28,12 @@
       "scsopo": 1.752,
       "scspar": 0.0
     }
+  },
+  "frag": {
+    "meta": {
+      "ncpus": 16,
+      "mem": "32gb",
+      "time": "2:00:00"
+    }
   }
 }

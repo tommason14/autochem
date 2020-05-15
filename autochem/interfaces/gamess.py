@@ -99,10 +99,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             self.input = self.merged.input
             self.job = self.merged.job
             self.meta = self.merged.meta
+            # for job settings of each fragment
+            self.frag = Settings()
+            self.frag.meta = self.merged.frag.meta
         else:
             self.input = self.defaults.input
             self.meta = self.defaults.meta
-
+            self.frag = Settings()
+            self.frag.meta = self.defaults.frag.meta
         # Split each molecule on a bond?
         if bonds_to_split is None:
             if hasattr(self, "merged") and "bonds_to_split" in self.merged:
@@ -620,11 +624,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 chdir(join(subdirectory, name))
                 write_xyz(atoms=data["atoms"], filename=name + str(".xyz"))
 
-                # re-use settings from complex
+                # re-use input file settings from complex  
                 if hasattr(self, "merged"):
                     frag_settings = self.merged
                 else:
                     frag_settings = self.defaults
+                # for job info, use self.frag.meta
+                frag_settings = frag_settings.merge(self.frag)
                 frag_settings.input.contrl.icharg = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.contrl.mult = data["multiplicity"]
