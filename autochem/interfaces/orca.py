@@ -64,14 +64,19 @@ class OrcaJob(Job):
 
         self.file_basename()
         self.get_sc()  # required to be called here as func uses sett.supercomp if provided
-
-        self.is_complex = is_complex  # creates a `complex` dir
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
+        # self.is_complex = is_complex  # creates a `complex` dir
 
         self.write_file(self.inp, filetype="inp")
         self.create_job()
         self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
+
+    def create_complex_dir_if_required(self, is_complex, make_frags):
+        self.is_complex = is_complex
+        if make_frags and not is_complex:
+            self.is_complex = True
 
     def write_file(self, data, filetype):
         """Writes the generated Orca input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 

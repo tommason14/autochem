@@ -312,7 +312,7 @@ For GAUSSIAN, options include `ncpus`, `mem` (%mem=... in the input file),
 (PBS only).
 
 To give information on job information for each fragment when choosing
-`PsiJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
+`GaussJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
 
 ## PSI4
 
@@ -470,7 +470,7 @@ For ORCA, options include `ncpus`, `mem`, `time`, `partition`, and `jobfs` (PBS
 only).
 
 To give information on job information for each fragment when choosing
-`PsiJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
+`OrcaJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.
 
 ## Inputs for all molecules in an xyz file
 

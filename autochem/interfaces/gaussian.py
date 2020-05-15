@@ -2,7 +2,7 @@ from ..core.atom import Atom
 from ..core.molecule import Molecule
 from ..core.settings import Settings, read_template
 from ..core.job import Job
-from os import mkdir, chdir, getcwd
+from os import mkdir, chdir, getcwd, system
 from os.path import exists, join
 from shutil import copyfile, move
 
@@ -26,7 +26,14 @@ class GaussJob(Job):
     For meta data, number of processors (ncpus), memory (mem) etc, use sett.meta.ncpus=46.
     """
 
-    def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None):
+    def __init__(
+        self,
+        using=None,
+        frags_in_subdir=False,
+        settings=None,
+        filename=None,
+        is_complex=None,
+    ):
         super().__init__(using)
         self.filename = filename
         self.defaults = read_template("gaussian.json")
@@ -50,9 +57,16 @@ class GaussJob(Job):
         self.xyz = using
 
         self.file_basename()
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
+
         if frags_in_subdir:
             self.create_inputs_for_fragments()
         self.write_file(self.inp, filetype="job")
+
+    def create_complex_dir_if_required(self, is_complex, make_frags):
+        self.is_complex = is_complex
+        if make_frags and not is_complex:
+            self.is_complex = True
 
     def file_basename(self):
         """
@@ -230,6 +244,18 @@ class GaussJob(Job):
             for atom in self.mol.coords
         ]
         return "\n".join(info)
+
+    def place_files_in_dir(self):
+        """
+        Move input and job files into a directory named `complex`, if self.
+        is_complex is set to True
+        """
+        complex_dir = join(getcwd(), "complex")
+        if self.is_complex:
+            if not exists(complex_dir):
+                mkdir(complex_dir)
+            system("cp *.xyz complex/complex.xyz")
+            system(f"mv {self.base_name}.inp {self.base_name}.job complex/")
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):

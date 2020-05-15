@@ -119,7 +119,7 @@ cluster.
         else:
             self.title = using[:-4]
 
-        self.is_complex = is_complex  # creates a `complex` dir
+        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
 
         self.cp = cp
         self.create_inp(counterpoise=self.cp)
@@ -127,6 +127,11 @@ cluster.
         self.place_files_in_dir()
         if frags_in_subdir:
             self.create_inputs_for_fragments()
+
+    def create_complex_dir_if_required(self, is_complex, make_frags):
+        self.is_complex = is_complex
+        if make_frags and not is_complex:
+            self.is_complex = True
 
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
