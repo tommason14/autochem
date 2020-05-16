@@ -91,7 +91,6 @@ cluster.
         settings=None,
         filename=None,
         is_complex=False,
-        run_dir=None,
         cp=False,
     ):
         super().__init__(using)
@@ -209,7 +208,7 @@ cluster.
                 # for data in self.input.run[k].values():
                 #     for k1, v1 in data.items():
                 #         res.append((k1, v1))
-        res = sorted(res, key=lambda val: val[0])  # sort by the first item of tuple, the number
+        res = sorted(res, key=lambda val: val[0])
         string = f"{res[0][1]}('{res[0][2]}'"
         for val in res[1:]:
             string += f", {val[1]}='{val[2]}'"
@@ -445,7 +444,7 @@ cluster.
                 frag_settings.input.molecule.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.molecule.multiplicity = data["multiplicity"]
-                job = PsiJob(using=name + str(".xyz"), settings=frag_settings, run_dir=True)
+                job = PsiJob(using=f"{name}.xyz", settings=frag_settings)
                 chdir(parent_dir)
                 count += 1
         if hasattr(self.mol, "ionic"):
@@ -464,5 +463,5 @@ cluster.
             frag_settings.input.molecule.charge = self.mol.ionic["charge"]
             if self.mol.ionic["multiplicity"] != 1:
                 frag_settings.input.molecule.multiplicity = self.mol.ionic["multiplicity"]
-            job = PsiJob(using="ionic.xyz", settings=frag_settings, run_dir=True)
+            job = PsiJob(using="ionic.xyz", settings=frag_settings)
             chdir(parent_dir)
