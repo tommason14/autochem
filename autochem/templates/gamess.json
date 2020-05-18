@@ -29,6 +29,12 @@
       "scspar": 0.0
     }
   },
+  "meta": {
+    "ncpus": 16,
+    "mem": "32gb",
+    "nodes": 1,
+    "time": "24:00:00"
+  },
   "frag": {
     "meta": {
       "ncpus": 16,

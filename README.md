@@ -264,6 +264,28 @@ using the command line (`chem_assist -d`), FMO jobs can also be chosen.
 Information for the SLURM/PBS schedulers are given as `sett.meta.option=choice`.
 For GAMESS, options include `ncpus`, `mem`, `partition`, `time` and `jobfs` (PBS
 only).
+If you are submitting a job on monarch or massive, a `sett.meta.nodes`
+parameter is also used. For example:
+
+```
+sett.supercomp='mas'
+sett.meta.ncpus=60
+sett.meta.mem=120
+sett.meta.nodes=2
+```
+
+produces:
+
+```
+#!/bin/env bash
+#SBATCH --job-name=opt
+#SBATCH --time=24:00:00
+#SBATCH --mem=120G
+#SBATCH --ntasks=60
+#SBATCH --cpus-per-task=1
+#SBATCH --tasks-per-node=30
+...
+```
 
 To give information on job information for each fragment when choosing
 `GamessJob(..., frags_in_subdir=True)`, use `sett.frag.meta.option=choice`.

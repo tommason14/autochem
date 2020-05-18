@@ -419,10 +419,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         Used to determine the rungms script used on gadi for FMO-SRS-MP2 runs.
         Probably will be extended in future to clean up code.
         """
-        if 'gddi' in self.input and self.input.gddi.ngroup > 1:
-            return 'fmo_ln'
+        if "gddi" in self.input and self.input.gddi.ngroup > 1:
+            return "fmo_ln"
         else:
-            return 'standard'
+            return "standard"
 
     def make_inp(self):
         inp = self.header
@@ -506,6 +506,44 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = jobfile.replace("-n 22", f"-n {22 * num_frags}")
         return jobfile
 
+    def change_monash_job(self, job):
+        """
+        Thresholds are implemented here automatically.
+        If a job is an FMO job, automatically uses 48 cpus with 24 per node,
+        unless otherwise stated in a Settings object.
+        If memory is not allocated by the user, 4 GB per cpu is used for FMO jobs. 
+        """
+        jobfile = job.replace("=name", f"={self.base_name}")
+        jobfile = jobfile.replace(" name", f" {self.base_name}")
+        # thresholds...
+        # if running fmo, automatically use two nodes if not allocated
+        # for this work, must use an even number of cpus
+        if "ncpus" in self.meta and self.meta.ncpus % 2 != 0:
+            raise AttributeError("Must allocate an even number of cpus")
+
+        ### fmo defaults if not set by user
+        if self.fmo:
+            if (
+                "meta" in self.user_settings
+                and "mem" not in self.user_settings["meta"]
+                and "cpus" not in self.user_settings["meta"]
+            ) or "meta" not in self.user_settings:
+                self.meta.ncpus = 48
+                self.meta.nodes = 2
+                self.meta.mem = 96
+
+        if "mem" in self.meta:
+            jobfile = jobfile.replace(
+                "mem=32", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
+            )
+        if "ncpus" in self.meta:
+            jobfile = jobfile.replace("ntasks=16", f"ntasks={self.meta.ncpus}")
+            jobfile = jobfile.replace(
+                "tasks-per-node=16",
+                f"tasks-per-node={int(self.meta.ncpus / self.meta.nodes)}",
+            )
+        return jobfile
+
     def change_gadi_job(self, job):
         job = job.replace("name", f"{self.base_name}")
         # can now give as number or string with gb
@@ -522,9 +560,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if "partition" in self.meta:
             job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
         # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi.ln
-        # default is set to use logical node        
-        if self._job_runtype is 'standard':
-            job = job.replace('rungms.gadi.ln', 'rungms.gadi')
+        # default is set to use logical node
+        if self._job_runtype is "standard":
+            job = job.replace("rungms.gadi.ln", "rungms.gadi")
         return job
 
     def create_job(self):
@@ -537,11 +575,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             jobfile = self.change_rjn_job(jobfile)
             jobfile = jobfile.replace("name", f"{self.base_name}")
         elif self.sc == "mon":
-            jobfile = jobfile.replace("=name", f"={self.base_name}")
-            jobfile = jobfile.replace(" name", f" {self.base_name}")
+            jobfile = self.change_monash_job(jobfile)
         elif self.sc == "mas":
-            jobfile = jobfile.replace("=name", f"={self.base_name}")
-            jobfile = jobfile.replace(" name", f" {self.base_name}")
+            jobfile = self.change_monash_job(jobfile)
         elif self.sc == "stm":
             jobfile = self.change_stm_job(jobfile)
         elif self.sc == "gadi":
@@ -624,7 +660,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 chdir(join(subdirectory, name))
                 write_xyz(atoms=data["atoms"], filename=name + str(".xyz"))
 
-                # re-use input file settings from complex  
+                # re-use input file settings from complex
                 if hasattr(self, "merged"):
                     frag_settings = self.merged
                 else:
