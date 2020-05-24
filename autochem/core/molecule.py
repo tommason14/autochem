@@ -13,9 +13,41 @@ __all__ = ['Molecule']
 
 class Molecule:
     """
-    Implementing the concept of a molecular system. Crucial is the
-    separation of molecules in a given system, with output for Fragment
-    Molecular Orbital calculations
+    Implementing the concept of a molecular system. The separation of molecules
+    in a given system is also accounted for, important for Fragment
+    Molecular Orbital calculations.
+
+    Class Attributes
+    ----------
+    Anions: dict
+        format of {'name': [atomic symbols]} for anions
+    Cations: dict
+        format of {'name': [atomic symbols]} for cations
+    Neutrals: dict
+        format of {'name': [atomic symbols]} for neutral molecules
+    Radicals: dict
+        format of {'name': [atomic symbols]} for doublet radicals
+    Dications: dict
+        format of {'name': [atomic symbols]} for ions of +2 charge
+    Anion_radicals: dict
+        format of {'name': [atomic symbols]} for negatively charged radicals
+    Cation_radicals: dict
+        format of {'name': [atomic symbols]} for positively charged radicals
+    Dication_radicals: dict
+        format of {'name': [atomic symbols]} for doubly charged radicals
+
+    Instance Attributes
+    -------------------
+    xyz: string
+        name of xyz file used to create the molecule
+    coords: list 
+        list of `Atom` objects for every atom in the molecule
+    fragments: dict
+        format of {number: subdict} created when `self.separate()` is called.
+        The subdict contains the keys: type (string), name (string),
+        atoms (list of `Atom` instances), charge (int), mult (int), 
+        elements (list of atomic symbols)
+
     """
 
     Anions = {"bromide" : ["Br"]}
