@@ -1,4 +1,5 @@
-__all__ = ['Bond']
+__all__ = ["Bond"]
+
 
 class Bond:
     """A class representing the bond between two atoms
@@ -13,16 +14,19 @@ class Bond:
 
     AROMATIC_ORDER = 1.5
 
-    def __init__(self, atom1 = None, atom2 = None, order = 1, mol = None):
+    def __init__(self, atom1=None, atom2=None, order=1, mol=None):
         self.atom1 = atom1
         self.atom2 = atom2
         self.order = order
         self.mol = mol
 
-  
-    def __str__(self):
+    def __repr__(self):
         """Returns a string representation of the bond"""
-        return f"({str(self.atom1).strip()})--{self.order:1.1f}--({str(self.atom2).strip()})"
+        return (
+            f"({str(self.atom1).strip()})--{self.order:1.1f}--({str(self.atom2).strip()})"
+        )
+
+    __str__ = __repr__
 
     def __iter__(self):
         """Iterate over the bonded atoms, ``atom1`` first"""
@@ -44,7 +48,7 @@ class Bond:
         elif atom is self.atom2:
             return self.atom1
         else:
-            return AttributeError('Bond.other_end: invalid atom used')
+            return AttributeError("Bond.other_end: invalid atom used")
 
     def resize(self, atom, length):
         """Change length of bond to length given, in angstroms"""
