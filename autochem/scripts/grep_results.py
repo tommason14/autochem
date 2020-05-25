@@ -95,9 +95,7 @@ def need_gauss_energy(calc):
     Required as Gaussian hessian calculations can be preceeded by optimisations,
     so the calc.is_hessian() call is irrelevant.
     """
-    return (
-        isinstance(calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
-    )
+    return isinstance(calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
 
 
 def energies(dir, filepath_includes):
@@ -255,8 +253,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
         {
             k: v
             for k, v in collected.items()
-            if k
-            in ("File", "Temperature [K]", "Multiplicity given", "S tot [J/(mol K)]")
+            if k in ("File", "Temperature [K]", "Multiplicity given", "S tot [J/(mol K)]")
         },
         strings=[1],
         min_width=10,
@@ -400,10 +397,6 @@ def charges(dir, output, string_to_find=None, autosave=None):
     Pulls mulliken charges from Gaussian calculations.
     Writes to `charges.csv` if desired
     """
-
-    # atom_regex = '^\s[A-Za-z]{1,2}s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$'
-    # charge_regex = '^\s[A-Za-z]{1,2}(\s*-?[0-9]*.[0-9]*){2}$'
-
     results = []
 
     files = get_files(dir, ["log"], filepath_includes=string_to_find)
@@ -436,28 +429,39 @@ def charges(dir, output, string_to_find=None, autosave=None):
             coordinates = [atom[1] for atom in res]
             mol = Molecule(atoms=coordinates)
             mol.separate()
-            print(mol.coords)
             for atom, r in zip(mol.coords, res):
-                print(r)
                 path, _, charge = r
-                results.append(
-                    [
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
-                    ]
-                )
+                try:
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            charge,
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
+                        ]
+                    )
+                except KeyError:
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            geodesic_charge,
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            "NA",
+                        ]
+                    )
 
         if file_is_gamess(logfile):
             atom_regex = "^\s[A-Za-z]{1,2}\s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$"
             charge_regex = "^\s[A-Za-z]{1,2}(\s*-?[0-9]*.[0-9]*){2}$"
             print(logfile)
-            path, filename = os.path.split(logfile)
             inpfile = logfile[:-3] + "inp"
 
             res = []
@@ -468,7 +472,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                     sym, atnum, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
                     res.append(
-                        [path, Atom(sym, coords=(x, y, z))]
+                        [logfile, Atom(sym, coords=(x, y, z))]
                     )  # new key for each coord
             found = False
             counter = 0
@@ -486,18 +490,32 @@ def charges(dir, output, string_to_find=None, autosave=None):
             mol.separate()
             for atom, r in zip(mol.coords, res):
                 path, _, geodesic_charge = r
-                results.append(
-                    [
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        geodesic_charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
-                    ]
-                )
+                try:
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            geodesic_charge,
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
+                        ]
+                    )
+                except KeyError:
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            geodesic_charge,
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            "NA",
+                        ]
+                    )
 
     # nested list (one level) to dict
     data = {}
