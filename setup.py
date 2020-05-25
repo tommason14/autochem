@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="autochem",
-    version="0.0.6",
+    version="0.0.7",
     description="Automates creation and post-processing of quantum chemical calculations",
     packages=find_packages(),
     py_modules=['autochem'],
@@ -21,7 +21,7 @@ setup(
     ],
     long_description=long_desc,
     long_description_content_type="text/markdown",
-    url="https://github.com/tommason14/monash_automation",
+    url="https://github.com/tommason14/autochem",
     author="Tom Mason",
     author_email="tom.mason14+pypi@gmail.com",
     install_requires=["pandas >= 1.0.1", "numpy >= 1.18.2", "dfply >= 0.3.3"],

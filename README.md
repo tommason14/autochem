@@ -35,6 +35,16 @@ Currently set up for the following supercomputers:
 - Monarch (Melbourne)
 - Massive (Melbourne)
 - Stampede2 (Texas)
+
+# Installation
+
+For a recent version: `pip install autochem`
+
+Otherwise, install from this git repo:
+```sh
+git clone https://github.com/tommason14/autochem
+pip install .
+```
   
 # Example Usage
 
