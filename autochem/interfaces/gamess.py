@@ -87,12 +87,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         filename=None,
         is_complex=False,
         run_dir=None,
+        keep = False,
         bonds_to_split=None,
     ):
         # Also read in bonds to split from settings object
         self.fmo = fmo  # Boolean
         self.filename = filename
         self.defaults = read_template("gamess.json")  # settings object
+        self.keep = keep # temporary files where possible
         if settings is not None:
             self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings)  # merges inp, job data
@@ -461,8 +463,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 "sadpoint": "ts",
             }
             self.base_name = options.get(
-                self.input.contrl.runtyp, "file"
-            )  # default name = file
+                self.input.contrl.runtyp.lower(), "file"
+            )
 
     def create_inp(self):
         self.input = self.input.remove_none_values()
@@ -475,7 +477,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         self.write_file(inp, filetype="inp")
 
     def get_job_template(self):
-        if "dfttyp" in self.input.contrl.keys():
+        if "dfttyp" in [x.lower() for x in self.input.contrl.keys()]:
             job_file = self.find_job(dft=True)
         else:
             job_file = self.find_job()
@@ -508,6 +510,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             num_frags = len(self.mol.fragments)
             jobfile = jobfile.replace("-N 1", f"-N {num_frags}")
             jobfile = jobfile.replace("-n 22", f"-n {22 * num_frags}")
+        if self.keep:
+            jobfile = jobfile.replace("rungms.tom", "rungms.tom.keep_files")
         return jobfile
 
     def change_monash_job(self, job):
@@ -563,10 +567,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             )
         if "partition" in self.meta:
             job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
-        # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi.ln
+        # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi
         # default is set to use logical node
         if self._job_runtype is "standard":
             job = job.replace("rungms.gadi.ln", "rungms.gadi")
+        if self.keep: # multinode
+            job = job.replace("rungms.gadi.ln", "rungms.keep_files")
         return job
 
     def create_job(self):
