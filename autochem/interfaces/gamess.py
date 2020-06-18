@@ -389,17 +389,19 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def fmo_formatting(self):
         self.fmo_meta()  # gives self.mol.indat, self.mol.charg
+        # real issue here is that fmo options aren't considered as self.input.fmo....
+        # when they should be...
         if self.input.contrl.runtyp.lower() in (
             "optimize",
             "hessian",
             "fmohess",
             "sadpoint",
         ):
-            nbody = 2
+            nbody = self.input.fmo.nbody if 'nbody' in self.input.fmo else 2
             rcorsd = 100
         else:
             # FMO3 for specs- change rcorsd to 50
-            nbody = 3
+            nbody = self.input.fmo.nbody if 'nbody' in self.input.fmo else 3
             rcorsd = 50
 
         string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
@@ -410,7 +412,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             string += f"{' '*14}{d}\n"
         string += f"     ICHARG(1)={','.join(self.fmo_charg)}\n"
         string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
-        string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
+        string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}\n"
+        if nbody == 3:
+            string += "     RITRIM(1)=50,50,50,50"
         return string
 
     @property

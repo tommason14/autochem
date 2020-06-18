@@ -799,21 +799,66 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         #   1) Define certain functional groups to have charges
         #       i.e. SO₃⁻ = -1, RNH3⁺ = +1 etc...
         #   2) Count all electrons of fragment and determine electronic charge from there?
-        # For ease of use, can define fragments and read in from a file, a la qcp?
+        # For ease of use, can define fragments and read in from file
 
         # At end of this, reassign self.fragments to be self.split_fragments, so that GAMESS
         # script can use this new fragment dict for the FMO calcs.
         
+        # molecules already read from ~/.config/autochem/molecules.txt 
+        # so can check if atoms are in the Molecules dict
         
+        # still not perfect because users have to input their fragments manually in the db
+
+        def check_frag_in_db(atoms):
+            """
+            Checking molecule database for a match, and returns charge and mult 
+            in that order.
+            If not found, returns a neutral species with no unpaired electrons.
+            """
+            anions = [sorted(v) for v in Molecule.Anions]
+            cations = [sorted(v) for v in Molecule.Cations]
+            neutrals = [sorted(v) for v in Molecule.Neutrals]
+            rads = [sorted(v) for v in Molecule.Radicals]
+            dicats = [sorted(v) for v in Molecule.Dications]
+            an_rads = [sorted(v) for v in Molecule.Anion_radicals]
+            cat_rads = [sorted(v) for v in Molecule.Cation_radicals]
+            dicat_rads = [sorted(v) for v in Molecule.Dication_radicals]
+            if atoms in anions:
+                return -1, 1
+            elif atoms in cations:
+                return 1, 1
+            elif atoms in neutrals:
+                return 0, 1
+            elif atoms in rads:
+                return 0, 2
+            elif atoms in dicats:
+                return 2, 1
+            elif atoms in an_rads:
+                return -1, 2
+            elif atoms in cat_rads:
+                return 1, 2
+            elif atoms in dicat_rads:
+                return 2, 2
+            else:
+                return 0, 1
+
+        #sort order of atoms
+        for data in self.fragments.values():
+            data['atoms'] = sorted(data['atoms'], key = lambda atom: atom.index)
+            # add number
+            for i, atom in enumerate(data['atoms']):
+                atom.number = i + 1
         # reassigning self.fragments
         self.fragments = {}
         for k, v in self.split_fragments.items():
+            atoms = sorted(v)
+            charge, mult = check_frag_in_db(atoms)
             self.fragments[k] = {
                 'type': 'frag',
                 'name': f'fragmented_{k}',
                 'atoms': v,
-                'charge': 0,  # can change
-                'multiplicity': 1, # can change
+                'charge': charge,  
+                'multiplicity': mult,
                 'elements': sort_elements(v),
                 'frag_type': 'fragmented_on_bond'
             }
