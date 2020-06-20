@@ -126,7 +126,7 @@ class OrcaJob(Job):
                 jobfile = jobfile.replace("24:00:00", self.meta.time)
 
             if hasattr(self, "meta") and "mem" in self.meta:
-                mem = self.meta.mem[:-2]
+                mem = str(self.meta.mem).lower().replace('gb', '')
                 jobfile = jobfile.replace(
                     "mem=64", f"mem={mem}"
                 )  # for m3/mon, mem=... doesn't appear for stm
@@ -134,7 +134,7 @@ class OrcaJob(Job):
             if "time" in self.meta:
                 jobfile = jobfile.replace("24:00:00", self.meta.time)
             if "mem" in self.meta:
-                mem = self.meta.mem[:-2]
+                mem = str(self.meta.mem).lower().replace('gb', '')
                 jobfile = jobfile.replace("mem=192", f"mem={mem}")
             if "partition" in self.meta:
                 jobfile = jobfile.replace(
