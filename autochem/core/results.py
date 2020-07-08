@@ -1,6 +1,6 @@
 import re
 import os
-from .utils import write_xyz, eof
+from .utils import write_xyz, eof, read_file
 
 __all__ = ['Results']
 
@@ -25,9 +25,8 @@ class Results:
         Memory-efficient reading of large log files, using a generator 
         returning lines as required
         """
-        with open(self.log, "r") as f:
-            for line in f:
-                yield line
+        for line in read_file(f):
+            yield line
 
     def get_error(self):
         print(f'{self.log}: Incomplete calculation')
