@@ -414,9 +414,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             string += f"{' '*14}{d}\n"
         string += f"     ICHARG(1)={','.join(self.fmo_charg)}\n"
         string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
-        string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}\n"
+        string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         if nbody == 3:
-            string += "     RITRIM(1)=50,50,50,50"
+            string += "\n     RITRIM(1)=50,50,50,50"
         return string
 
     @property
