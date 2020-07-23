@@ -1,5 +1,6 @@
 #!/bin/sh
 #PBS -P k96
+#PBS -l storage=scratch/k96+gdata/k96
 #PBS -l mem=96gb
 #PBS -l ncpus=48
 #PBS -l jobfs=100gb
