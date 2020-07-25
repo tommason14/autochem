@@ -13,10 +13,6 @@ __all__ = ["GamessJob"]
 
 
 class GamessJob(Job):
-    # Note the job scripts require the supercomputer to be entered, such as:
-
-    # >>> j = GamessJob(using = 'file.xyz')
-    # >>> j.supercomp = 'raijin'
     """Class for creating GAMESS input files and job scripts. 
 
     The input files generated default to geometry optimisations at the SRS-MP2/cc-pVDZ level of theory. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
@@ -261,8 +257,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
             if isinstance(value, Settings):
                 ret += " ${}".format(key.upper())
-                for el in value:
-                    ret += " {}={}".format(el.upper(), str(value[el]).upper())
+                for el, val in value.items():
+                    ret += " {}={}".format(el.upper(), str(val).upper())
                 ret += " $END\n"
             else:
                 ret += " ${} {}\n $END\n".format(key.upper(), value.upper())
@@ -281,7 +277,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # group together indat and charge for each fragment, and order according
         # to the atom indices of indat
         for frag, data in self.mol.fragments.items():
-            if frag is not "ionic":
+            if frag != "ionic":
                 if len(data["atoms"]) == 1:
                     # should add to next fragment- wasteful to run on own node
                     info[frag] = {
@@ -297,7 +293,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                             f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
                         )
                     else:
-                        # odd ordering, especially with fragmenting on a bond
+                        # odd ordering, especially when fragmenting on a bond
                         groups = []
                         frags = []
                         indices = [atom.index for atom in data["atoms"]]
@@ -569,7 +565,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
         # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi
         # default is set to use logical node
-        if self._job_runtype is "standard":
+        if self._job_runtype == "standard":
             job = job.replace("rungms.gadi.ln", "rungms.gadi")
         if self.keep: # multinode
             job = job.replace("rungms.gadi.ln", "rungms.keep_files")
