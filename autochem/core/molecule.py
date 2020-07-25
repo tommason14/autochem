@@ -116,12 +116,6 @@ class Molecule:
     Neutrals['ethane'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H']
     Neutrals['water'] = ['H', 'H', 'O']
     Neutrals['acetic_acid'] = ['C', 'H', 'H', 'H', 'C', 'O', 'O', 'H'] 
-    Neutrals['dopamine-c=c-carbonyl'] = ['O','O','C','C','C','C','C','C',
-                                         'C','C','N','H','H','H','H','H']
-    Neutrals['dopamine-c=c-hydroxyl'] = ['O','O','C','C','C','C','C','C',
-                                         'C','C','N','H','H','H','H','H','H','H']
-    Neutrals['dopamine-c-c-hydroxyl'] = ['O','O','C','C','C','C','C','C','C','C',
-                                         'N','H','H','H','H','H','H','H','H','H']
     Neutrals['benzene'] = ['C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'] 
     Neutrals['acetone'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'O']
     Neutrals['dmso'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O']
@@ -133,36 +127,14 @@ class Molecule:
     # Dopamine "monomers"
     Neutrals['dhica'] = ['O','C','C','C','N','H','C','C','C','C','C',
                          'O','H','H','H','H','C','H','O','O','H']
-    Neutrals['pezz-2a'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
+    Neutrals['indole-5,6-dione'] = ['O','O','C','C','C','C','C','C',
+                                         'C','C','N','H','H','H','H','H']
+    Neutrals['dhi'] = ['O','O','C','C','C','C','C','C',
+                                         'C','C','N','H','H','H','H','H','H','H']
+    Neutrals['reduced-dhi'] = ['O','O','C','C','C','C','C','C','C','C',
+                                         'N','H','H','H','H','H','H','H','H','H']
+    Neutrals['dop-cov-dimer'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
                            'C','C','C','C','O','H','O','O','H','O','H','H','H','H','H','H','H','H']
-    Neutrals['pezz-2b'] = ['C','C','C','C','C','C','C','C','N','O','H','O','H','H',
-                           'H','H','C','N','C','C','H','C','H','C','C','C','C','H','H','O','O','H']
-    Neutrals['pezz-2c'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2d'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2e'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2f'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','H','O','O','H','O','H','H','H','H','H','C','H','H','H']
-    Neutrals['pezz-2g'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2h'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2i'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2j'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','O','O','O','H','O','H','H','H','H','H','C','H','H','H','H']
-    Neutrals['pezz-2k'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
-                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2l'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
-                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2m'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
-                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['pezz-2n'] = ['C','C','C','C','C','C','C','N','C','C','C','C','N','C',
-                           'C','C','O','O','O','H','O','H','H','H','C','H','H','H','H','H','C','H']
-    Neutrals['quinone-methide'] = ['O','C','C','C','N','C','C','C','C','C','O','H','H','H','H','H']
-    Neutrals['quinonimine-projct'] = ['O','C','C','C','N','C','H','C','H','C','C','C','O','H','H','H']
     Neutrals['uncyclised-dopamine'] = ['C','C','C','C','C','C','H','H','H','C','C','H','H','N',
                                        'H','H','H','H','O','H','O','H']
 
@@ -595,7 +567,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         coord_list = [coord for coord in self.coords] 
         for k, frag in self.fragments.items():
             # remove neutrals
-            if frag['charge'] is 0:
+            if frag['charge'] == 0:
                 for coord in frag['atoms']:
                     # remove coord from coord_list
                     for i, atom in enumerate(coord_list):
@@ -976,7 +948,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 if atom1.symbol == atom2.symbol:
                     return False                
                 for atom in (atom1, atom2):
-                    if atom.symbol is 'H':
+                    if atom.symbol == 'H':
                         if is_imid_c2_h(atom): # exception
                             return True
                         if is_alkyl(atom):
@@ -1181,21 +1153,21 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     # ONCE ALL DEFINED ADD TO DICTIONARY
                     if not name is False and not charge is False:
                         if not mult is False and not atoms is False:
-                            if charge is 0 and mult is 1:
+                            if charge == 0 and mult == 1:
                                 Molecule.Neutrals[name] = atoms
-                            elif charge is -1 and mult is 1:
+                            elif charge == -1 and mult == 1:
                                 Molecule.Anions[name] = atoms
-                            if charge is 1 and mult is 1:
+                            if charge == 1 and mult == 1:
                                 Molecule.Cations[name] = atoms
-                            if charge is 0 and mult is 2:
+                            if charge == 0 and mult == 2:
                                 Molecule.Radicals[name] = atoms
-                            if charge is -1 and mult is 2:
+                            if charge == -1 and mult == 2:
                                 Molecule.Anion_radicals[name] = atoms
-                            if charge is 1 and mult is 2:
+                            if charge == 1 and mult == 2:
                                 Molecule.Cation_radicals[name] = atoms
-                            if charge is 2 and mult is 1:
+                            if charge == 2 and mult == 1:
                                 Molecule.Dications[name] = atoms
-                            if charge is 2 and mult is 2:
+                            if charge == 2 and mult == 2:
                                 Molecule.Dication_radicals[name] = atoms
                             # RESET VARS
                             name   = False
