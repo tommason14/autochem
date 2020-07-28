@@ -260,7 +260,9 @@ class OrcaResults(Results):
             "Gap (eV)": gap,
         }
 
-    # Vibrational analysis
+    ##########################
+    #  Vibrational analysis  #
+    ##########################
 
     @property
     def frequencies(self):
@@ -269,13 +271,12 @@ class OrcaResults(Results):
         """
         vibs = []
         found = False
-        regex = r"^\s+[0-9]+:(\s+-?[0-9]+.[0-9]+){2}\s+\((\s+-?[0-9]+.[0-9]+){3}\)"
         for line in self.read():
             if "Mode    freq (cm**-1)" in line:
                 found = True
-            if line is "\n":
+            if found and line == "\n":
                 found = False
-            if found and re.search(regex, line):
+            if found and '------' not in line:
                 vibs.append(float(line.split()[1]))
         return vibs
 
@@ -285,18 +286,84 @@ class OrcaResults(Results):
         Orca removes rotations/vibrations before printing
         """
         ints = []
-        regex = r"^\s+[0-9]+:(\s+-?[0-9]+.[0-9]+){2}\s+\((\s+-?[0-9]+.[0-9]+){3}\)"
         for line in self.read():
             if "Mode    freq (cm**-1)" in line:
                 found = True
-            if line is "\n":
+            if found and line == "\n":
                 found = False
-            if found and re.search(regex, line):
+            if found and '------' not in line:
                 ints.append(float(line.split()[2]))
         return ints
 
-    # TD-DFT Excited states
+    #####################
+    #  Thermochemistry  #
+    #####################
+    
+    @property
+    def thermo_temp(self):
+        """
+        Orca can process thermochemistry at multiple temperatures,
+        so returns a list of temperatures in Kelvin
+        """
+        temps = []
+        for line in self.eof(0.5):
+            match = re.match('THERMOCHEMISTRY AT (.*)K', line)
+            if match is not None:
+                temps.append(match.group(1) + ' K')
+        return temps
 
+    @property
+    def thermo_zpve(self):
+        """
+        Zero-point vibrational energies for each temperature are printed
+        in kJ/mol.
+        """
+        zpves = []
+        for line in self.eof(0.5):
+            if 'Zero point energy' in line:
+                zpve = float(line.split()[4])
+                zpve *= 2625.5
+                zpves.append(zpve)    return zpves
+
+    @property
+    def thermo_thermal_energy(self):
+        """
+        Thermal energies for each temperature are printed in kJ/mol.
+        Thermal energy = E(el) + E(ZPE) + E(vib) + E(rot) + E(trans)
+        """
+        energies = []
+        for line in self.eof(0.5):
+            if 'Total thermal energy' in line:
+                energy = float(line.split()[3])
+                energy *= 2625.5
+                energies.append(energy)
+        return energies
+
+    ########################
+    #  Work in progress ↓  #
+    ########################
+    
+    def thermo_summary(self):
+        """
+        Prints all thermochemical data currently extracted from orca log files.
+        """
+        print(f"Thermochemical summary for {self.log}")
+        for temp, zpve, thermal in zip(self.thermo_temp, self.thermo_zpve,
+        self.thermo_thermal_energy):
+            print(f'Data taken at {temp}:')
+            print(f"\tZPVE: {zpve} kJ/mol")
+            print(f"\tTotal thermal energy: {thermal} kJ/mol") 
+
+        print(
+        "Note:\n"
+        "    Relevant formulae printed in docstrings.\n"
+        "    Call help() on the OrcaResults class for more info."
+        )
+
+    ###########################
+    #  TD-DFT Excited states  #
+    ###########################
+    
     @property
     def td_dft_wavelengths(self):
         """
