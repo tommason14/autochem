@@ -121,7 +121,7 @@ class OrcaResults(Results):
                 found_equil = True
             if "CARTESIAN COORDINATES (ANGSTROEM)" in line:
                 found_coords = True
-            if line is "\n":
+            if line == "\n":
                 found_coords = False
             if found_coords and re.search(regex, line):
                 if len(coords) == self.num_atoms:
@@ -323,7 +323,8 @@ class OrcaResults(Results):
             if 'Zero point energy' in line:
                 zpve = float(line.split()[4])
                 zpve *= 2625.5
-                zpves.append(zpve)    return zpves
+                zpves.append(zpve)    
+        return zpves
 
     @property
     def thermo_thermal_energy(self):
@@ -380,7 +381,7 @@ class OrcaResults(Results):
                 if re.search(regex, line):
                     wave = float(line.split()[2])
                     waves_per_iter.append(wave)
-            if line is "\n":
+            if line == "\n":
                 found = False
                 if len(waves_per_iter) > 0:
                     waves.append(waves_per_iter)
@@ -403,7 +404,7 @@ class OrcaResults(Results):
                 if re.search(regex, line):
                     intensity = float(line.split()[4])
                     ints_per_iter.append(intensity)
-            if line is "\n":
+            if line == "\n":
                 found = False
                 if len(ints_per_iter) > 0:
                     ints.append(ints_per_iter)
@@ -428,7 +429,7 @@ class OrcaResults(Results):
                 if re.search(regex, line):
                     val = float(line.split()[1]) * inverse_cm_to_ev
                     vals_per_iter.append(val)
-            if line is "\n":
+            if line == "\n":
                 found = False
                 if len(vals_per_iter) > 0:
                     vals.append(vals_per_iter)
