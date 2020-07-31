@@ -69,7 +69,7 @@ def thermo_initial_geom_gauss(file):
     for line in read_file(file):
         if 'Symbolic Z-matrix:' in line:
             found_coords=True
-        if line is '\n':
+        if line == '\n':
             found_coords=False
         if found_coords and re.search(regex, line):
             sym, x, y, z = line.split()
@@ -89,7 +89,7 @@ def freq_data_gamess(file):
         for line in f:
             if 'MODE FREQ(CM**-1)  SYMMETRY  RED. MASS  IR INTENS.' in line:
                 found_region = True
-            if line is '\n':
+            if line == '\n':
                 found_region = False
             if found_region:
                 if re.search(regex, line):
