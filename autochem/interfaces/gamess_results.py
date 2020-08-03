@@ -142,7 +142,7 @@ store the iteration number.
                         rerun.append(line[:-1])  # drop newline char
                     else:
                         rerun.append(line)
-            if line is "\n":
+            if line == "\n":
                 found_equil = False
                 found_some = False
 

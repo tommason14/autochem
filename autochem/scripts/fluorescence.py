@@ -46,7 +46,7 @@ def user_choice():
         cutoff = 0
     elif choice == "2":
         cutoff = input("Collect peaks with intensity above which value? [0.1] ")
-        if cutoff is not "":
+        if cutoff != "":
             try:
                 cutoff = float(cutoff)
             except:

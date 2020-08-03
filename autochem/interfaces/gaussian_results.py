@@ -393,7 +393,7 @@ class GaussianResults(Results):
         for line in self.read():
             if "Symbolic Z-matrix:" in line:
                 found_coords = True
-            if line is "\n":
+            if line == "\n":
                 found_coords = False
             if found_coords and re.search(regex, line):
                 sym, x, y, z = line.split()

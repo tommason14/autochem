@@ -141,7 +141,7 @@ def energy_table(dir, file_name, string_to_find=None, autosave=None):
         return data
 
     def remove_column_if_all_na(data):
-        return {k: v for k, v in data.items() if not all(val is "NA" for val in v)}
+        return {k: v for k, v in data.items() if not all(val == "NA" for val in v)}
 
     for result in output:
         data = add_data(data, result["data"])
@@ -315,11 +315,11 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
 
     distance = check_user_input(
         "Distance (Å) [2]",
-        lambda item: can_cast_as_float(item) or item is "",
+        lambda item: can_cast_as_float(item) or item == "",
         "Please enter a number",
     )
 
-    if distance is "":
+    if distance == "":
         distance = 2.0
     else:
         distance = float(distance)

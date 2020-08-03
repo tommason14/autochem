@@ -72,7 +72,7 @@ class PsiResults(Results):
                 found_region = True
             if "Final Occupation" in line:
                 found_region = False
-            if found_region and line.strip() is not "":
+            if found_region and line.strip() != "":
                 energies.append(line)
         for index, line in enumerate(energies):
             if "Virtual" in line:
@@ -98,9 +98,9 @@ class PsiResults(Results):
                 found_virtual = True
             if "Final Occupation" in line:
                 found_virtual = False
-            if found_singly_occupied and line.strip() is not "":
+            if found_singly_occupied and line.strip() != "":
                 singly.append(line)
-            if found_virtual and line.strip() is not "":
+            if found_virtual and line.strip() != "":
                 virtual.append(line)
                 # save time
                 if len(virtual) > 3:

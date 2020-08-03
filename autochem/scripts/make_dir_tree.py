@@ -216,7 +216,7 @@ def make_job_files(base_dir, chem_package, settings):
     files = glob.glob("**/*xyz", recursive=True)
     for file in files:
         path, f = os.path.split(file)
-        if path is not "":  # or xyz_is_rerun(f):
+        if path != "":  # or xyz_is_rerun(f):
             subdir = base_dir + "/" + path
             print(f"Creating inputs for {file}...")
             # move to dir, make file, then move out
