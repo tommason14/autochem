@@ -429,6 +429,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             # only grid-based methods supported in FMO, so must have $DFT METHOD=GRID in file
             string += f"     DFTTYP(1)={self.input.contrl.dfttyp}\n"
         if not self.all_frags_same:
+            string += f"     INDAT(1)={self.fmo_indat[0]}\n"
+            for d in self.fmo_indat[1:]:
+                string += f"{' '*14}{d}\n"
             string += f"     ICHARG(1)={','.join(self.fmo_charg)}\n"
             string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
