@@ -103,7 +103,7 @@ sett.meta.nodemem='192GB'
 sett.meta.time='24:00:00'
 sett.meta.jobfs='400gb'
 ```
-then run from the command line using `chem_assist -d -s settings.py`, which
+then run from the command line using `autochem -d -s settings.py`, which
 takes in every xyz file in the current directory and creates jobs using
 parameters from the `Settings` object in `settings.py`. 
 Note: using this method, the `Settings` object must be called `sett`.
@@ -267,7 +267,7 @@ list of atoms that form the bonds that should be broken. (Currently
 experimental and may not work as desired.)
 
 FMO jobs are run by using the `GamessJob(..., fmo=True)` option. If running
-using the command line (`chem_assist -d`), FMO jobs can also be chosen.
+using the command line (`autochem -d`), FMO jobs can also be chosen.
 
 ### Job information
 
@@ -510,7 +510,7 @@ All calculations have the option of producing files for each molecule in the
 system. To do this, pass in a `frags_in_subdir` option. For example,
 `GamessJob('file.xyz', frags_in_subdir=True, settings=sett)`.
 
-When running from the command line with `chem_assist -d`, input files can 
+When running from the command line with `autochem -d`, input files can 
 also be created for all molecules in the system.
 
 In `Settings` files, to specify job parameters type `sett.frag.meta...`, whereas
@@ -556,47 +556,47 @@ The table below highlights the desired data and the command required:
 
 Data  | Command
 :---: | :---:
-Energies | `chem_assist -r`
-Partial charges | `chem_assist --charges`
-Fluorescence data | `chem_assist --fluorescence`
-HOMO-LUMO data | `chem_assist --homo-lumo`
-Hydrogen bond data | `chem_assist -b`
-Thermochemistry data | `chem_assist -t [temp in K] -m [multiplicity]`
-Frequencies | `chem_assist --freqs-to-csv`
+Energies | `autochem -r`
+Partial charges | `autochem --charges`
+Fluorescence data | `autochem --fluorescence`
+HOMO-LUMO data | `autochem --homo-lumo`
+Hydrogen bond data | `autochem -b`
+Thermochemistry data | `autochem -t [temp in K] -m [multiplicity]`
+Frequencies | `autochem --freqs-to-csv`
 
 Every command shown above produces a csv file. These commands also 
 allow you to give a filename with the `-o` parameter. For example, 
-`chem_assist --homo-lumo -o homo_lumo.csv` to save the data into
+`autochem --homo-lumo -o homo_lumo.csv` to save the data into
 `homo_lumo.csv`.
 
 Outputs can also be limited to files that contain
 a certain string in their path. To do this, use the `-l` flag. For example,
-`chem_assist -rl 'spec'` to return only single point energies.
+`autochem -rl 'spec'` to return only single point energies.
 
 In addition, other information can be found:
-- to look for equilibrated coordinates, use `chem_assist -e`
+- to look for equilibrated coordinates, use `autochem -e`
   - this will create either `spec` or `rerun` directories as subdirectories of
     each log file, depending on whether the optimisations have completed.
-- to print out fragments of each xyz file in a directory, use `chem_assist -p`.
+- to print out fragments of each xyz file in a directory, use `autochem -p`.
   If you wish for fragments to be grouped, use 
-  `chem_assist -p -g 'lithium-sacchrinate'`. To give a more verbose output,
+  `autochem -p -g 'lithium-sacchrinate'`. To give a more verbose output,
   showing the atom numbers of each fragment, use the `-v` flag.
-- Interaction energies can be calculated using the output of `chem_assist -r`,
+- Interaction energies can be calculated using the output of `autochem -r`,
   by using the `-c` flag.
   By default, this assumes that you want to calculate the interaction of each
   species in the cluster. i.e. cluster - sum(all_molecules).
   If you wish to calculate the interaction of neutral species i.e. cluster -
   ionic - sum(neutral), pass in a `-with-ionic` flag. For example, 
-  `chem_assist -c [results.csv] --with-ionic`. (Experimental, use with caution.)
+  `autochem -c [results.csv] --with-ionic`. (Experimental, use with caution.)
 - Gibbs free energies can also be calculated, by taking in the thermochemical
-  data of `chem_assist -t [temp in K] -m [multiplicity]`, the interaction
-  energies of `chem_assist -c [results.csv] [--with-ionic]`. (Experimental, use
+  data of `autochem -t [temp in K] -m [multiplicity]`, the interaction
+  energies of `autochem -c [results.csv] [--with-ionic]`. (Experimental, use
   with caution.)
 - Boltzmann-weighted interaction energies can be calculated using the output of
-  `chem_assist -c [results.csv] [--with-ionic]`. A grouping parameter is
+  `autochem -c [results.csv] [--with-ionic]`. A grouping parameter is
   required here, and is written as though the csv file is described as `df`, a
   `pandas.DataFrame` object. For example, 
-  `chem_assist -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
+  `autochem -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
   (Experimental, use with caution)
   
 # Adding additional molecules to the database

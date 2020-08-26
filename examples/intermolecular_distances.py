@@ -91,7 +91,7 @@ for f in sorted(files):
             bonds[f][bond] = []
            
 # Just pretty-printing in using the responsive_table() utility. 
-# Could easily just export to a csv here with ca.write_csv_from_dict(bonds) or similar
+# Could easily just export to a csv here with autochem.write_csv_from_dict(bonds) or similar
 
 files = []
 cat_an = []

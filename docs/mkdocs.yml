@@ -1,0 +1,8 @@
+site_name: autochem
+theme:
+  name: material
+nav:
+  - 'Home': 'index.md'
+  - 'GAMESS':
+    - 'Creating inputs': 'gamess_input.md'
+    - 'Post-processing': 'gamess_results.md'

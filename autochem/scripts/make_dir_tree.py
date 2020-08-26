@@ -96,9 +96,7 @@ def job_type(package, xyz, s):
     elif package == "orca":
         return OrcaJob(using=xyz, settings=s, frags_in_subdir=True)
     elif package == "gamess_no_frags":
-        return GamessJob(
-            using=xyz, frags_in_subdir=False, settings=s
-        )  # no need for is_complex here
+        return GamessJob(using=xyz, frags_in_subdir=False, settings=s)
     elif package == "psi4_no_frags":
         return PsiJob(using=xyz, frags_in_subdir=False, settings=s)
     elif package == "gamess_fmo_no_frags":
@@ -218,11 +216,15 @@ def make_job_files(base_dir, chem_package, settings):
         path, f = os.path.split(file)
         if path != "":  # or xyz_is_rerun(f):
             subdir = base_dir + "/" + path
-            print(f"Creating inputs for {file}...")
-            # move to dir, make file, then move out
             os.chdir(subdir)
-            # job_type(chem_package, subdir + '/' + f, settings)
-            job_type(chem_package, f, settings)
+            try:
+                # print(f"Creating inputs for {file}...")
+                # job = job_type(chem_package, f, settings)
+                # job.create()
+                job_type(chem_package, f, settings)
+            except AttributeError as e:
+                print(f">>> Error <<<")
+                print(e)
             os.chdir(base_dir)
 
 
@@ -305,5 +307,4 @@ def xyz_to_tree(settings):
     files = [f for f in files if not logfile_in_dir(os.path.dirname(f))]
     make_tree_and_copy(xyz_directory, files)
     make_job_files(xyz_directory, package, settings)  # xyz directory is base dir
-    # make_job_subdirs(calc_dir)
     os.chdir(xyz_directory)
