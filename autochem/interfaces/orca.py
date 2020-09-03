@@ -430,15 +430,20 @@ class OrcaJob(Job):
         - Gadi: 48
 
         Can also set manually with `sett.meta.ncpus=20`
+
+        This function also looks for a `sett.input.maxcore` option, and if present,
+        adds the line "%maxcore ___"
         """
         ret = ""
+        if hasattr(self.input, 'maxcore'):
+            ret +=f"%maxcore {self.input.maxcore}\n\n"
         if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
         elif hasattr(self, "meta") and "ncpus" in self.meta:
             ret += f"%pal\n nprocs {self.meta.ncpus}\nend"
         else:
-            ret += f"%pal\n  nprocs {OrcaJob._procs[self.sc]}\nend"
-
+            ret += f"%pal\n nprocs {OrcaJob._procs[self.sc]}\nend"
+        
         for key, val in self.input.meta.items():
             ret += f"\n\n%{key}\n{val}\nend"
         return ret
