@@ -435,7 +435,7 @@ class OrcaJob(Job):
         adds the line "%maxcore ___"
         """
         ret = ""
-        if hasattr(self.input, 'maxcore'):
+        if 'maxcore' in self.input:
             ret +=f"%maxcore {self.input.maxcore}\n\n"
         if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
