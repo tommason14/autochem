@@ -282,18 +282,7 @@ cluster.
         with open(job_file) as f:
             job = f.read()
 
-        if self.sc == "mgs":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "rjn":
-            # should alter the job time as they never need 4 hours-
-            # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "mas":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "mon":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "stm":
-            job = job.replace("name", f"{self.base_name}")
+        job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
             job = job.replace("03:00:00", self.meta.time)
@@ -337,21 +326,8 @@ cluster.
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
         job = self.get_job_template()
-        # modify
-        if self.sc == "mgs":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "rjn":
-            # should alter the job time as they never need 4 hours-
-            # walltime = max_time_for_4ip (probs have?) * num atoms / num atoms in 4IP
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "mas":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "mon":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "stm":
-            job = job.replace("name", f"{self.base_name}")
-        elif self.sc == "gadi":
-            job = job.replace("name", f"{self.base_name}")
+        
+        job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
             job = job.replace("3:00:00", self.meta.time)
