@@ -5,12 +5,12 @@ with open("README.md", "r") as f:
 
 setup(
     name="autochem",
-    version="0.1.1",
+    version="0.1.2",
     description="Automates creation and post-processing of quantum chemical calculations",
     packages=find_packages(),
     py_modules=['autochem'],
     python_requires=">=3.6",
-    scripts=["bin/chem_assist"],
+    scripts=["bin/autochem"],
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
