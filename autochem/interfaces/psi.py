@@ -68,7 +68,6 @@ class PsiJob(Job):
             # optimize('scf', dertype='energy')
             >>> self.input.run.additional = {'dertype': 'energy', 'option2': 'value'} 
             # optimize('scf', dertype='energy', 'option2'='value')
-        NOTE: An option for adding commands outside of the molecule and globals section needs to be added.                        
     
     The names of files created default to the type of calculation: optimisation (opt), single point
 energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
@@ -165,7 +164,7 @@ cluster.
         Returns a dictionary of terms- might need more than two terms on same line = nested dict """
 
         vals = search_dict_recursively(self.input.unbound)
-        if vals != {}:  # if not empty
+        if len(vals) > 0:
             self.inp.append("\n")
             for key, value in vals.items():
                 if isinstance(value, list):
@@ -263,6 +262,16 @@ cluster.
             if key not in ("charge", "multiplicity", "units", "symmetry"):
                 key = f"{key} {value}\n"
                 data.insert(-1, key)  # insert before last item
+        # add in unbound items
+        _vals = search_dict_recursively(self.input.unbound)
+        if len(_vals) > 0:
+            data.append("\n")
+            for key, value in _vals.items():
+                if isinstance(value, list):
+                    data.append(f"{key} {' '.join(value)}\n")
+                elif isinstance(value, str):
+                    data.append(f"{key} {value}\n")
+
         data.append("\nset globals {\n")
         for key, value in self.input.globals.items():
             data.append(f"    {key} {value}\n")
@@ -277,7 +286,7 @@ cluster.
         with open(cp_input, "w") as f:
             for line in data:
                 f.write(line)
-
+        # self.create_job() doesn't write to subdirs...
         job_file = self.find_job()
         with open(job_file) as f:
             job = f.read()
@@ -285,18 +294,18 @@ cluster.
         job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
-            job = job.replace("03:00:00", self.meta.time)
+            job = job.replace("3:00:00", self.meta.time)
 
         if self.sc in super().SLURM_HOSTS:
-            if "nprocs" in self.meta:
-                job = job.replace("-c 16", f"-c {self.meta.nprocs}")
+            if "ncpus" in self.meta:
+                job = job.replace("-c 16", f"-c {self.meta.ncpus}")
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
-            
+
         if self.sc in super().PBS_HOSTS:
-            if "nprocs" in self.meta:
-                job = job.replace("ncpus=16", f"ncpus={self.meta.nprocs}")
+            if "ncpus" in self.meta:
+                job = job.replace("ncpus=16", f"ncpus={self.meta.ncpus}")
             if "jobfs" in self.meta:
                 jobfs = self.meta.jobfs[:-2]  # drop units
                 job = job.replace("jobfs=10GB", f"jobfs={jobfs}GB")
