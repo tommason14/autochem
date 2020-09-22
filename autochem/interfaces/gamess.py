@@ -73,7 +73,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
     small number of atoms assigned to them. 
 
     """
-
     def __init__(
         self,
         using=None,
@@ -110,7 +109,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             if hasattr(self, "merged") and "bonds_to_split" in self.merged:
                 bonds_to_split = self.merged.bonds_to_split
 
-        super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split)
+        super().__init__(using,
+                         user_settings=settings,
+                         bonds_to_split=bonds_to_split)
 
         if "/" in using:
             # say using = ../xyz_files/file.xyz --> file
@@ -191,8 +192,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         user_assigned_charge = False
         user_assigned_mult = False
         if hasattr(self, "user_settings"):
-            user_assigned_charge = hasattr(self.user_settings, "input.contrl.icharg")
-            user_assigned_mult = hasattr(self.user_settings, "input.contrl.mult")
+            user_assigned_charge = hasattr(self.user_settings,
+                                           "input.contrl.icharg")
+            user_assigned_mult = hasattr(self.user_settings,
+                                         "input.contrl.mult")
         if self.mol.overall_charge != 0 and not user_assigned_charge:
             self.input.contrl.icharg = self.mol.overall_charge
         if self.mol.overall_mult != 1 and not user_assigned_mult:
@@ -219,12 +222,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if self.input.basis.gbasis.lower() == basis:
                     self.input.mp2.scsopo = opp
                     break
-        if self.fmo and "pcm" in self.input and not isinstance(self.input.pcm, str):
+        if self.fmo and "pcm" in self.input and not isinstance(
+                self.input.pcm, str):
             self.input.pcm.ifmo = -1
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
-
         def format_line_if_too_long(line):
             if len(line) > 55:
                 line = line.split()
@@ -290,8 +293,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             raise AttributeError(
                 f"Cannot create job file for {self.molecule_name}.\n"
                 "Some atoms not allocated to a fragment.\n"
-                "Maybe add a molecule to ~/.config/autochem/molecules.txt?"
-            )
+                "Maybe add a molecule to ~/.config/autochem/molecules.txt?")
 
         mols = []
         for data in self.mol.fragments.values():
@@ -309,7 +311,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 if len(data["atoms"]) == 1:
                     # should add to next fragment- wasteful to run on own node
                     info[frag] = {
-                        "indat": f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
+                        "indat":
+                        f"0,{data['atoms'][0].index},-{data['atoms'][0].index},",
                         "charg": str(data["charge"]),
                         "mult": str(data["multiplicity"]),
                     }
@@ -354,16 +357,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                         # Check for 'single' atom parts i.e. 43, -, 43,
                         # remove -, 43
                         for i, val in enumerate(frags):
-                            if frags[i : i + 3] == [val, "-", val]:
-                                del frags[i + 1 : i + 3]
+                            if frags[i:i + 3] == [val, "-", val]:
+                                del frags[i + 1:i + 3]
                         # Check for consecutives like 46, -, 47, remove - from middle
                         for i, val in enumerate(frags):
                             try:
-                                if (
-                                    isinstance(frags[i], int)
-                                    and isinstance(frags[i + 1], str)
-                                    and isinstance(frags[i + 2], int)
-                                ):
+                                if (isinstance(frags[i], int)
+                                        and isinstance(frags[i + 1], str)
+                                        and isinstance(frags[i + 2], int)):
                                     if frags[i + 2] == val + 1:
                                         del frags[i + 1]
                             except IndexError:
@@ -399,8 +400,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # 0.8,28
 
         sorted_info = sorted(
-            info.items(), key=lambda val: int(val[1]["indat"].split(",")[1])
-        )
+            info.items(), key=lambda val: int(val[1]["indat"].split(",")[1]))
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file
@@ -418,10 +418,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # real issue here is that fmo options aren't considered as self.input.fmo....
         # when they should be...
         if self.input.contrl.runtyp.lower() in (
-            "optimize",
-            "hessian",
-            "fmohess",
-            "sadpoint",
+                "optimize",
+                "hessian",
+                "fmohess",
+                "sadpoint",
         ):
             nbody = self.input.fmo.nbody if "nbody" in self.input.fmo else 2
             rcorsd = 100
@@ -448,7 +448,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         if nbody == 3:
-            string += "\n     RITRIM(1)=50,50,50,50"
+            if self.input.fmo.ritrim:
+                string += f"\n     RITRIM(1)={self.input.fmo.ritrim}"
+            else:
+                string += "\n     RITRIM(1)=50,50,50,50"
         return string
 
     @property
@@ -494,11 +497,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 "fmohess": "hess",
                 "sadpoint": "ts",
             }
-            self.base_name = options.get(self.input.contrl.runtyp.lower(), "file")
+            self.base_name = options.get(self.input.contrl.runtyp.lower(),
+                                         "file")
 
     def create_inp(self):
         self.input = self.input.remove_none_values()
-        self.determine_fragments()  # add fmo info to input settings, if self.fmo is True
+        self.determine_fragments(
+        )  # add fmo info to input settings, if self.fmo is True
         self.make_automatic_changes()
         self.unordered_header = self.parse_settings()
         self.order_header()  # create self.header variable
@@ -528,11 +533,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             num_frags = len(self.mol.fragments)
             jobfile = job.replace("ncpus=32", f"ncpus={16 * num_frags}")
             jobfile = jobfile.replace(
-                "mem=125gb", f"mem={4 * 16 * num_frags}gb"
-            )  # 4gb cpus
-            jobfile = jobfile.replace(
-                "jobfs=150gb", f"jobfs={4 * 16 * num_frags + 20}gb"
-            )
+                "mem=125gb", f"mem={4 * 16 * num_frags}gb")  # 4gb cpus
+            jobfile = jobfile.replace("jobfs=150gb",
+                                      f"jobfs={4 * 16 * num_frags + 20}gb")
             return jobfile
         return job
 
@@ -563,19 +566,18 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
         ### fmo defaults if not set by user
         if self.fmo:
-            if (
-                "meta" in self.user_settings
-                and "mem" not in self.user_settings["meta"]
-                and "cpus" not in self.user_settings["meta"]
-            ) or "meta" not in self.user_settings:
+            if ("meta" in self.user_settings
+                    and "mem" not in self.user_settings["meta"]
+                    and "cpus" not in self.user_settings["meta"]
+                ) or "meta" not in self.user_settings:
                 self.meta.ncpus = 48
                 self.meta.nodes = 2
                 self.meta.mem = 96
 
         if "mem" in self.meta:
             jobfile = jobfile.replace(
-                "mem=32", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
-            )
+                "mem=32",
+                f"mem={str(self.meta.mem).upper().replace('GB', '')}")
         if "ncpus" in self.meta:
             jobfile = jobfile.replace("ntasks=16", f"ntasks={self.meta.ncpus}")
             jobfile = jobfile.replace(
@@ -589,18 +591,17 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         # can now give as number or string with gb
         if "mem" in self.meta:
             job = job.replace(
-                "mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
-            )
+                "mem=96",
+                f"mem={str(self.meta.mem).upper().replace('GB', '')}")
         if "ncpus" in self.meta:
             job = job.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
         if "jobfs" in self.meta:
             job = job.replace(
-                "jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}"
-            )
+                "jobfs=100",
+                f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}")
         if "partition" in self.meta:
-            job = job.replace(
-                "#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}"
-            )
+            job = job.replace("#PBS -l wd",
+                              f"#PBS -l wd\n#PBS -q {self.meta.partition}")
         # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi
         # default is set to use logical node
         if self._job_runtype == "standard":
@@ -714,9 +715,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 frag_settings.input.contrl.icharg = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.contrl.mult = data["multiplicity"]
-                job = GamessJob(
-                    using=name + str(".xyz"), settings=frag_settings, run_dir=True
-                )
+                job = GamessJob(using=name + str(".xyz"),
+                                settings=frag_settings,
+                                run_dir=True)
                 chdir(parent_dir)
                 count += 1
 
@@ -736,7 +737,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     frag_settings = self.defaults
                 frag_settings.input.contrl.icharg = self.mol.ionic["charge"]
                 if self.mol.ionic["multiplicity"] != 1:
-                    frag_settings.input.contrl.mult = self.mol.ionic["multiplicity"]
+                    frag_settings.input.contrl.mult = self.mol.ionic[
+                        "multiplicity"]
 
                 # FMO only if more than 2 fragments
                 if complex_is_fmo:
