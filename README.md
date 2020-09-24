@@ -38,12 +38,14 @@ Currently set up for the following supercomputers:
 
 # Installation
 
-For a recent version: `pip install autochem`
+Pip install available: `pip install autochem`
+Beware, this version may have bugs and is only updated semi-regularly.
 
-Otherwise, install from this git repo:
+Recommended installation (settings files are easier to access): 
 ```sh
 git clone https://github.com/tommason14/autochem
-pip install .
+cd autochem
+sh install.sh
 ```
   
 # Example Usage
@@ -74,9 +76,9 @@ sett.input.scrf='smd,solvent=n,n-DiMethylFormamide'
 # define job scheduler parameters
 sett.meta.mem='160gb'
 sett.meta.ncpus=48
-sett.meta.nodemem='192GB'
+sett.meta.nodemem='192GB' # gaussian only
 sett.meta.time='24:00:00'
-sett.meta.jobfs='400gb'
+sett.meta.jobfs='400gb' # gadi only
 
 # create the input and job files
 GaussJob(xyz, settings=sett)
