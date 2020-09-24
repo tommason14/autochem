@@ -38,8 +38,7 @@ Currently set up for the following supercomputers:
 
 # Installation
 
-Pip install available: `pip install autochem`
-Beware, this version may have bugs and is only updated semi-regularly.
+Pip install available (may contain bugs): `pip install autochem`
 
 Recommended installation (settings files are easier to access): 
 ```sh
