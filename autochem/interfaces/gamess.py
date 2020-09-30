@@ -108,7 +108,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if bonds_to_split is None:
             if hasattr(self, "merged") and "bonds_to_split" in self.merged:
                 bonds_to_split = self.merged.bonds_to_split
-
+        if bonds_to_split is not None:
+            self.fragmenting_on_bonds = True
         super().__init__(using,
                          user_settings=settings,
                          bonds_to_split=bonds_to_split)
@@ -289,18 +290,22 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         for data in self.mol.fragments.values():
             for atom in data["atoms"]:
                 atoms_in_system.append(atom.index)
-        if len(atoms_in_system) != len(self.mol.coords):
-            raise AttributeError(
-                f"Cannot create job file for {self.molecule_name}.\n"
-                "Some atoms not allocated to a fragment.\n"
-                "Maybe add a molecule to ~/.config/autochem/molecules.txt?")
+        self.all_frags_known_to_autochem = len(atoms_in_system) == len(
+            self.mol.coords)
+        if not self.all_frags_known_to_autochem:
+            if self.fragmenting_on_bonds:
+                print('Warning: Unknown fragments found and are considered neutral with singlet multiplicity.')
+            else:
+                print(
+                f"Some or all fragments in {self.molecule_name} are unknown.\n"
+                "Try adding molecules to ~/.config/autochem/molecules.txt?")
 
         mols = []
         for data in self.mol.fragments.values():
             mols.append(data["name"].rsplit("_")[0])
         mols = list(set(mols))
         self.all_frags_same = len(mols) == 1
-        if self.all_frags_same:
+        if self.all_frags_same and self.all_frags_known_to_autochem:
             self.nacut = len(Molecule.molecules.get(mols[0]))
             return  # exit early if all molecules are the same
         info = {}
@@ -383,7 +388,6 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                                         del group[i]
                                 group = map(str, group)
                                 indat_string += ",".join(group) + ","
-
                     info[frag] = {
                         "indat": indat_string,
                         "charg": str(data["charge"]),
@@ -430,7 +434,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             nbody = self.input.fmo.nbody if "nbody" in self.input.fmo else 3
             rcorsd = 50
 
-        if self.all_frags_same:
+        # issue here when fragmenting on bonds, so the self.all_frags_known_to_autochem
+        # check is needed
+        if self.all_frags_same and self.all_frags_known_to_autochem:
             string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}"
             string += f" NACUT={self.nacut}\n"
         else:
@@ -440,7 +446,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         elif "dft" in self.input:
             # only grid-based methods supported in FMO, so must have $DFT METHOD=GRID in file
             string += f"     DFTTYP(1)={self.input.contrl.dfttyp}\n"
-        if not self.all_frags_same:
+        # if not self.all_frags_same:
+        if 'NACUT' not in string: # issue with self.all_frags_same when fragmenting
             string += f"     INDAT(1)={self.fmo_indat[0]}\n"
             for d in self.fmo_indat[1:]:
                 string += f"{' '*14}{d}\n"

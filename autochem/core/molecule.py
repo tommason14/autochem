@@ -11,6 +11,7 @@ import sys
 
 __all__ = ['Molecule']
 
+
 class Molecule:
     """
     Implementing the concept of a molecular system. The separation of molecules
@@ -50,115 +51,172 @@ class Molecule:
 
     """
 
-    Anions = {"bromide" : ["Br"]}
+    Anions = {"bromide": ["Br"]}
     Anions["chloride"] = ["Cl"]
     Anions["bf4"] = ['B', 'F', 'F', 'F', 'F']
     Anions["dca"] = ['N', 'C', 'N', 'C', 'N']
     Anions["pf6"] = ['F', 'P', 'F', 'F', 'F', 'F', 'F']
     Anions["mes"] = ['S', 'O', 'O', 'O', 'C', 'H', 'H', 'H']
-    Anions["ntf2"] = ['F', 'F', 'F', 'F', 'F', 'N', 'S', 'S'
-                        ,'O', 'O', 'O', 'O', 'C', 'C', 'F']
+    Anions["ntf2"] = [
+        'F', 'F', 'F', 'F', 'F', 'N', 'S', 'S', 'O', 'O', 'O', 'O', 'C', 'C',
+        'F'
+    ]
     Anions["bis-fsi"] = ['F', 'S', 'O', 'O', 'N', 'S', 'O', 'O', 'F']
-    Anions["tos"] = ['C', 'C', 'C', 'C', 'H', 'H', 'H', 'H',
-                        'H', 'H', 'H', 'S', 'O', 'O', 'O', 'C', 'C', 'C']
+    Anions["tos"] = [
+        'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'S', 'O', 'O',
+        'O', 'C', 'C', 'C'
+    ]
     Anions["dhp"] = ['H', 'H', 'P', 'O', 'O', 'O', 'O']
-    Anions["acetate"] = ['C','H', 'H', 'H', 'C', 'O', 'O']
-    Anions['saccharinate'] = ['C', 'C', 'C', 'C', 'C', 'C', 'H',
-                     'H', 'H', 'H', 'C', 'O', 'N', 'S', 'O', 'O']
-    Anions['triflate'] = ['C', 'F', 'F', 'F', 'S', 'O',  'O', 'O']
+    Anions["acetate"] = ['C', 'H', 'H', 'H', 'C', 'O', 'O']
+    Anions['saccharinate'] = [
+        'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'C', 'O', 'N', 'S',
+        'O', 'O'
+    ]
+    Anions['triflate'] = ['C', 'F', 'F', 'F', 'S', 'O', 'O', 'O']
 
-    Cations = {"c1mim": ['C', 'N', 'C', 'N',
-                        'C', 'C', 'C', 'H',
-                        'H', 'H', 'H', 'H',
-                        'H', 'H', 'H', 'H']}
-    Cations["c1mpyr"] = ['C', 'C', 'C', 'N', 'C', 'C', 'C',
-                            'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H', 'H', 'H', 'H', 'H']
+    Cations = {
+        "c1mim": [
+            'C', 'N', 'C', 'N', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H',
+            'H', 'H', 'H'
+        ]
+    }
+    Cations["c1mpyr"] = [
+        'C', 'C', 'C', 'N', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H'
+    ]
 
-    Cations["c2mim"] = ['C', 'N', 'C', 'N', 'C',
-                        'C', 'C', 'C', 'H', 'H',
-                        'H', 'H', 'H', 'H', 'H',
-                        'H', 'H', 'H', 'H']
-    Cations["c2mpyr"] = ['N', 'C', 'C', 'C', 'C', 'C',
-                        'C', 'C', 'H', 'H', 'H', 'H', 'H',
-                        'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                        'H', 'H', 'H', 'H']
+    Cations["c2mim"] = [
+        'C', 'N', 'C', 'N', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H'
+    ]
+    Cations["c2mpyr"] = [
+        'N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'
+    ]
 
-    Cations["c3mim"] = ['N', 'C', 'N', 'C', 'C', 'C', 'C', 'H',
-                            'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H', 'H', 'H', 'H']
-    Cations["c3mpyr"] = ['N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
-                            'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H']
+    Cations["c3mim"] = [
+        'N', 'C', 'N', 'C', 'C', 'C', 'C', 'H', 'C', 'C', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'
+    ]
+    Cations["c3mpyr"] = [
+        'N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'
+    ]
 
-    Cations["c4mim"] = ['C', 'N', 'C', 'C', 'N', 'C', 'C', 'H', 'C', 'C',
-                            'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H', 'H', 'H', 'H']
-    Cations["c4mpyr"] = ['N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C',
-                            'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
-                            'H', 'H', 'H']
-    Cations['choline'] = ['N', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
-                        'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H',
-                        'C', 'H', 'H', 'O', 'H']
+    Cations["c4mim"] = [
+        'C', 'N', 'C', 'C', 'N', 'C', 'C', 'H', 'C', 'C', 'C', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'
+    ]
+    Cations["c4mpyr"] = [
+        'N', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H',
+        'H', 'H'
+    ]
+    Cations['choline'] = [
+        'N', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C',
+        'H', 'H', 'C', 'H', 'H', 'O', 'H'
+    ]
     Cations['lithium'] = ['Li']
     Cations['sodium'] = ['Na']
     Cations['potassium'] = ['K']
-    Cations['styrene-trimethylammonium'] = ['H','C','H','C','H','C','C','H','C','H','C','C','H',
-                                            'C','H','C','H','H','N','C','H','H','H','C','H','H',
-                                            'H','C','H','H','H']
-    Cations['maotmac'] = ['C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H','H','N',
-                           'C','H','H','H','C','H','H','H','C','H','H','H']    
+    Cations['styrene-trimethylammonium'] = [
+        'H', 'C', 'H', 'C', 'H', 'C', 'C', 'H', 'C', 'H', 'C', 'C', 'H', 'C',
+        'H', 'C', 'H', 'H', 'N', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C',
+        'H', 'H', 'H'
+    ]
+    Cations['maotmac'] = [
+        'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'O', 'O', 'C', 'H', 'H',
+        'C', 'H', 'H', 'N', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'H',
+        'H', 'H'
+    ]
 
-    Neutrals = {"nh3" : ['N', 'H', 'H', 'H']}
+    Neutrals = {"nh3": ['N', 'H', 'H', 'H']}
     Neutrals['hf'] = ['H', 'F']
     Neutrals['methane'] = ['C', 'H', 'H', 'H', 'H']
     Neutrals['ethane'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H']
     Neutrals['water'] = ['H', 'H', 'O']
-    Neutrals['acetic_acid'] = ['C', 'H', 'H', 'H', 'C', 'O', 'O', 'H'] 
-    Neutrals['benzene'] = ['C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'] 
+    Neutrals['acetic_acid'] = ['C', 'H', 'H', 'H', 'C', 'O', 'O', 'H']
+    Neutrals['benzene'] = [
+        'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H'
+    ]
     Neutrals['acetone'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'O']
     Neutrals['dmso'] = ['C', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O']
-    Neutrals['amps'] = ['H','C','H','C','H','C','O','N','H','C','C','H','H','H',
-                        'C','H','H','H','C','H','H','S','O','H','O','O']
-    Neutrals['sty-sulfonate-hydrogenated'] = ['H','C','C','H','H','C','C','H','C',
-                                              'H','C','C','H','C','H','S','O','H','O','O']
-    
+    Neutrals['amps'] = [
+        'H', 'C', 'H', 'C', 'H', 'C', 'O', 'N', 'H', 'C', 'C', 'H', 'H', 'H',
+        'C', 'H', 'H', 'H', 'C', 'H', 'H', 'S', 'O', 'H', 'O', 'O'
+    ]
+    Neutrals['sty-sulfonate-hydrogenated'] = [
+        'H', 'C', 'C', 'H', 'H', 'C', 'C', 'H', 'C', 'H', 'C', 'C', 'H', 'C',
+        'H', 'S', 'O', 'H', 'O', 'O'
+    ]
+
     # Dopamine "monomers"
-    Neutrals['dhica'] = ['O','C','C','C','N','H','C','C','C','C','C',
-                         'O','H','H','H','H','C','H','O','O','H']
-    Neutrals['indole-5,6-dione'] = ['O','O','C','C','C','C','C','C',
-                                         'C','C','N','H','H','H','H','H']
-    Neutrals['dhi'] = ['O','O','C','C','C','C','C','C',
-                                         'C','C','N','H','H','H','H','H','H','H']
-    Neutrals['reduced-dhi'] = ['O','O','C','C','C','C','C','C','C','C',
-                                         'N','H','H','H','H','H','H','H','H','H']
-    Neutrals['dop-cov-dimer'] = ['C','C','C','C','C','C','C','C','N','C','C','C','C','N',
-                           'C','C','C','C','O','H','O','O','H','O','H','H','H','H','H','H','H','H']
-    Neutrals['uncyclised-dopamine'] = ['C','C','C','C','C','C','H','H','H','C','C','H','H','N',
-                                       'H','H','H','H','O','H','O','H']
+    Neutrals['dhica'] = [
+        'O', 'C', 'C', 'C', 'N', 'H', 'C', 'C', 'C', 'C', 'C', 'O', 'H', 'H',
+        'H', 'H', 'C', 'H', 'O', 'O', 'H'
+    ]
+    Neutrals['indole-5,6-dione'] = [
+        'O', 'O', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'H', 'H', 'H',
+        'H', 'H'
+    ]
+    Neutrals['dhi'] = [
+        'O', 'O', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H'
+    ]
+    Neutrals['reduced-dhi'] = [
+        'O', 'O', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H', 'H', 'H'
+    ]
+    Neutrals['dop-cov-dimer'] = [
+        'C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'N', 'C', 'C', 'C', 'C', 'N',
+        'C', 'C', 'C', 'C', 'O', 'H', 'O', 'O', 'H', 'O', 'H', 'H', 'H', 'H',
+        'H', 'H', 'H', 'H'
+    ]
+    Neutrals['uncyclised-dopamine'] = [
+        'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'C', 'C', 'H', 'H', 'N',
+        'H', 'H', 'H', 'H', 'O', 'H', 'O', 'H'
+    ]
 
-
-    Radicals = {'amps-dimer': ['H','O','S','O','O','C','H','H','C','C','H','H','H','C','H','H','H','N',
-                               'H','C','O','C','H','H','C','H','H','C','H','H','C','H','C','O','N','H',
-                               'C','C','H','H','H','C','H','H','C','H','H','H','S','O','O','O','H']}
-    Radicals['divinyl-benzene'] = ['C','C','H','H','H','H','C','C','H','C','H','C','H','C','H','C','C','H','C','H','H']
-    Radicals['ethylene-glycol-dimethacrylate'] = ['C','C','C','H','H','H','H','H','H','C','O','O','C','H','H','C','H',
-                                                 'H','O','C','O','C','C','H','H','C','H','H','H']
-    Radicals['glycerol-dimethacrylate'] = ['H','C','C','C','H','H','H','H','H','C','O','O','C','H','H','C','H',
-                                           'O','H','C','H','H','O','C','O','C','C','H','H','C','H','H','H']    
-    Radicals['sty-sulf-dimer-hydrogenated'] = ['H','O','S','O','O','C','C','H','C','H','C','H','C','H','C','C','H',
-                                  'C','H','H','C','H','H','C','H','C','C','H','C','H','C','H','C','H',
-                                  'C','S','O','H','O','O','H']
+    Radicals = {
+        'amps-dimer': [
+            'H', 'O', 'S', 'O', 'O', 'C', 'H', 'H', 'C', 'C', 'H', 'H', 'H',
+            'C', 'H', 'H', 'H', 'N', 'H', 'C', 'O', 'C', 'H', 'H', 'C', 'H',
+            'H', 'C', 'H', 'H', 'C', 'H', 'C', 'O', 'N', 'H', 'C', 'C', 'H',
+            'H', 'H', 'C', 'H', 'H', 'C', 'H', 'H', 'H', 'S', 'O', 'O', 'O',
+            'H'
+        ]
+    }
+    Radicals['divinyl-benzene'] = [
+        'C', 'C', 'H', 'H', 'H', 'H', 'C', 'C', 'H', 'C', 'H', 'C', 'H', 'C',
+        'H', 'C', 'C', 'H', 'C', 'H', 'H'
+    ]
+    Radicals['ethylene-glycol-dimethacrylate'] = [
+        'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'C', 'O', 'O', 'C', 'H',
+        'H', 'C', 'H', 'H', 'O', 'C', 'O', 'C', 'C', 'H', 'H', 'C', 'H', 'H',
+        'H'
+    ]
+    Radicals['glycerol-dimethacrylate'] = [
+        'H', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'C', 'O', 'O', 'C', 'H',
+        'H', 'C', 'H', 'O', 'H', 'C', 'H', 'H', 'O', 'C', 'O', 'C', 'C', 'H',
+        'H', 'C', 'H', 'H', 'H'
+    ]
+    Radicals['sty-sulf-dimer-hydrogenated'] = [
+        'H', 'O', 'S', 'O', 'O', 'C', 'C', 'H', 'C', 'H', 'C', 'H', 'C', 'H',
+        'C', 'C', 'H', 'C', 'H', 'H', 'C', 'H', 'H', 'C', 'H', 'C', 'C', 'H',
+        'C', 'H', 'C', 'H', 'C', 'H', 'C', 'S', 'O', 'H', 'O', 'O', 'H'
+    ]
     Dications = dict()
     Anion_radicals = dict()
-    Cation_radicals = dict()   
+    Cation_radicals = dict()
 
-    Dication_radicals = {'maotmac-dimer-hydrogenated-rad' : 
-        ['C','N','H','H','H','C','H','H','H','C','H','H','H','C','H','H',
-         'C','H','H','O','C','O','C','C','H','H','H','C','H','H','C','C',
-         'H','H','H','C','H','H','H','C','O','O','C','H','H','C','H','H',
-         'N','C','H','H','H','C','H','H','H','C','H','H','H']
+    Dication_radicals = {
+        'maotmac-dimer-hydrogenated-rad': [
+            'C', 'N', 'H', 'H', 'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H',
+            'C', 'H', 'H', 'C', 'H', 'H', 'O', 'C', 'O', 'C', 'C', 'H', 'H',
+            'H', 'C', 'H', 'H', 'C', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H',
+            'C', 'O', 'O', 'C', 'H', 'H', 'C', 'H', 'H', 'N', 'C', 'H', 'H',
+            'H', 'C', 'H', 'H', 'H', 'C', 'H', 'H', 'H'
+        ]
     }
 
     molecules = {
@@ -170,9 +228,13 @@ class Molecule:
         **Anion_radicals,
         **Cation_radicals,
         **Dication_radicals
-        }
+    }
 
-    def __init__(self, using = None, atoms = None, group = None, bonds_to_split = None):
+    def __init__(self,
+                 using=None,
+                 atoms=None,
+                 group=None,
+                 bonds_to_split=None):
         self.check_user_additions()
         if using is not None:
             self.xyz = using
@@ -184,14 +246,14 @@ class Molecule:
                 self.coords = []
                 for atom in atoms:
                     sym, *coords = atom
-                    a = Atom(symbol = sym, coords = coords)
+                    a = Atom(symbol=sym, coords=coords)
                     self.coords.append(a)
-            else: 
+            else:
                 self.coords = atoms
-    
-        self.frags_grouped_if_desired = False    
+
+        self.frags_grouped_if_desired = False
         if group is not None:
-            self.group_together = group    
+            self.group_together = group
 
         self.split_on_bonds = False
         if bonds_to_split is not None:
@@ -202,8 +264,8 @@ class Molecule:
             atom.index = index + 1
 
         if hasattr(self, 'coords'):
-        # self.complex used in input files
-        # assuming a neutral closed shell system as the default
+            # self.complex used in input files
+            # assuming a neutral closed shell system as the default
             self.complex = {
                 "type": "complex",
                 "name": "complex",
@@ -219,8 +281,8 @@ class Molecule:
         if not hasattr(self, 'fragments'):
             return f'Molecule of {len(self.coords)} atoms. Elements: {els}'
         return self._repr()
-    
-    def _repr(self): 
+
+    def _repr(self):
         """
         Repr for system after fragmentation
         """
@@ -238,7 +300,7 @@ class Molecule:
     def __iter__(self):
         return iter(self.coords)
 
-    def translate(self, vector, frag = None):
+    def translate(self, vector, frag=None):
         """
         Apply the vector to every atom in the system.
         Note that if fragmented, can specify which fragment to translate,
@@ -246,14 +308,14 @@ class Molecule:
         """
         for atom in self.coords:
             atom.translate(vector)
-        
-        if frag is not None: 
+
+        if frag is not None:
             if not hasattr(self, 'fragments'):
                 raise AttributeError('Must run self.separate() first')
             for atom in self.fragments[frag]:
                 atom.translate(vector)
 
-    def formula(self, as_dict = False, as_latex = False, as_html = False):
+    def formula(self, as_dict=False, as_latex=False, as_html=False):
         """
         Returns the molecular format in a variety of formats using keyword 
         arguments:
@@ -265,7 +327,7 @@ class Molecule:
         no formatting i.e. C8H18
         """
 
-        formula  = {}
+        formula = {}
         for atom in self.coords:
             if atom.symbol not in formula:
                 formula[atom.symbol] = 1
@@ -297,7 +359,7 @@ class Molecule:
         formula = self.formula(as_dict=True)
         mass = 0
         for element, number in formula.items():
-            element = Atom(element) # PT.x requires Atom objects
+            element = Atom(element)  # PT.x requires Atom objects
             mass += PT.get_mass(element) * number
         return f"{mass:.2f} g mol⁻¹"
 
@@ -311,7 +373,7 @@ class Molecule:
             self.fragment_on_bonds()
         self.overall_charge = Molecule.get_charge(self.fragments)
         self.overall_mult = Molecule.get_multiplicity(self.fragments)
-     
+
     def read_xyz(self, using):
         """
         Reads coordinates of an xyz file and return a list of |Atom| objects,
@@ -323,10 +385,12 @@ class Molecule:
                 line = coord.split()
                 for val in PT.ptable.values():
                     if line[0] == val[0]:
-                        coords.append(Atom(line[0], coords = tuple(float(i) for i in line[1:4])))
+                        coords.append(
+                            Atom(line[0],
+                                 coords=tuple(float(i) for i in line[1:4])))
         return coords
 
-    def write_xyz(self, atoms, filename = None):
+    def write_xyz(self, atoms, filename=None):
         """
         Writes an xyz file using a list of |Atom| instances
         """
@@ -336,17 +400,19 @@ class Molecule:
             with open(filename, "w") as f:
                 f.write(str(len(atoms)) + '\n\n')
                 for atom in atoms:
-                    f.write(f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n")
+                    f.write(
+                        f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n"
+                    )
 
     def check_db(self):
         """
         Checks fragments for a match in the database
         """
 
-        symbols = {} 
+        symbols = {}
         for frag, atoms in self.mol_dict.items():
             symbols[frag] = [atom.symbol for atom in atoms]
- 
+
         def check_dict(molecules_dict, symbols_dict, db):
             """
             Checking molecule database for a match, and returning the required attributes- 
@@ -385,37 +451,31 @@ class Molecule:
                 mult = 2
                 mol_type = 'dication-radical'
 
-
             for name, atom_list in db.items():
                 for sym, molecule in symbols_dict.items():
-                    if sorted(molecule) == sorted(atom_list): 
+                    if sorted(molecule) == sorted(atom_list):
                         data = {
-                                "type": mol_type,
-                                "name" : name,
-                                "atoms": self.mol_dict[sym],
-                                "charge": charge,
-                                "multiplicity": mult,
-                                "elements": sort_elements(self.mol_dict[sym]),
-                                "frag_type": "frag"
-                            }
+                            "type": mol_type,
+                            "name": name,
+                            "atoms": self.mol_dict[sym],
+                            "charge": charge,
+                            "multiplicity": mult,
+                            "elements": sort_elements(self.mol_dict[sym]),
+                            "frag_type": "frag"
+                        }
                         molecules_dict[sym] = data
             return molecules_dict
 
         self.fragments = {}
-        for db in (
-            Molecule.Cations,
-            Molecule.Anions,
-            Molecule.Neutrals,
-            Molecule.Radicals,
-            Molecule.Anion_radicals,
-            Molecule.Cation_radicals,
-            Molecule.Dications,
-            Molecule.Dication_radicals):
+        for db in (Molecule.Cations, Molecule.Anions, Molecule.Neutrals,
+                   Molecule.Radicals, Molecule.Anion_radicals,
+                   Molecule.Cation_radicals, Molecule.Dications,
+                   Molecule.Dication_radicals):
             self.fragments = check_dict(self.fragments, symbols, db)
 
         #sort order of atoms
         for data in self.fragments.values():
-            data['atoms'] = sorted(data['atoms'], key = lambda atom: atom.index)
+            data['atoms'] = sorted(data['atoms'], key=lambda atom: atom.index)
             # add number
             for i, atom in enumerate(data['atoms']):
                 atom.number = i + 1
@@ -425,9 +485,11 @@ class Molecule:
         Molecule numbers (Mol: _) are sometimes not in a numerical order. 
         This function takes the molecules and gives them a number from 1 to the 
         number of fragments
-        """ 
+        """
         current = set([atom.mol for atom in self.coords])
-        convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)} # old: new
+        convert_keys = {k: v
+                        for k, v in enumerate(self.fragments.keys(), 1)
+                        }  # old: new
         frags = list(self.fragments.items())
         self.fragments.clear()
         for k, v in frags:
@@ -438,19 +500,19 @@ class Molecule:
                         atom.mol = key
 
     def give_atoms_a_fragment_name(self):
-        for num, frag in self.fragments.items(): 
+        for num, frag in self.fragments.items():
             for atom in frag['atoms']:
-                atom.fragment = f"{frag['name']}_{num}"   
-    
+                atom.fragment = f"{frag['name']}_{num}"
+
     def sort_fragments_by_index(self):
         """
         Sorts self.fragments according to the index of the atoms in each fragment.
         Sorts by the index of the first atom in each fragment
         """
-        frags = [(k, v) for k,v in self.fragments.items()]
-        frags = sorted(frags, key = lambda kv: kv[1]['atoms'][0].index)
-        self.fragments = {k : v for k, v in frags}        
-        
+        frags = [(k, v) for k, v in self.fragments.items()]
+        frags = sorted(frags, key=lambda kv: kv[1]['atoms'][0].index)
+        self.fragments = {k: v for k, v in frags}
+
     def print_frags(self):
         print()
         for frag, data in self.fragments.items():
@@ -462,7 +524,6 @@ class Molecule:
         Called if fragments are not assigned correctly- user then inputs 
         the fragments manually
         """
-
         def get_manual_assignments():
             manual = input("Fragments: ")
             manual_split = manual.split(',')
@@ -479,34 +540,34 @@ class Molecule:
                     end = int(frag[:-1])
                 if start != 0 and end != 0:
                     frag_indices.append((start, end))
-                    start, end  = 0, 0 # start looking again
+                    start, end = 0, 0  # start looking again
                 elif start != 0 and end == 0:
                     # found first atom
                     pass
                 else:
-                    frag_indices.append(int(frag)) # single number
+                    frag_indices.append(int(frag))  # single number
 
-            return frag_indices 
+            return frag_indices
             # [(start of frag, end of frag), single atom, (...), (...)]
 
-        
         def update_mol_dictionary(frag_indices):
             for molecule, item in enumerate(frag_indices):
                 num = molecule + 1
-                if isinstance(item, tuple): # if molecule (1, 21) --> choline
+                if isinstance(item, tuple):  # if molecule (1, 21) --> choline
                     start, end = item
                     for ind in range(start, end + 1):
                         self.coords[ind - 1].index = ind
                         self.coords[ind - 1].mol = num
-                else: # single-atom 'molecule' i.e. Li, Na, K, Cl, Br
+                else:  # single-atom 'molecule' i.e. Li, Na, K, Cl, Br
                     self.coords[item - 1].index = item
                     self.coords[item - 1].mol = num
-        
+
             # reassign mol dict, check db
             self.mol_dict.clear()
             mols = set([atom.mol for atom in self.coords])
             for mol in mols:
-                self.mol_dict[mol] = Molecule(atoms = [atom for atom in self.coords if atom.mol == mol])
+                self.mol_dict[mol] = Molecule(
+                    atoms=[atom for atom in self.coords if atom.mol == mol])
             self.check_db()
             self.print_frags()
 
@@ -543,18 +604,16 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                         if atom_i not in atom_j.connected_atoms:
                             atom_j.connected_atoms.append(atom_i)
 
-
     def add_ionic_network(self):
         """
         Adds one item to self.fragments- removing all neutral species, 
         along with the one-atom ions
         """
-
         def ionic_mol_properties(coords):
             """
             Returns charge and multiplicity of ionic network
             """
-            ionic_mol = Molecule(atoms = coords)
+            ionic_mol = Molecule(atoms=coords)
             # causing errors here I think, when separating and using for input
             ionic_mol.separate()
             # instead, just use the mol assignments from the original coords list
@@ -564,7 +623,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
             return charge, multiplicity
 
-        coord_list = [coord for coord in self.coords] 
+        coord_list = [coord for coord in self.coords]
         for k, frag in self.fragments.items():
             # remove neutrals
             if frag['charge'] == 0:
@@ -585,7 +644,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             # charge, multiplicity = ionic_mol_properties(coord_list)
             self.ionic = {
                 "type": 'ionic',
-                "name" : 'ionic',
+                "name": 'ionic',
                 "atoms": coord_list,
                 "charge": 0,
                 "multiplicity": 1,
@@ -644,7 +703,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 return 'anion'
             else:
                 return f'charge: {charge}'
-    
+
         groups = self.group_together.split('-')
         frags = [frag['name'] for frag in self.fragments.values()]
         merge_keys = []
@@ -659,19 +718,21 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         merged_elements = []
         for key in merge_keys:
             merged_atoms += self.fragments[key]['atoms']
-            merged_charge += self.fragments[key]['charge'] 
+            merged_charge += self.fragments[key]['charge']
             merged_elements += self.fragments[key]['elements']
         merged_elements = set(merged_elements)
-        merged_mult = 2 if any(frag['multiplicity'] == 2 
-        for frag in self.fragments.values()) else 1
-        merged_mol_type = merged_type(merged_charge) 
-        self.fragments[new_key] = {'type': 'merged', # was merged_mol_type
-                                   'name': self.group_together,
-                                   'atoms': merged_atoms,
-                                   'charge': merged_charge,
-                                   'multiplicity': merged_mult,
-                                   'elements': merged_elements,
-                                   'frag_type': 'frag'}
+        merged_mult = 2 if any(frag['multiplicity'] == 2
+                               for frag in self.fragments.values()) else 1
+        merged_mol_type = merged_type(merged_charge)
+        self.fragments[new_key] = {
+            'type': 'merged',  # was merged_mol_type
+            'name': self.group_together,
+            'atoms': merged_atoms,
+            'charge': merged_charge,
+            'multiplicity': merged_mult,
+            'elements': merged_elements,
+            'frag_type': 'frag'
+        }
         for key in merge_keys:
             del self.fragments[key]
         self.fragments_after_merge = self.fragments
@@ -687,14 +748,17 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         self.check_db()
         self.renumber_molecules()
         self.sort_fragments_by_index()
-        if not self.all_atoms_assigned: #or not self.all_fragments_known: # fix for stampede check_hf_v_mp2 geodesics
-            print(f"{len(self.fragments)} fragments found, some atoms unaccounted for...")
+        if not self.all_atoms_assigned:  #or not self.all_fragments_known: # fix for stampede check_hf_v_mp2 geodesics
+            print(
+                f"{len(self.fragments)} fragments found, some atoms unaccounted for..."
+            )
             all_assigned = False
             while not all_assigned:
                 self.reassign_frags_manually()
                 if self.all_atoms_assigned:
                     all_assigned = True
-        if hasattr(self, 'group_together') and not self.frags_grouped_if_desired:
+        if hasattr(self,
+                   'group_together') and not self.frags_grouped_if_desired:
             self.group_frags_together()
         self.give_atoms_a_fragment_name()
         self.add_ionic_network()
@@ -718,14 +782,20 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 connections[atom2].remove(atom1)
             return connections
 
-        connections = {atom.index : [con.index for con in atom.connected_atoms] for atom in self}
+        connections = {
+            atom.index: [con.index for con in atom.connected_atoms]
+            for atom in self
+        }
         # apply split
         for bond in self.bonds_to_split:
             a1, a2 = bond
             connections = remove_connection(connections, a1, a2)
 
         # convert indices back to atom objects
-        connections = {k: [self.coords[i - 1] for i in v] for k,v in connections.items()}
+        connections = {
+            k: [self.coords[i - 1] for i in v]
+            for k, v in connections.items()
+        }
 
         # now have {original_atom: [connections_to_original_atom]}
         # but need include original_atom in that dict
@@ -740,14 +810,18 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             # for connections to any of current atoms in fragment
             for index2, connected2 in connections.items():
                 if index != index2:
-                    if any(atom in connected2 for atom in connected_atoms): # frags are connected
+                    if any(atom in connected2
+                           for atom in connected_atoms):  # frags are connected
                         # add the rest of connected2 into connected_atoms and empty 'old' frag
                         for a2 in connected2:
                             if a2 not in connected_atoms:
                                 connected_atoms.append(a2)
                         connections[index2] = []
 
-        connections = {k: sorted(v, key=lambda atom: atom.index) for k,v in connections.items() if len(v) != 0}
+        connections = {
+            k: sorted(v, key=lambda atom: atom.index)
+            for k, v in connections.items() if len(v) != 0
+        }
 
         # redefine molecule number for each atom, starting from 1
         redefined = {}
@@ -775,10 +849,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         # At end of this, reassign self.fragments to be self.split_fragments, so that GAMESS
         # script can use this new fragment dict for the FMO calcs.
-        
-        # molecules already read from ~/.config/autochem/molecules.txt 
+
+        # molecules already read from ~/.config/autochem/molecules.txt
         # so can check if atoms are in the Molecules dict
-        
+
         # still not perfect because users have to input their fragments manually in the db
 
         def check_frag_in_db(atoms):
@@ -816,25 +890,24 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         #sort order of atoms
         for data in self.fragments.values():
-            data['atoms'] = sorted(data['atoms'], key = lambda atom: atom.index)
+            data['atoms'] = sorted(data['atoms'], key=lambda atom: atom.index)
             # add number
             for i, atom in enumerate(data['atoms']):
                 atom.number = i + 1
         # reassigning self.fragments
         self.fragments = {}
         for k, v in self.split_fragments.items():
-            atoms = sorted(v)
+            atoms = sorted(v, key=lambda atom: atom.index)
             charge, mult = check_frag_in_db(atoms)
             self.fragments[k] = {
                 'type': 'frag',
                 'name': f'fragmented_{k}',
                 'atoms': v,
-                'charge': charge,  
+                'charge': charge,
                 'multiplicity': mult,
                 'elements': sort_elements(v),
                 'frag_type': 'fragmented_on_bond'
             }
-
 
     def distance_matrix(self):
         """
@@ -847,7 +920,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         for i, atom_i in enumerate(self.coords):
             for j, atom_j in enumerate(self.coords):
-                    matrix[i, j] = atom_i.distance_to(atom_j)
+                matrix[i, j] = atom_i.distance_to(atom_j)
         return matrix
 
     def split(self):
@@ -864,7 +937,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             for j, atom_j in enumerate(self.coords):
                 if i != j:
                     vdw_dist = PT.get_vdw(atom_i) + PT.get_vdw(atom_j)
-                    if dists[i,j] < vdw_dist:
+                    if dists[i, j] < vdw_dist:
                         # connected
                         connected = True
                         if atom_i not in atom_j.connected_atoms:
@@ -892,9 +965,12 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 mol_count += 1
 
         nums = set([atom.mol for atom in self.coords])
-        self.mol_dict = {val: [atom for atom in self.coords if atom.mol == val] for val in nums}
+        self.mol_dict = {
+            val: [atom for atom in self.coords if atom.mol == val]
+            for val in nums
+        }
         for mol in self.mol_dict.values():
-            mol.sort(key = lambda atom: atom.index)
+            mol.sort(key=lambda atom: atom.index)
 
     def find_h_bonds(self, distance=2.0):
         """
@@ -902,22 +978,21 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         connected atoms and bond lengths of less than 2 Å, and bond angles of
         45° either side of linear. Users can also provide an optional distance.
         """
-
         def find_bonds(self):
-
             def is_imid_c2_h(atom):
                 """
                 Checks if a C2-H proton of imidazolium is found
                 """
                 connectors = {}
                 if atom.symbol == 'H':
-                    for alpha in atom.connected_atoms: # alpha = one atom away, beta = two away
+                    for alpha in atom.connected_atoms:  # alpha = one atom away, beta = two away
                         for beta in alpha.connected_atoms:
                             if beta.symbol not in connectors:
                                 connectors[beta.symbol] = 1
                             else:
                                 connectors[beta.symbol] += 1
-                            if alpha.symbol == 'C' and 'N' in connectors and connectors['N'] == 2:
+                            if alpha.symbol == 'C' and 'N' in connectors and connectors[
+                                    'N'] == 2:
                                 return True
                 return False
 
@@ -937,19 +1012,19 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 function ignores any of those interactions.
                 """
                 # remove alkyl proton interactions
-                # need the atom.symbol == line, 
+                # need the atom.symbol == line,
                 # otherwise c-o --- h-o hydrogen
-                # bonds will fail (as c is not in 
+                # bonds will fail (as c is not in
                 # h-bonders)
                 h_bonders = ['O', 'F', 'H', 'N']
 
                 # can't have two hydrogens for example
                 # if all(atom.symbol is 'H' for atom in (atom1, atom2)):
                 if atom1.symbol == atom2.symbol:
-                    return False                
+                    return False
                 for atom in (atom1, atom2):
                     if atom.symbol == 'H':
-                        if is_imid_c2_h(atom): # exception
+                        if is_imid_c2_h(atom):  # exception
                             return True
                         if is_alkyl(atom):
                             return False
@@ -958,7 +1033,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                         for a in atom.connected_atoms:
                             if a.symbol not in h_bonders:
                                 return False
-                            
+
                 return True
 
             def within_hbond_distance(atom1, atom2, dist):
@@ -982,8 +1057,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 first in the list.
                 """
                 connected_to_atom2 = atom2.connected_atoms[0]
-                return atom2.angle_between(atom1.coords,connected_to_atom2.coords)
-                
+                return atom2.angle_between(atom1.coords,
+                                           connected_to_atom2.coords)
 
             def within_angle_tolerance(atom1, atom2):
                 """
@@ -991,7 +1066,6 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 either side of linear.
                 """
                 return 225 > bond_angle(atom1, atom2) > 145
-
 
             def valid_bond(atom1, atom2, dist):
                 """
@@ -1011,15 +1085,16 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             for i, mol in enumerate(frag_list):
                 for j, mol2 in enumerate(frag_list):
                     if i != j:
-                        for atom1 in mol: 
-                            for atom2 in mol2: 
+                        for atom1 in mol:
+                            for atom2 in mol2:
                                 if valid_bond(atom1, atom2, distance):
                                     pair = sorted([atom1.index, atom2.index])
                                     if pair not in counted:
                                         dist = atom1.distance_to(atom2)
                                         angle = bond_angle(atom1, atom2)
-                                        h_bonded.append([atom1, atom2, dist, angle])
-                                        counted.append(pair) 
+                                        h_bonded.append(
+                                            [atom1, atom2, dist, angle])
+                                        counted.append(pair)
 
             return h_bonded
 
@@ -1031,7 +1106,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             """
             db = {}
             db['Cat'] = Molecule.Cations
-            db['An']  = Molecule.Anions
+            db['An'] = Molecule.Anions
             db['Neu'] = Molecule.Neutrals
             db['Rad'] = Molecule.Radicals
 
@@ -1039,31 +1114,25 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 if molecule in molecules:
                     return moltype
 
-
         def hydrogen_bond_data(self, h_bonds):
             """
             Prints data to the screen, and returns a list of hydrogen bond
             attributes of the form:
             molecule1, atom1, molecule2, atom2, distance.
             """
-            hbond_data = []            
-            
+            hbond_data = []
 
             for bond in h_bonds:
                 one, two, dist, angle = bond
                 # dmso_1
                 mol_one_name = f"{self.fragments[one.mol]['name']}_{one.mol}"
                 mol_two_name = f"{self.fragments[two.mol]['name']}_{two.mol}"
-            
+
                 group1 = find_molecule_type(mol_one_name)
                 group2 = find_molecule_type(mol_two_name)
 
                 hbond_data.append([
-                    mol_one_name, 
-                    one.symbol, 
-                    mol_two_name, 
-                    two.symbol, 
-                    dist,
+                    mol_one_name, one.symbol, mol_two_name, two.symbol, dist,
                     angle
                 ])
 
@@ -1092,26 +1161,22 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     @classmethod
     def get_multiplicity(cls, fragment_dict):
-        return 2 if any('radical' in frag['type'] for frag in fragment_dict.values()) else 1
+        return 2 if any('radical' in frag['type']
+                        for frag in fragment_dict.values()) else 1
         # extend multiplicity for biradicals etc...
 
     def mol_template(self):
         lines = [
             "# Molecules should be laid out in four lines as follows:\n",
-            "# name=<NAME>\n",
-            "# charge=<CHARGE>\n",
+            "# name=<NAME>\n", "# charge=<CHARGE>\n",
             "# multiplicity=<MULTIPLICITY>\n",
             "# atoms=<list of individual atoms in any order>\n",
             "# hashed and blank lines are not read by python,\n",
             '# and names should contain no spaces\n'
-            "# below is an example for hydrogen peroxide:\n\n",
-            "name=h2o2\n",
-            "charge=0\n",
-            "multiplicity=1\n",
-            "atoms=O,H,H,O\n"
-            ]
+            "# below is an example for hydrogen peroxide:\n\n", "name=h2o2\n",
+            "charge=0\n", "multiplicity=1\n", "atoms=O,H,H,O\n"
+        ]
         return lines
-
 
     def check_user_additions(self):
         """
@@ -1127,10 +1192,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             open(userfile, 'w+').writelines(self.mol_template())
         # READ USER MOLECULES IF FILE EXISTS
         else:
-            name   = False
+            name = False
             charge = False
-            mult   = False
-            atoms  = False
+            mult = False
+            atoms = False
             with open(userfile, 'r+') as f:
                 for line in f:
                     # GET RID OF EXTRA SPACES AND ANYTHING AFTER A HASH
@@ -1170,7 +1235,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             if charge == 2 and mult == 2:
                                 Molecule.Dication_radicals[name] = atoms
                             # RESET VARS
-                            name   = False
+                            name = False
                             charge = False
-                            mult   = False
-                            atoms  = False
+                            mult = False
+                            atoms = False
