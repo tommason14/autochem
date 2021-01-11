@@ -4,7 +4,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 16
-#SBATCH -t 03:00:00
+#SBATCH -t 3:00:00
 
 /group/pawsey0197/software/psi4/bin/psi4 name.inp name.log
 find . -empty -delete
