@@ -8,7 +8,6 @@ from .atom import Atom
 from .periodic_table import PeriodicTable as PT
 
 __all__ = [
-    "assign_molecules_from_dict_keys",
     "cd",
     "check_user_input",
     "consecutive",
@@ -108,8 +107,8 @@ def read_xyz(using):
             for val in PT.ptable.values():
                 if line[0] == val[0]:
                     coords.append(
-                        Atom(line[0], coords=tuple(float(i) for i in line[1:4]))
-                    )
+                        Atom(line[0],
+                             coords=tuple(float(i) for i in line[1:4])))
     return coords
 
 
@@ -131,7 +130,8 @@ def write_xyz(atoms, filename=None):
                     else:
                         sym, x, y, z = parts
                     x, y, z = float(x), float(y), float(z)
-                    file.write(f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
+                    file.write(
+                        f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
                 else:
                     file.write(
                         f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n"
@@ -163,7 +163,8 @@ def get_files(directory, ext, filepath_includes=None):
                     # freq.out used for thermo calculations
                     # with the fortran code
                     if filepath_includes is not None:
-                        if any(filepath_includes in string for string in (path, file)):
+                        if any(filepath_includes in string
+                               for string in (path, file)):
                             file_list.append(os.path.join(path, file))
                     else:
                         file_list.append(os.path.join(path, file))
@@ -212,7 +213,6 @@ def list_of_dicts_to_one_level_dict(lst):
     Note that all dictionaries must have the same keys. Values can be ints, floats, strings or lists.
     Will break if values of the dicts of each list item are dicts.
     """
-
     def add_to_dict(lst_item, dictionary):
         for k, v in lst_item.items():
             if k not in dictionary:
@@ -256,9 +256,12 @@ def write_csv_from_dict(data, filename=None, autosave=False):
             writer.writerows(content)
 
 
-def write_csv_from_nested(
-    data, *, col_names=None, return_name=False, filename=None, autosave=False
-):
+def write_csv_from_nested(data,
+                          *,
+                          col_names=None,
+                          return_name=False,
+                          filename=None,
+                          autosave=False):
     """
     Write to csv from nested data structure; list of tuples, list of lists. 
     
@@ -268,7 +271,8 @@ def write_csv_from_nested(
     import csv
 
     if type(col_names) not in (list, tuple):
-        raise AttributeError("Must pass in column names as a list or tuple of values")
+        raise AttributeError(
+            "Must pass in column names as a list or tuple of values")
 
     write = True if autosave else False
     if not autosave:
@@ -294,6 +298,7 @@ def write_csv_from_nested(
             writer.writerows(data)
     if return_name:
         return filename
+
 
 def search_dict_recursively(d):
     ret = {}
@@ -349,37 +354,9 @@ def sort_data(data):
     sorted_dict = {}
     for data in sorted_data:
         k, v = data
-        sorted_dict[
-            k
-        ] = v  # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
+        sorted_dict[k] = v
+        # as of py 3.6, dicts remain ordered- so no need to implement ordered dict
     return sorted_dict
-
-
-def assign_molecules_from_dict_keys(data):
-    """ 
-    Assign a cation and anion to each path.
-    """
-    for key in data.keys():
-        cation = ""
-        anion = ""
-        vals = key.split("/")
-        for val in vals:
-            # different names for the same anion
-            if val == "ch":
-                val = "choline"
-            if val == "ac":
-                val = "acetate"
-            if val == "h2po4":
-                val = "dhp"  # in Molecules.Anions
-            if val == "mesylate":
-                val = "mes"
-            if val in Molecule.Cations:
-                cation = val
-            elif val in Molecule.Anions:
-                anion = val
-        data[key]["cation"] = cation
-        data[key]["anion"] = anion
-    return data
 
 
 def responsive_table(data, strings, min_width=13, decimal_places=5):
@@ -399,7 +376,8 @@ def responsive_table(data, strings, min_width=13, decimal_places=5):
     can be passed in to define the number of decimal places of floats.
     """
     num_cols = len(data.keys())
-    content = zip(*[data[key] for key in data.keys()])  # dict values into list of lists
+    content = zip(*[data[key]
+                    for key in data.keys()])  # dict values into list of lists
     # unknown number of arguments
     max_sizes = {}
     try:
@@ -457,7 +435,7 @@ def eof(file, percFile):
             lines[i] = lines[i].decode("utf-8")
         except:
             lines[i] = "CORRUPTLINE"
-            print("eof function passed a corrupt line in file ", File)
+            print("eof function passed a corrupt line in file ", file)
         # FOR LETTER IN SYMBOL
     return lines
 
