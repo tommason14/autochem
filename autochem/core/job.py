@@ -37,9 +37,9 @@ molecular dynamics. This class also creates job files in the same directory as t
         if using is not None:
             self.molecule_name = using
             if user_settings is not None and "grouped" in user_settings.keys():
-                self.mol = Molecule(
-                    using, group=user_settings.grouped, bonds_to_split=bonds_to_split
-                )
+                self.mol = Molecule(using,
+                                    group=user_settings.grouped,
+                                    bonds_to_split=bonds_to_split)
             else:
                 self.mol = Molecule(using, bonds_to_split=bonds_to_split)
 
@@ -88,7 +88,8 @@ molecular dynamics. This class also creates job files in the same directory as t
         Returns the relevant job template. If a GAMESS job is for a dft 
         calculation, gamess_{self.sc}_dft.job will be called"""
         self.get_sc()
-        package = sys.modules[self.__class__.__module__].__file__.split("/")[-1][:-3]
+        package = sys.modules[self.__class__.__module__].__file__.split(
+            "/")[-1][:-3]
         # Returns gamess from GamessJob, psi from PsiJob etc...
         if dft:
             job = f"{package}_{self.sc}_dft.job"
@@ -144,4 +145,3 @@ molecular dynamics. This class also creates job files in the same directory as t
         # Need to:
         # - create dirs outside of the init
         # - so have a self.create_fragdirs() func- maybe in the base class
-        
