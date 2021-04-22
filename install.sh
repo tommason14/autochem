@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
 command -v gfortran > /dev/null && fort=gfortran || fort=ifort
-[ -f ~/.zshrc ] && rc=~/.zshrc || rc=~/.bashrc
+[[ $SHELL =~ zsh ]] && rc=~/.zshrc || rc=~/.bashrc
 echo "Compiling autochem/core/thermo.f"
 $fort autochem/core/thermo.f -o autochem/core/thermo.exe
 echo "Adding to PATH and PYTHONPATH in $rc"
