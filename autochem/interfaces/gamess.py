@@ -109,6 +109,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if bonds_to_split is None:
             if hasattr(self, "merged") and "bonds_to_split" in self.merged:
                 bonds_to_split = self.merged.bonds_to_split
+        self.fragmenting_on_bonds = False
         if bonds_to_split is not None:
             self.fragmenting_on_bonds = True
         super().__init__(using, user_settings=settings, bonds_to_split=bonds_to_split)
