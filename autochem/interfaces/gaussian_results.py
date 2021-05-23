@@ -82,9 +82,9 @@ class GaussianResults(Results):
                 break
             if found_some:
                 if re.search(regex, line):
-                    _, atnum, _, x, y, z = line.split()
-                    atnum, x, y, z = map(float, (atnum, x, y, z))
-                    coords.append(Atom(atnum=atnum, coords=(x, y, z)))
+                    _, atomic_number, _, x, y, z = line.split()
+                    atomic_number, x, y, z = map(float, (atomic_number, x, y, z))
+                    coords.append(Atom(atomic_number=atomic_number, coords=(x, y, z)))
         if found_equil:
             return coords, "equil"
         else:
@@ -121,14 +121,14 @@ class GaussianResults(Results):
                         some_coords = []
                 if found_equil:
                     if re.search(regex, line):
-                        _, atnum, _, x, y, z = line.split()
-                        atnum, x, y, z = map(float, (atnum, x, y, z))
-                        coords.append(Atom(atnum=atnum, coords=(x, y, z)))
+                        _, atomic_number, _, x, y, z = line.split()
+                        atomic_number, x, y, z = map(float, (atomic_number, x, y, z))
+                        coords.append(Atom(atomic_number=atomic_number, coords=(x, y, z)))
                 if found_some:
                     if re.search(regex, line):
-                        _, atnum, _, x, y, z = line.split()
-                        atnum, x, y, z = map(float, (atnum, x, y, z))
-                        some_coords.append(Atom(atnum=atnum, coords=(x, y, z)))
+                        _, atomic_number, _, x, y, z = line.split()
+                        atomic_number, x, y, z = map(float, (atomic_number, x, y, z))
+                        some_coords.append(Atom(atomic_number=atomic_number, coords=(x, y, z)))
                 if "Rotational constants" in line:
                     found_some = False
                 if "Distance matrix (angstroms)" in line:

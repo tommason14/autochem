@@ -94,14 +94,14 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if settings is not None:
             self.user_settings = settings.as_dict()
             self.merged = self.defaults.merge(settings)  # merges inp, job data
-            self.input = self.merged.input
+            self._input = self.merged.input # user writes self.input, considered as self._input here
             self.job = self.merged.job
             self.meta = self.merged.meta
             # for job settings of each fragment
             self.frag = Settings()
             self.frag.meta = self.merged.frag.meta
         else:
-            self.input = self.defaults.input
+            self._input = self.defaults.input
             self.meta = self.defaults.meta
             self.frag = Settings()
             self.frag.meta = self.defaults.frag.meta
@@ -120,18 +120,29 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         else:
             self.title = using[:-4]
         self.xyz = using
+        self.is_complex = is_complex
+        self.frags_in_subdir = frags_in_subdir
+        self.run_dir = run_dir
+        self.initialise_input()
+        
+    @property
+    def input(self):
+        if hasattr(self, 'input_as_string'):
+            return self.input_as_string
+        return self._input
 
-        self.create_complex_dir_if_required(is_complex, frags_in_subdir)
+    def create(self):
+        self.create_complex_dir_if_required(self.is_complex, self.frags_in_subdir)
 
         self.made_run_dir = False
-        if run_dir is not None:
+        if self.run_dir is not None:
             self.made_run_dir = True
 
-        self.create_inp()
+        self.write_inp()
         self.create_job()
         self.place_files_in_dir()
 
-        if frags_in_subdir:
+        if self.frags_in_subdir:
             self.create_inputs_for_fragments(complex_is_fmo=self.fmo)
 
     def create_complex_dir_if_required(self, is_complex, make_frags):
@@ -143,11 +154,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         if self.fmo:
             self.mol.separate()
             fmo_data = self.fmo_formatting()
-            self.input.fmo = fmo_data
-            self.input.fmoprp.maxit = 200
+            self._input.fmo = fmo_data
+            self._input.fmoprp.maxit = 200
             # if ngroup not defined
-            if "ngroup" not in self.input.gddi:
-                self.input.gddi.ngroup = len(self.mol.fragments)
+            if "ngroup" not in self._input.gddi:
+                self._input.gddi.ngroup = len(self.mol.fragments)
 
     def order_header(self):
         if self.fmo:
@@ -178,7 +189,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                     self.header.append(line)
 
         # no need for stationary point steps if not an optimisation
-        if self.input.contrl.runtyp != "optimize":
+        if self._input.contrl.runtyp != "optimize":
             for index, line in enumerate(self.header):
                 if line.split()[0] == "$STATPT":
                     del self.header[index]
@@ -196,9 +207,9 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             user_assigned_charge = hasattr(self.user_settings, "input.contrl.icharg")
             user_assigned_mult = hasattr(self.user_settings, "input.contrl.mult")
         if self.mol.overall_charge != 0 and not user_assigned_charge:
-            self.input.contrl.icharg = self.mol.overall_charge
+            self._input.contrl.icharg = self.mol.overall_charge
         if self.mol.overall_mult != 1 and not user_assigned_mult:
-            self.input.contrl.mult = self.mol.overall_mult
+            self._input.contrl.mult = self.mol.overall_mult
 
     def make_automatic_changes(self):
         """
@@ -216,13 +227,13 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             "acct": 1.443,
             "accq": 1.591,
         }
-        if "mp2" in self.input:
+        if "mp2" in self._input:
             for basis, opp in opp_spin_params.items():
-                if self.input.basis.gbasis.lower() == basis:
-                    self.input.mp2.scsopo = opp
+                if self._input.basis.gbasis.lower() == basis:
+                    self._input.mp2.scsopo = opp
                     break
-        if self.fmo and "pcm" in self.input and not isinstance(self.input.pcm, str):
-            self.input.pcm.ifmo = -1
+        if self.fmo and "pcm" in self._input and not isinstance(self._input.pcm, str):
+            self._input.pcm.ifmo = -1
 
     def parse_settings(self):
         """Transforms all contents of |Settings| objects into GAMESS input file headers, containing all the information pertinent to the calculation"""
@@ -268,7 +279,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 ret = format_line_if_too_long(ret)
             return ret
 
-        inp = [parse(item, self.input[item]) for item in self.input]
+        inp = [parse(item, self._input[item]) for item in self._input]
         return inp
 
     def fmo_meta(self):
@@ -428,19 +439,19 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def fmo_formatting(self):
         self.fmo_meta()  # gives self.mol.indat, self.mol.charg
-        # real issue here is that fmo options aren't considered as self.input.fmo....
+        # real issue here is that fmo options aren't considered as self._input.fmo....
         # when they should be...
-        if self.input.contrl.runtyp.lower() in (
+        if self._input.contrl.runtyp.lower() in (
             "optimize",
             "hessian",
             "fmohess",
             "sadpoint",
         ):
-            nbody = self.input.fmo.nbody if "nbody" in self.input.fmo else 2
+            nbody = self._input.fmo.nbody if "nbody" in self._input.fmo else 2
             rcorsd = 100
         else:
             # FMO3 for specs- change rcorsd to 50
-            nbody = self.input.fmo.nbody if "nbody" in self.input.fmo else 3
+            nbody = self._input.fmo.nbody if "nbody" in self._input.fmo else 3
             rcorsd = 50
 
         # issue here when fragmenting on bonds, so the self.all_frags_known_to_autochem
@@ -452,11 +463,11 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
         else:
             string = f"\n     NFRAG={len(self.mol.fragments)} NBODY={nbody}\n"
-        if "mp2" in self.input:
+        if "mp2" in self._input:
             string += "     MPLEVL(1)=2\n"
-        elif "dft" in self.input:
+        elif "dft" in self._input:
             # only grid-based methods supported in FMO, so must have $DFT METHOD=GRID in file
-            string += f"     DFTTYP(1)={self.input.contrl.dfttyp}\n"
+            string += f"     DFTTYP(1)={self._input.contrl.dfttyp}\n"
         # if not self.all_frags_same:
         if "NACUT" not in string:  # issue with self.all_frags_same when fragmenting
             string += f"     INDAT(1)={self.fmo_indat[0]}\n"
@@ -466,8 +477,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
             string += f"     MULT(1)={','.join(self.fmo_mult)}\n"
         string += f"     RESPAP=0 RESPPC=-1 RESDIM=100 RCORSD={rcorsd}"
         if nbody == 3:
-            if self.input.fmo.ritrim:
-                string += f"\n     RITRIM(1)={self.input.fmo.ritrim}"
+            if self._input.fmo.ritrim:
+                string += f"\n     RITRIM(1)={self._input.fmo.ritrim}"
             else:
                 string += "\n     RITRIM(1)=50,50,50,50"
         return string
@@ -478,12 +489,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         Used to determine the rungms script used on gadi for FMO-SRS-MP2 runs.
         Probably will be extended in future to clean up code.
         """
-        if "gddi" in self.input and self.input.gddi.ngroup > 1:
+        if "gddi" in self._input and self._input.gddi.ngroup > 1:
             return "fmo_ln"
         else:
             return "standard"
 
-    def make_inp(self):
+    def add_gamess_info(self):
         inp = self.header
         inp += " $DATA\n"
         inp += f"{self.title}\n"
@@ -494,10 +505,12 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 inp += f" {el[0]} {el[1]}\n"
             inp += " $END\n"
             inp += " $FMOXYZ\n"
+        self.input_as_string = inp    
+    
+    def add_coords_to_input(self):
         for atom in self.mol.coords:
-            inp += f" {atom.symbol:5s} {PT.get_atnum(atom):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
-        inp += " $END"
-        return inp
+            self.input_as_string += f" {atom.symbol:5s} {PT.get_atomic_number(atom.symbol):>3}.0{atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}\n"
+        self.input_as_string += " $END"
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
@@ -515,20 +528,25 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
                 "fmohess": "hess",
                 "sadpoint": "ts",
             }
-            self.base_name = options.get(self.input.contrl.runtyp.lower(), "file")
+            self.base_name = options.get(self._input.contrl.runtyp.lower(), "file")
 
-    def create_inp(self):
-        self.input = self.input.remove_none_values()
+    def initialise_input(self):
+        # ideally, at all times we should be able to print self.input to the
+        # screen, with coordinates assigned
+        self._input = self._input.remove_none_values()
         self.determine_fragments()  # add fmo info to input settings, if self.fmo is True
         self.make_automatic_changes()
         self.unordered_header = self.parse_settings()
         self.order_header()  # create self.header variable
-        inp = self.make_inp()
+        self.add_gamess_info() # creates self.input_as_string
+        self.add_coords_to_input()
+    
+    def write_inp(self):
         self.file_basename()
-        self.write_file(inp, filetype="inp")
+        self.write_file(self.input_as_string, filetype="inp")
 
     def get_job_template(self):
-        if "dfttyp" in [x.lower() for x in self.input.contrl.keys()]:
+        if "dfttyp" in [x.lower() for x in self._input.contrl.keys()]:
             job_file = self.find_job(dft=True)
         else:
             job_file = self.find_job()
