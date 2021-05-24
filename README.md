@@ -36,6 +36,8 @@ Currently set up for the following supercomputers:
 - Massive (Melbourne)
 - Stampede2 (Texas)
 
+Inspired by the [PLAMS](https://github.com/SCM-NV/PLAMS) package.
+
 # Installation
 
 ```sh
