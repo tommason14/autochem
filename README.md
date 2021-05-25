@@ -45,7 +45,9 @@ git clone https://github.com/tommason14/autochem
 cd autochem
 sh install.sh
 ```
-  
+
+Note the `install.sh` scripts installs the python numpy, pandas and dfply packages through pip by assuming you have a `python3` executable available.
+
 # Example Usage
 
 # Creating input files for computational calculations
