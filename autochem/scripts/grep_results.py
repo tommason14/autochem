@@ -40,6 +40,7 @@ def search_for_coords(dir):
     `rerun/rerun.xyz`, whilst also creating the corresponding input and
     job file.
     """
+
     def checked_before(r):
         """
         check that no rerun or spec for that particular file has been created before
@@ -47,11 +48,9 @@ def search_for_coords(dir):
         reruns = False
         equils = False
         if "rerun" in os.listdir(r.path):
-            reruns = any(f"{r.title}" in f
-                         for f in os.listdir(f"{r.path}/rerun"))
+            reruns = any(f"{r.title}" in f for f in os.listdir(f"{r.path}/rerun"))
         if "spec" in os.listdir(r.path):
-            equils = any(f"{r.title}" in f
-                         for f in os.listdir(f"{r.path}/spec"))
+            equils = any(f"{r.title}" in f for f in os.listdir(f"{r.path}/spec"))
         return reruns or equils
 
     for log in get_files(dir, (".log", ".out")):
@@ -96,8 +95,9 @@ def need_gauss_energy(calc):
     Required as Gaussian hessian calculations can be preceeded by optimisations,
     so the calc.is_hessian() call is irrelevant.
     """
-    return isinstance(
-        calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
+    return (
+        isinstance(calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
+    )
 
 
 def energies(dir, filepath_includes):
@@ -105,13 +105,12 @@ def energies(dir, filepath_includes):
     Used internally to parse log files for energies
     """
     output = []
-    for log in get_files(dir, (".out", ".log"),
-                         filepath_includes=filepath_includes):
+    for log in get_files(dir, (".out", ".log"), filepath_includes=filepath_includes):
         calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
             if (
-                    calc.completed()
+                calc.completed()
             ):  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian() or need_gauss_energy(calc):
                     print(log)
@@ -144,10 +143,7 @@ def energy_table(dir, file_name, string_to_find=None, autosave=None):
         return data
 
     def remove_column_if_all_na(data):
-        return {
-            k: v
-            for k, v in data.items() if not all(val == "NA" for val in v)
-        }
+        return {k: v for k, v in data.items() if not all(val == "NA" for val in v)}
 
     for result in output:
         data = add_data(data, result["data"])
@@ -183,8 +179,7 @@ def homo_lumo_gaps(dir, output, string_to_find=None, autosave=None):
     would have to check the log files first.
     """
     info = []
-    for log in get_files(dir, (".out", ".log"),
-                         filepath_includes=string_to_find):
+    for log in get_files(dir, (".out", ".log"), filepath_includes=string_to_find):
         calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
@@ -222,8 +217,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
         "TC - TS": [],
     }
     print("Print csv for more info")
-    for log in get_files(dir, (".log", ".out"),
-                         filepath_includes=string_to_find):
+    for log in get_files(dir, (".log", ".out"), filepath_includes=string_to_find):
         r = file_as_results_class(log)
         try:
             if r.completed():
@@ -261,8 +255,8 @@ def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
         {
             k: v
             for k, v in collected.items()
-            if k in ("File", "Temperature [K]", "Multiplicity given",
-                     "S tot [J/(mol K)]")
+            if k
+            in ("File", "Temperature [K]", "Multiplicity given", "S tot [J/(mol K)]")
         },
         strings=[1],
         min_width=10,
@@ -279,8 +273,7 @@ def print_freqs(dir, output, string_to_find=None, autosave=None):
     data["File"] = []
     data["Frequencies"] = []
     data["Intensities"] = []
-    for file in get_files(dir, ["log", "out"],
-                          filepath_includes=string_to_find):
+    for file in get_files(dir, ["log", "out"], filepath_includes=string_to_find):
         if "slurm" not in file:
             calc = file_as_results_class(file)
             if calc.is_hessian():
@@ -315,6 +308,7 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
     hydrogen-bonding atoms less than 2 Å apart, of the correct type and within
     45° of linear. Prints to screen, with the option of saving to csv. If user says yes, writes to hbonds.csv
     """
+
     def can_cast_as_float(item):
         try:
             item = float(item)
@@ -336,7 +330,8 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
     print("\n", " " * 15, "HYDROGEN BOND DATA\n")
     output = []
     files = [
-        f for f in get_files(dir, ["xyz"], filepath_includes=string_to_find)
+        f
+        for f in get_files(dir, ["xyz"], filepath_includes=string_to_find)
         if f.count("/") == 1
     ]
     for file in files:
@@ -406,12 +401,10 @@ def charges(dir, output, string_to_find=None, autosave=None):
     Writes to `charges.csv` if desired
     """
     results = []
-
     files = get_files(dir, ["log"], filepath_includes=string_to_find)
     for logfile in files:
         if file_is_gaussian(logfile):
             res = []
-            assigned = []
             print(logfile)
             atom_regex = "^\s?[A-z]{1,2}(\s+-?[0-9]+\.[0-9]+){3}"
             charge_regex = "^\s+[0-9]+\s+[A-z]{1,2}\s+-?[0-9]+\.[0-9]+"
@@ -420,8 +413,9 @@ def charges(dir, output, string_to_find=None, autosave=None):
                 if re.search(atom_regex, line):
                     sym, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append([logfile, Atom(sym, coords=(x, y, z))
-                                ])  # new key for each coord
+                    res.append(
+                        [logfile, Atom(sym, coords=(x, y, z))]
+                    )  # new key for each coord
             found = False
             counter = 0
             for line in eof(logfile, 0.20):
@@ -439,27 +433,33 @@ def charges(dir, output, string_to_find=None, autosave=None):
             for atom, r in zip(mol.coords, res):
                 path, _, charge = r
                 try:
-                    results.append([
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
-                    ])
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            charge,
+                            'NA', # need to pull out standard devation...
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
+                        ]
+                    )
                 except KeyError:
-                    results.append([
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        geodesic_charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        "NA",
-                    ])
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            charge,
+                            'NA', # need to pull out standard devation...
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            "NA",
+                        ]
+                    )
 
         if file_is_gamess(logfile):
             atom_regex = "^\s[A-Za-z]{1,2}\s*[0-9]*.[0-9]*(\s*-?[0-9]*.[0-9]*){3}$"
@@ -473,8 +473,9 @@ def charges(dir, output, string_to_find=None, autosave=None):
                 if re.search(atom_regex, line):
                     sym, atnum, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append([logfile, Atom(sym, coords=(x, y, z))
-                                ])  # new key for each coord
+                    res.append(
+                        [logfile, Atom(sym, coords=(x, y, z))]
+                    )  # new key for each coord
             found = False
             counter = 0
             for line in read_file(logfile):
@@ -484,44 +485,49 @@ def charges(dir, output, string_to_find=None, autosave=None):
                     break
                 if found:
                     if re.search(charge_regex, line):
-                        res[counter].append(float(line.split()[1]))
+                        _, charge, esd = line.split()
+                        charge, esd = map(float, (charge, esd))
+                        res[counter].append(charge)
+                        res[counter].append(esd)
                         counter += 1
             coordinates = [atom[1] for atom in res]
             mol = Molecule(atoms=coordinates)
             mol.separate()
             for atom, r in zip(mol.coords, res):
-                path, _, geodesic_charge = r
+                path, _, geodesic_charge, esd = r
                 try:
-                    results.append([
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        geodesic_charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
-                    ])
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            geodesic_charge,
+                            esd,
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            f"{mol.fragments[atom.mol]['name']}_{atom.mol}",
+                        ]
+                    )
                 except KeyError:
-                    results.append([
-                        path,
-                        atom.index,
-                        atom.symbol,
-                        geodesic_charge,
-                        atom.x,
-                        atom.y,
-                        atom.z,
-                        "NA",
-                    ])
-
+                    results.append(
+                        [
+                            path,
+                            atom.index,
+                            atom.symbol,
+                            geodesic_charge,
+                            esd, 
+                            atom.x,
+                            atom.y,
+                            atom.z,
+                            "NA",
+                        ]
+                    )
     # nested list (one level) to dict
     data = {}
-    keys = ("Path", "Index", "Element", "Charge", "Rx", "Ry", "Rz", "Fragment")
+    keys = ("Path", "Index", "Element", "Charge", "Estimated Stdev", "Rx", "Ry", "Rz", "Fragment")
     for index, value in enumerate(keys):
         data[value] = [val[index] for val in results]
-    responsive_table(data, strings=[1, 3, 8], min_width=10)
+    responsive_table(data, strings=[1, 3, 9], min_width=10)
 
-    write_csv_from_nested(results,
-                          col_names=keys,
-                          filename=output,
-                          autosave=autosave)
+    write_csv_from_nested(results, col_names=keys, filename=output, autosave=autosave)
