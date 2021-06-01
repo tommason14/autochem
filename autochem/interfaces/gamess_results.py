@@ -1,5 +1,6 @@
 from ..core.utils import write_geom_input_for_thermo, write_xyz, eof
 from ..core.results import Results
+from ..core.atom import Atom
 
 import re
 import os
@@ -38,18 +39,16 @@ store the iteration number.
     def __init__(self, log):
         super().__init__(log)
 
-    
     @property
     def title(self):
         found = False
-        for line in self.read():    
+        for line in self.read():
             if found:
-                if re.search('[A-Za-z0-9]', line):
+                if re.search("[A-Za-z0-9]", line):
                     return line
-            if 'RUN TITLE' in line:
+            if "RUN TITLE" in line:
                 found = True
- 
-    
+
     ################################
     #                              #
     #      CHECK IF COMPLETED      #
@@ -132,16 +131,16 @@ store the iteration number.
                     rerun = []
             if found_equil:
                 if re.search(regex, line):
-                    if line.endswith("\n"):
-                        equil.append(line[:-1])  # drop newline char
-                    else:
-                        equil.append(line)
+                    sym, _, x, y, z = line.strip().split()
+                    sym = sym.title()  # convert BR -> Br
+                    x, y, z = map(float, (x, y, z))
+                    equil.append(Atom(sym, coords=(x, y, z)))
             if found_some:
                 if re.search(regex, line):
-                    if line.endswith("\n"):
-                        rerun.append(line[:-1])  # drop newline char
-                    else:
-                        rerun.append(line)
+                    sym, _, x, y, z = line.strip().split()
+                    sym = sym.title()
+                    x, y, z = map(float, (x, y, z))
+                    rerun.append(Atom(sym, coords=(x, y, z)))
             if line == "\n":
                 found_equil = False
                 found_some = False
