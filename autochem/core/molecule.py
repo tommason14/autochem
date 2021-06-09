@@ -1296,13 +1296,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                     for i, atom in enumerate(coord_list):
                         if coord.index == atom.index:
                             del coord_list[i]
-            # remove Li, Na, Cl, Br etc...
-            elif len(frag["atoms"]) == 1:
-                for coord in frag["atoms"]:
-                    # remove coord from coord_list
-                    for i, atom in enumerate(coord_list):
-                        if coord.index == atom.index:
-                            del coord_list[i]
+            # # remove Li, Na, Cl, Br etc...
+            # elif len(frag["atoms"]) == 1:
+            #     for coord in frag["atoms"]:
+            #         # remove coord from coord_list
+            #         for i, atom in enumerate(coord_list):
+            #             if coord.index == atom.index:
+            #                 del coord_list[i]
         if len(coord_list) != len(self.coords) and len(coord_list) != 0:
             # split and add charges and multiplicities up
             # charge, multiplicity = ionic_mol_properties(coord_list)
