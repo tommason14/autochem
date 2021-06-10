@@ -80,6 +80,24 @@ class OrcaResults(Results):
                 return line.split()[-1].rsplit(".")[0]
 
     @property
+    def atoms(self):
+        atoms = []
+        found = False
+        for line in self.read():
+            if "CARTESIAN COORDINATES (ANGSTROEM)" in line:
+                found = True
+                continue
+            if found and re.search("^\s*$", line):
+                break
+            if found and "---" not in line:
+                line = line.strip().split()
+                sym = line[0]
+                coords = [float(i) for i in line[1:]]
+                atoms.append(Atom(sym, coords=coords))
+        return atoms
+
+
+    @property
     def is_dft(self):
         """
         Used internally to decide if dft energies should be collected.
@@ -247,9 +265,9 @@ class OrcaResults(Results):
             transition = "HOMO-LUMO"
         else:
             transition = "SOMO-LUMO"
-        
+
         homo, lumo, gap = self._homo_lumo_gap()
-        
+
         return {
             "File": self.file,
             "Path": self.path,
@@ -274,9 +292,10 @@ class OrcaResults(Results):
         for line in self.read():
             if "Mode    freq (cm**-1)" in line:
                 found = True
+                continue
             if found and line == "\n":
                 found = False
-            if found and '------' not in line:
+            if found and "------" not in line:
                 vibs.append(float(line.split()[1]))
         return vibs
 
@@ -291,14 +310,14 @@ class OrcaResults(Results):
                 found = True
             if found and line == "\n":
                 found = False
-            if found and '------' not in line:
+            if found and "------" not in line:
                 ints.append(float(line.split()[2]))
         return ints
 
     #####################
     #  Thermochemistry  #
     #####################
-    
+
     @property
     def thermo_temp(self):
         """
@@ -307,9 +326,9 @@ class OrcaResults(Results):
         """
         temps = []
         for line in self.eof(0.5):
-            match = re.match('THERMOCHEMISTRY AT (.*)K', line)
+            match = re.match("THERMOCHEMISTRY AT (.*)K", line)
             if match is not None:
-                temps.append(match.group(1) + ' K')
+                temps.append(match.group(1) + " K")
         return temps
 
     @property
@@ -320,10 +339,10 @@ class OrcaResults(Results):
         """
         zpves = []
         for line in self.eof(0.5):
-            if 'Zero point energy' in line:
+            if "Zero point energy" in line:
                 zpve = float(line.split()[4])
                 zpve *= 2625.5
-                zpves.append(zpve)    
+                zpves.append(zpve)
         return zpves
 
     @property
@@ -334,7 +353,7 @@ class OrcaResults(Results):
         """
         energies = []
         for line in self.eof(0.5):
-            if 'Total thermal energy' in line:
+            if "Total thermal energy" in line:
                 energy = float(line.split()[3])
                 energy *= 2625.5
                 energies.append(energy)
@@ -343,28 +362,29 @@ class OrcaResults(Results):
     ########################
     #  Work in progress ↓  #
     ########################
-    
+
     def thermo_summary(self):
         """
         Prints all thermochemical data currently extracted from orca log files.
         """
         print(f"Thermochemical summary for {self.log}")
-        for temp, zpve, thermal in zip(self.thermo_temp, self.thermo_zpve,
-        self.thermo_thermal_energy):
-            print(f'Data taken at {temp}:')
+        for temp, zpve, thermal in zip(
+            self.thermo_temp, self.thermo_zpve, self.thermo_thermal_energy
+        ):
+            print(f"Data taken at {temp}:")
             print(f"\tZPVE: {zpve} kJ/mol")
-            print(f"\tTotal thermal energy: {thermal} kJ/mol") 
+            print(f"\tTotal thermal energy: {thermal} kJ/mol")
 
         print(
-        "Note:\n"
-        "    Relevant formulae printed in docstrings.\n"
-        "    Call help() on the OrcaResults class for more info."
+            "Note:\n"
+            "    Relevant formulae printed in docstrings.\n"
+            "    Call help() on the OrcaResults class for more info."
         )
 
     ###########################
     #  TD-DFT Excited states  #
     ###########################
-    
+
     @property
     def td_dft_wavelengths(self):
         """
