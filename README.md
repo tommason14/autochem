@@ -46,7 +46,7 @@ cd autochem
 sh install.sh
 ```
 
-Note the `install.sh` scripts installs the python numpy, pandas and dfply packages through pip by assuming you have a `python3` executable available.
+Note the `install.sh` scripts installs the python numpy and pandas packages through pip by assuming you have a `python3` executable available.
 
 # Example Usage
 
