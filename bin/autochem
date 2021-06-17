@@ -51,11 +51,6 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "--soft",
-    help="Use with --interaction-energies to indicate that output is from gamess or psi4 software. Use `gamess` or `psi`",
-    action="store",
-)
-parser.add_argument(
     "--with-ionic",
     help="Use with --interaction-energies to indicate that a purely ionic network is present",
     action="store_true",
@@ -255,9 +250,8 @@ if args.interaction_energies:
         args.output = "ints.csv"
     calculate_interaction_energies(
         args.interaction_energies,
-        ionic_present=args.with_ionic,
+        with_ionic=args.with_ionic,
         pretty_print=args.verbose,
-        software=args.soft,
         output=args.output,
     )
 
