@@ -251,7 +251,7 @@ if args.interaction_energies:
     calculate_interaction_energies(
         args.interaction_energies,
         with_ionic=args.with_ionic,
-        pretty_print=args.verbose,
+        pretty_print=True, # prefer the output in a table rather than a truncated DataFrame
         output=args.output,
     )
 
