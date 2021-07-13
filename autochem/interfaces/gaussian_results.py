@@ -14,7 +14,6 @@ class GaussianResults(Results):
     """
     Class for obtaining results from Gaussian simulations. This class requires a log file to be read.
     """
-
     def __init__(self, log):
         super().__init__(log)
 
@@ -97,7 +96,9 @@ class GaussianResults(Results):
         # with calcall, things are different, collect standard orientation
         # and if optimization completed found, they are equil coords
         # else rerun
-        calcall = True if "calcall" else False in self.user_commands
+        calcall = False
+        if "calcall" in self.user_commands:
+            calcall = True
         # tddft = True if "td" in self.user_commands else False
         found_equil = False
         found_some = False
@@ -117,7 +118,8 @@ class GaussianResults(Results):
                     found_equil = True
                 if "Standard orientation" in line:
                     found_some = True
-                    if len(some_coords) > 0:  # from last run, remove those coords
+                    if len(some_coords
+                           ) > 0:  # from last run, remove those coords
                         some_coords = []
                 if found_equil:
                     if re.search(regex, line):
@@ -156,7 +158,8 @@ class GaussianResults(Results):
                 newdir = os.path.join(MOLECULE_PARENT_DIR, "rerun")
                 if not os.path.isdir(newdir):
                     os.mkdir(newdir)
-                write_xyz(some_coords, os.path.join(newdir, f"{self.title}-rerun.xyz"))
+                write_xyz(some_coords,
+                          os.path.join(newdir, f"{self.title}-rerun.xyz"))
             else:
                 print("No iterations were cycled through!")
 
