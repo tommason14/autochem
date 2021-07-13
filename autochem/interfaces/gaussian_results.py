@@ -182,7 +182,7 @@ class GaussianResults(Results):
         title = lines[-2].strip()
         # if spaces in title, use the filename instead
         if ' ' in title:
-            return self.log.split('.')[0]
+            return self.basename
         return title
 
     @property
