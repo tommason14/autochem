@@ -175,12 +175,15 @@ class GaussianResults(Results):
         ...
         """
         lines = []
-        found = False
         for line in self.read():
             if "Symbolic" in line:
                 break
             lines.append(line)
-        return lines[-2].strip()
+        title = lines[-2].strip()
+        # if spaces in title, use the filename instead
+        if ' ' in title:
+            return self.log.split('.')[0]
+        return title
 
     @property
     def user_commands(self):
