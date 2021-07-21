@@ -110,12 +110,12 @@ class Atom:
         denom = self.distance_to(pos1) * self.distance_to(pos2)
         return math.acos(num / denom) * (180 / math.pi)
 
-    def as_xyz(self, end_of_line="\n", dps=5):
+    def as_xyz(self, dps=5, end_of_line="\n"):
         """
         Return atom in xyz format: symbol x y z. Can also give an optional 
         end of line character such as a space, as well as specify how many 
         decimal places the coordinates should be given to.
         """
-        return f" {self.symbol:5s} {self.x:>13.{dps}f} {self.y:>13.{dps}f} {self.z:>13.{dps}f}{end_of_line}"
+        return f"{self.symbol:5s} {self.x:>13.{dps}f} {self.y:>13.{dps}f} {self.z:>13.{dps}f}{end_of_line}"
 
     __str__ = __repr__
