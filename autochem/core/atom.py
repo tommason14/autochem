@@ -116,6 +116,6 @@ class Atom:
         end of line character such as a space, as well as specify how many 
         decimal places the coordinates should be given to.
         """
-        return f" {self.symbol:5s} {self.x:>10.{dps}f} {self.y:>10.{dps}f} {self.z:>10.{dps}f}{end_of_line}"
+        return f" {self.symbol:5s} {self.x:>13.{dps}f} {self.y:>13.{dps}f} {self.z:>13.{dps}f}{end_of_line}"
 
     __str__ = __repr__
