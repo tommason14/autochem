@@ -46,7 +46,9 @@ cd autochem
 sh install.sh
 ```
 
-Note the `install.sh` scripts installs the python numpy and pandas packages through pip by assuming you have a `python3` executable available.
+Then reload your shell with `source ~/.bashrc` or `source ~/.zshrc`.
+
+Note that the `install.sh` scripts installs the python numpy and pandas packages through pip by assuming you have a `python3` executable available.
 
 # Example Usage
 
