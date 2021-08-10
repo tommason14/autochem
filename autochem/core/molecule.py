@@ -885,6 +885,7 @@ class Molecule:
         **Neutrals,
         **Radicals,
         **Dications,
+        **Dianions,
         **Anion_radicals,
         **Cation_radicals,
         **Dication_radicals,
@@ -1131,6 +1132,7 @@ class Molecule:
             Molecule.Anion_radicals,
             Molecule.Cation_radicals,
             Molecule.Dications,
+            Molecule.Dianions,
             Molecule.Dication_radicals,
         ):
             self.fragments = check_dict(self.fragments, symbols, db)
