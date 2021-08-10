@@ -807,6 +807,9 @@ class Molecule:
         "H",
     ]
     Dications = dict()
+
+    Dianions = {"sulfate": ["S"] + ["O"] * 4, "phosphate": ["P", "H"] + ["O"] * 4}
+
     Anion_radicals = dict()
     Cation_radicals = dict()
 
@@ -1913,6 +1916,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                                 Molecule.Cation_radicals[name] = atoms
                             if charge == 2 and mult == 1:
                                 Molecule.Dications[name] = atoms
+                            if charge == -2 and mult == 1:
+                                Molecule.Dianions[name] = atoms
                             if charge == 2 and mult == 2:
                                 Molecule.Dication_radicals[name] = atoms
                             # RESET VARS
