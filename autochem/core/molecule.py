@@ -1095,6 +1095,10 @@ class Molecule:
                 charge = 2
                 mult = 1
                 mol_type = "dication"
+            elif db == Molecule.Dianions:
+                charge = -2
+                mult = 1
+                mol_type = "dianion"
             elif db == Molecule.Anion_radicals:
                 charge = -1
                 mult = 2
