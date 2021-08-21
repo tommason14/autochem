@@ -808,6 +808,11 @@ class Molecule:
     ]
     Dications = dict()
 
+    Trications = dict()
+    Tetracations = dict()
+    Pentacations = dict()
+    Hexacations = dict()
+
     Dianions = {"sulfate": ["S"] + ["O"] * 4, "phosphate": ["P", "H"] + ["O"] * 4}
 
     Anion_radicals = dict()
@@ -885,6 +890,10 @@ class Molecule:
         **Neutrals,
         **Radicals,
         **Dications,
+        **Trications,
+        **Tetracations,
+        **Pentacations,
+        **Hexacations,
         **Dianions,
         **Anion_radicals,
         **Cation_radicals,
@@ -1095,6 +1104,22 @@ class Molecule:
                 charge = 2
                 mult = 1
                 mol_type = "dication"
+            elif db == Molecule.Trications:
+                charge = 3
+                mult = 1
+                mol_type = "trication"
+            elif db == Molecule.Tetracations:
+                charge = 4
+                mult = 1
+                mol_type = "tetracation"
+            elif db == Molecule.Pentacations:
+                charge = 5
+                mult = 1
+                mol_type = "pentacation"
+            elif db == Molecule.Hexacations:
+                charge = 6
+                mult = 1
+                mol_type = "hexacation"
             elif db == Molecule.Dianions:
                 charge = -2
                 mult = 1
@@ -1136,6 +1161,10 @@ class Molecule:
             Molecule.Anion_radicals,
             Molecule.Cation_radicals,
             Molecule.Dications,
+            Molecule.Trications,
+            Molecule.Tetracations,
+            Molecule.Pentacations,
+            Molecule.Hexacations,
             Molecule.Dianions,
             Molecule.Dication_radicals,
         ):
@@ -1545,6 +1574,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             neutrals = [sorted(v) for v in Molecule.Neutrals]
             rads = [sorted(v) for v in Molecule.Radicals]
             dicats = [sorted(v) for v in Molecule.Dications]
+            tricats = [sorted(v) for v in Molecule.Trications]
+            tetcats = [sorted(v) for v in Molecule.Tetracations]
+            pentcats = [sorted(v) for v in Molecule.Pentacations]
+            hexcats = [sorted(v) for v in Molecule.Hexacations]
             an_rads = [sorted(v) for v in Molecule.Anion_radicals]
             cat_rads = [sorted(v) for v in Molecule.Cation_radicals]
             dicat_rads = [sorted(v) for v in Molecule.Dication_radicals]
@@ -1558,6 +1591,14 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 return 0, 2
             elif atoms in dicats:
                 return 2, 1
+            elif atoms in tricats:
+                return 3, 1
+            elif atoms in tetcats:
+                return 4, 1
+            elif atoms in pentcats:
+                return 5, 1
+            elif atoms in hexcats:
+                return 6, 1
             elif atoms in an_rads:
                 return -1, 2
             elif atoms in cat_rads:
@@ -1922,6 +1963,14 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                                 Molecule.Cation_radicals[name] = atoms
                             if charge == 2 and mult == 1:
                                 Molecule.Dications[name] = atoms
+                            if charge == 3 and mult == 1:
+                                Molecule.Trications[name] = atoms
+                            if charge == 4 and mult == 1:
+                                Molecule.Tetracations[name] = atoms
+                            if charge == 5 and mult == 1:
+                                Molecule.Pentacations[name] = atoms
+                            if charge == 6 and mult == 1:
+                                Molecule.Hexacations[name] = atoms
                             if charge == -2 and mult == 1:
                                 Molecule.Dianions[name] = atoms
                             if charge == 2 and mult == 2:
