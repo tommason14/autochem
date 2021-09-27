@@ -21,8 +21,12 @@ class Atom:
     >>> a = Atom('H', coords = (1,2,3))
 
     """
-
-    def __init__(self, symbol=None, atnum=0, coords=None, mol=None, bonds=None):
+    def __init__(self,
+                 symbol=None,
+                 atnum=0,
+                 coords=None,
+                 mol=None,
+                 bonds=None):
         if symbol is not None:
             self.symbol = symbol
             self.atnum = PT.get_atnum(self)
@@ -59,24 +63,31 @@ class Atom:
     def __repr__(self):
         """Unambiguous representation of an |Atom| instance"""
         if self.fragment is not None:
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
- Index: {self.index} Mol: {self.fragment}"
+            return (
+                f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                f"{self.z:>10.5f} Index: {self.index} Mol: {self.fragment}")
+
         if hasattr(self, "index") and not hasattr(self, "mol"):
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
- Index: {self.index} "
+            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                    f"{self.z:>10.5f} Index: {self.index}")
+
         if hasattr(self, "index") and hasattr(self, "mol"):
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
- Index: {self.index} Mol: {self.mol}"
+            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                    f"{self.z:>10.5f} Index: {self.index} Mol: {self.mol}")
+
         elif hasattr(self, "number"):
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
- Mol: {self.mol} Atom: {self.number}"
+            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                    f" {self.z:>10.5f} Mol: {self.mol} Atom: {self.number}")
+
         elif hasattr(self, "index") and len(self.h_bonded_to) > 0:
-            h_bonded = [
-                (atom.symbol, {"mol": atom.mol, "atom": atom.index})
-                for atom in self.h_bonded_to
-            ]
-            return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}\
- Mol: {self.mol} Index: {self.index} Number: {self.number} H-Bonds: {h_bonded}"
+            h_bonded = [(atom.symbol, {
+                "mol": atom.mol,
+                "atom": atom.index
+            }) for atom in self.h_bonded_to]
+            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                    f"{self.z:>10.5f} Mol: {self.mol} Index: {self.index} "
+                    f"Number: {self.number} H-Bonds: {h_bonded}")
+
         return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}"
 
     def __iter__(self):
@@ -88,7 +99,8 @@ class Atom:
         self.coords = [i + j for i, j in zip(self, vector)]
 
     def move_to(self, vector):
-        """Move atom in space to the values, in angstroms, given in this vector. The vector passed represents a point in euclidean space"""
+        """Move atom in space to the values, in angstroms, given in this vector.
+        The vector passed represents a point in euclidean space"""
         self.coords = [i for i in vector]
 
     def distance_to(self, vector):
@@ -96,8 +108,8 @@ class Atom:
         # pythagoras in 3D
         dist = 0.0
         for i, j in zip(self, vector):
-            dist += (i - j) ** 2
-        return dist ** 0.5
+            dist += (i - j)**2
+        return dist**0.5
 
     def vector_to(self, point):
         """Returns a vector from the atom to a given point, in angstroms"""
@@ -112,8 +124,8 @@ class Atom:
 
     def as_xyz(self, dps=5, end_of_line="\n"):
         """
-        Return atom in xyz format: symbol x y z. Can also give an optional 
-        end of line character such as a space, as well as specify how many 
+        Return atom in xyz format: symbol x y z. Can also give an optional
+        end of line character such as a space, as well as specify how many
         decimal places the coordinates should be given to.
         """
         return f"{self.symbol:5s} {self.x:>13.{dps}f} {self.y:>13.{dps}f} {self.z:>13.{dps}f}{end_of_line}"
