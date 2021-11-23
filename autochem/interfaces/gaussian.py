@@ -25,7 +25,6 @@ class GaussJob(Job):
     job scheduler information.
     For meta data, number of processors (ncpus), memory (mem) etc, use sett.meta.ncpus=46.
     """
-
     def __init__(
         self,
         using=None,
@@ -108,9 +107,8 @@ class GaussJob(Job):
                     job = job.replace("mem=192", f"mem={mem}")
             if "ncpus" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
-                    job = job.replace(
-                        "cpus-per-task=16", f"cpus-per-task={self.meta.ncpus}"
-                    )
+                    job = job.replace("cpus-per-task=16",
+                                      f"cpus-per-task={self.meta.ncpus}")
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
                 else:  # gadi
@@ -118,18 +116,19 @@ class GaussJob(Job):
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     jobfile = job.split("\n")
-                    jobfile = _change_partition(
-                        jobfile, self.meta.partition, search_term="#SBATCH -p "
-                    )
+                    jobfile = _change_partition(jobfile,
+                                                self.meta.partition,
+                                                search_term="#SBATCH -p ")
                     # might be --partition=
                     jobfile = _change_partition(
-                        jobfile, self.meta.partition, search_term="#SBATCH --partition="
-                    )
+                        jobfile,
+                        self.meta.partition,
+                        search_term="#SBATCH --partition=")
                     job = "\n".join(jobfile)
                 else:
                     job = job.replace(
-                        "#PBS -l wd", f"#PBS -q {self.meta.partition}\n#PBS -l wd"
-                    )
+                        "#PBS -l wd",
+                        f"#PBS -q {self.meta.partition}\n#PBS -l wd")
 
             if self.sc in super().PBS_HOSTS:
                 if "jobfs" in self.meta:
@@ -166,7 +165,8 @@ class GaussJob(Job):
         """
         Include data such as memory and number of cpus in the Gaussian file.
         """
-        excluded_properties = ("time", "partition", "nodemem", "jobfs")
+        excluded_properties = ("time", "partition", "nodemem", "jobfs",
+                               "nodes")
         # input by user for scheduler
         meta = []
         if self.sc == "stm":
@@ -230,10 +230,8 @@ class GaussJob(Job):
         #P wB97XD/cc-pVDZ opt=(ts,noeigentest,calcfc) freq SCF=tight SCRF=(SMD,solvent=water) INT=(grid=ultrafine)
         from data stored in self.input
         """
-        return (
-            f"#P {self.input.method}/{self.input.basis}"
-            f"{self.formatted_run}{self.additional_params}"
-        )
+        return (f"#P {self.input.method}/{self.input.basis}"
+                f"{self.formatted_run}{self.additional_params}")
 
     @property
     def coord_info(self):
@@ -301,8 +299,8 @@ class GaussJob(Job):
                     mkdir(join(subdirectory, name))  # ./frags/water4/
                 chdir(join(subdirectory, name))
                 Molecule.write_xyz(
-                    self, atoms=data["atoms"], filename=name + str(".xyz")
-                )  # using the method, but with no class
+                    self, atoms=data["atoms"], filename=name +
+                    str(".xyz"))  # using the method, but with no class
 
                 # use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
                 if hasattr(self, "merged"):
@@ -314,7 +312,8 @@ class GaussJob(Job):
                 frag_settings.input.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.mult = data["multiplicity"]
-                job = GaussJob(using=name + str(".xyz"), settings=frag_settings)
+                job = GaussJob(using=name + str(".xyz"),
+                               settings=frag_settings)
                 chdir(parent_dir)
                 count += 1
         if hasattr(self.mol, "ionic"):
