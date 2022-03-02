@@ -2,11 +2,8 @@ from .periodic_table import PeriodicTable as PT
 from .atom import Atom
 from .utils import sort_elements
 
-import re
 import os
 import numpy as np
-import math
-import itertools
 import sys
 
 __all__ = ["Molecule"]
@@ -1891,6 +1888,14 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             else 1
         )
         # extend multiplicity for biradicals etc...
+
+    def centre_of_mass(self):
+        """
+        Returns the centre of mass of the molecule.
+        """
+        masses = np.array([PT.get_mass(atom) for atom in self.coords])
+        coords = np.array([atom.coords for atom in self.coords])
+        return (masses.reshape(-1, 1) * coords / masses.sum()).sum(axis=0)
 
     def mol_template(self):
         lines = [
