@@ -13,64 +13,64 @@ __all__ = ["GamessJob"]
 
 
 class GamessJob(Job):
-    """Class for creating GAMESS input files and job scripts. 
+    """Class for creating GAMESS input files and job scripts.
 
-    The input files generated default to geometry optimisations at the SRS-MP2/cc-pVDZ level of theory. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
-    >>> s = Settings()
-    >>> s.input.contrl.runtyp = 'energy'
-    >>> s.input.basis.gbasis = 'CCT'
-    >>> s.input.mp2.scsopo = 1.64
-    >>> j = GamessJob(using = '../xyz_files/ch_ac.xyz', settings = s)
-    This yields the following result:
-         $SYSTEM MEMDDI=0 MWORDS=500 $END
-         $CONTRL ICHARG=0 ISPHER=1 MAXIT=200 RUNTYP=ENERGY SCFTYP=RHF $END
-         $STATPT NSTEP=500 $END
-         $SCF DIIS=.TRUE. DIRSCF=.TRUE. FDIFF=.FALSE. $END
-         $BASIS GBASIS=CCT $END
-         $MP2 CODE=IMS SCSOPO=1.64 SCSPAR=0.0 SCSPT=SCS $END
-         $DATA
-        ch_ac
-        C1
-         H 1.0
-         C 6.0
-         N 7.0
-         O 8.0
-         $END
-         C     6.0   -6.27719   -2.98190   -7.44828
-         H     1.0   -7.26422   -2.51909   -7.63925
-         H     1.0   -5.81544   -3.32313   -8.39516 
-    If FMO (Fragment Molecular Orbital) calculations are desired, pass the keyword argument ``fmo``, set to *True*, along with a settings object with a parameter of ``nfrags``:
+        The input files generated default to geometry optimisations at the SRS-MP2/cc-pVDZ level of theory. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
         >>> s = Settings()
-        >>> s.nfrags = 4
-        >>> job = GamessJob(using = 'file.xyz', fmo = True, settings = s)
+        >>> s.input.contrl.runtyp = 'energy'
+        >>> s.input.basis.gbasis = 'CCT'
+        >>> s.input.mp2.scsopo = 1.64
+        >>> j = GamessJob(using = '../xyz_files/ch_ac.xyz', settings = s)
+        This yields the following result:
+             $SYSTEM MEMDDI=0 MWORDS=500 $END
+             $CONTRL ICHARG=0 ISPHER=1 MAXIT=200 RUNTYP=ENERGY SCFTYP=RHF $END
+             $STATPT NSTEP=500 $END
+             $SCF DIIS=.TRUE. DIRSCF=.TRUE. FDIFF=.FALSE. $END
+             $BASIS GBASIS=CCT $END
+             $MP2 CODE=IMS SCSOPO=1.64 SCSPAR=0.0 SCSPT=SCS $END
+             $DATA
+            ch_ac
+            C1
+             H 1.0
+             C 6.0
+             N 7.0
+             O 8.0
+             $END
+             C     6.0   -6.27719   -2.98190   -7.44828
+             H     1.0   -7.26422   -2.51909   -7.63925
+             H     1.0   -5.81544   -3.32313   -8.39516
+        If FMO (Fragment Molecular Orbital) calculations are desired, pass the keyword argument ``fmo``, set to *True*, along with a settings object with a parameter of ``nfrags``:
+            >>> s = Settings()
+            >>> s.nfrags = 4
+            >>> job = GamessJob(using = 'file.xyz', fmo = True, settings = s)
 
-    The class creates different subdirectories for every molecule in the system.
-    Using the class with `frags_in_subdir` set to true produces:
-        - a `complex` subdirectory- one per xyz
-        - an `ionic` subdirectory for every complex with the neutral species and/or single atom ions removed
-            - for water inclusion, N2 inclusion, alkali metal inclusion
-        - a `frags` subdirectory for every fragment of the complex
+        The class creates different subdirectories for every molecule in the system.
+        Using the class with `frags_in_subdir` set to true produces:
+            - a `complex` subdirectory- one per xyz
+            - an `ionic` subdirectory for every complex with the neutral species and/or single atom ions removed
+                - for water inclusion, N2 inclusion, alkali metal inclusion
+            - a `frags` subdirectory for every fragment of the complex
 
-    The names of files created default to the type of calculation: optimisation (opt), single point
-energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
-(hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
-        >>> job = GamessJob(using = 'file.xyz', fmo = True, filename = 'benzene')
+        The names of files created default to the type of calculation: optimisation (opt), single point
+    energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies
+    (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
+            >>> job = GamessJob(using = 'file.xyz', fmo = True, filename = 'benzene')
 
-    This command produces two files, benzene.inp and benzene.job.
+        This command produces two files, benzene.inp and benzene.job.
 
-    Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
-        .
-        └── opt
-            ├── opt.inp
-            └── opt.job
+        Files are placed in a subdirectory of their own name. So when creating optimisation files, files are placed in opt:
+            .
+            └── opt
+                ├── opt.inp
+                └── opt.job
 
-    To group fragments together, just pass in a `grouped` argument in the settings file:
+        To group fragments together, just pass in a `grouped` argument in the settings file:
 
-        >>> sett = Settings()
-        >>> sett.grouped = 'water-chloride'
+            >>> sett = Settings()
+            >>> sett.grouped = 'water-chloride'
 
-    This will group water and chloride fragments together, to avoid having lots of nodes with a
-    small number of atoms assigned to them. 
+        This will group water and chloride fragments together, to avoid having lots of nodes with a
+        small number of atoms assigned to them.
 
     """
 
@@ -187,7 +187,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def change_charge_and_mult(self):
         """
-        Changes charge and multiplicity unless user defines values. 
+        Changes charge and multiplicity unless user defines values.
         In that case, the user-defined charge and multiplicity are used.
         """
         user_assigned_charge = False
@@ -501,8 +501,8 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-        the run type: a geometry optimisation (opt), single point energy calculation (spec), 
-        or a hessian matrix calculation for vibrational frequencies (hess). 
+        the run type: a geometry optimisation (opt), single point energy calculation (spec),
+        or a hessian matrix calculation for vibrational frequencies (hess).
         This method creates an attribute ``base_name``, used in creating the input and job files."""
 
         if self.filename is not None:
@@ -572,7 +572,7 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         Thresholds are implemented here automatically.
         If a job is an FMO job, automatically uses 48 cpus with 24 per node,
         unless otherwise stated in a Settings object.
-        If memory is not allocated by the user, 4 GB per cpu is used for FMO jobs. 
+        If memory is not allocated by the user, 4 GB per cpu is used for FMO jobs.
         """
         jobfile = job.replace("=name", f"={self.base_name}")
         jobfile = jobfile.replace(" name", f" {self.base_name}")
@@ -679,10 +679,10 @@ energy (spec) or hessian matrix calculation for thermochemical data and vibratio
         return len(ionic_mol.fragments) > 2
 
     def create_inputs_for_fragments(self, complex_is_fmo=False):
-        """Very useful to generate files for each fragment automatically, 
-        for single point and frequency calculations, generating free energy changes. 
-        Called if ``frags_in_subdir`` is set to True, as each fragment is given a 
-        subdirectory in an overall subdirectory, creating the following directory 
+        """Very useful to generate files for each fragment automatically,
+        for single point and frequency calculations, generating free energy changes.
+        Called if ``frags_in_subdir`` is set to True, as each fragment is given a
+        subdirectory in an overall subdirectory, creating the following directory
         structure (here for a 5-molecule system):
             .
             ├── frags

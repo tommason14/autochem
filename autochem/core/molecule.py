@@ -898,7 +898,7 @@ class Molecule:
     }
 
     def __init__(self, using=None, atoms=None, group=None, bonds_to_split=None):
-        self.check_user_additions()
+        Molecule.check_user_additions()
         if using is not None:
             self.xyz = using
             self.coords = self.read_xyz(self.xyz)
@@ -1897,6 +1897,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         coords = np.array([atom.coords for atom in self.coords])
         return (masses.reshape(-1, 1) * coords / masses.sum()).sum(axis=0)
 
+    @staticmethod
     def mol_template(self):
         lines = [
             "# Molecules should be laid out in four lines as follows:\n",
@@ -1914,7 +1915,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         ]
         return lines
 
-    def check_user_additions(self):
+    @staticmethod
+    def check_user_additions():
         """
         Reads ~/.config/autochem/molecules.txt for 
         any additional molecules
@@ -1925,7 +1927,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         userfile = os.path.join(confdir, "molecules.txt")
         # CREATE TEMPLATE FILE IF NOT EXISTS
         if not os.path.isfile(userfile):
-            open(userfile, "w+").writelines(self.mol_template())
+            open(userfile, "w+").writelines(Molecule.mol_template())
         # READ USER MOLECULES IF FILE EXISTS
         else:
             name = False
@@ -1956,7 +1958,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                         if not mult is False and not atoms is False:
                             if charge == 0 and mult == 1:
                                 Molecule.Neutrals[name] = atoms
-                            elif charge == -1 and mult == 1:
+                            if charge == -1 and mult == 1:
                                 Molecule.Anions[name] = atoms
                             if charge == 1 and mult == 1:
                                 Molecule.Cations[name] = atoms
@@ -1985,3 +1987,20 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             charge = False
                             mult = False
                             atoms = False
+        # now have to update the collated dict otherwise 
+        # the additions aren't found in the overall dict,
+        Molecule.molecules = {
+            **Molecule.Cations,
+            **Molecule.Anions,
+            **Molecule.Neutrals,
+            **Molecule.Radicals,
+            **Molecule.Dications,
+            **Molecule.Trications,
+            **Molecule.Tetracations,
+            **Molecule.Pentacations,
+            **Molecule.Hexacations,
+            **Molecule.Dianions,
+            **Molecule.Anion_radicals,
+            **Molecule.Cation_radicals,
+            **Molecule.Dication_radicals,
+    }
