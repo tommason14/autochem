@@ -1,7 +1,6 @@
 __all__ = []
 
 from .atom import *
-from .bond import *
 from .job import *
 from .molecule import *
 from .periodic_table import *
@@ -12,7 +11,6 @@ from .thermo import *
 from .utils import *
 
 __all__ += atom.__all__
-__all__ += bond.__all__
 __all__ += job.__all__
 __all__ += molecule.__all__
 __all__ += periodic_table.__all__
