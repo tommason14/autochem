@@ -1,18 +1,16 @@
-from ..core.utils import read_file, write_xyz
+from ..core.utils import write_xyz
 from ..core.results import Results
-from ..core.periodic_table import PeriodicTable as PT
 from ..core.atom import Atom
 
 import re
 import os
-import subprocess
 
 __all__ = ["OrcaResults"]
 
 
 class OrcaResults(Results):
     """
-    Class for obtaining results from Orca simulations. This class     
+    Class for obtaining results from Orca simulations. This class
     requires a log file to be read.
     """
 
@@ -87,7 +85,7 @@ class OrcaResults(Results):
             if "CARTESIAN COORDINATES (ANGSTROEM)" in line:
                 found = True
                 continue
-            if found and re.search("^\s*$", line):
+            if found and re.search(r"^\s*$", line):
                 break
             if found and "---" not in line:
                 line = line.strip().split()
@@ -95,7 +93,6 @@ class OrcaResults(Results):
                 coords = [float(i) for i in line[1:]]
                 atoms.append(Atom(sym, coords=coords))
         return atoms
-
 
     @property
     def is_dft(self):
@@ -132,7 +129,7 @@ class OrcaResults(Results):
         coords = []
         found_coords = False
         found_equil = False
-        regex = "^\s+[A-z]+(\s+-?[0-9]+\.[0-9]+){3}$"
+        regex = r"^\s+[A-z]+(\s+-?[0-9]+\.[0-9]+){3}$"
 
         for line in self.eof(0.5):
             if "THE OPTIMIZATION HAS CONVERGED" in line:
@@ -393,7 +390,7 @@ class OrcaResults(Results):
         waves = []
         waves_per_iter = []
         found = False
-        regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
+        regex = r"^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
         for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
@@ -416,7 +413,7 @@ class OrcaResults(Results):
         ints = []
         ints_per_iter = []
         found = False
-        regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
+        regex = r"^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
         for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
@@ -434,14 +431,14 @@ class OrcaResults(Results):
     @property
     def td_dft_transition_energies(self):
         """
-        Returns a nested list of energies of each transition, converted 
+        Returns a nested list of energies of each transition, converted
         from cm-1 to eV
         """
         inverse_cm_to_ev = 1 / 8065.6
         vals = []
         vals_per_iter = []
         found = False
-        regex = "^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
+        regex = r"^\s+[0-9]+(\s+-?[0-9]+\.[0-9]+){7}$"
         for line in self.read():
             if "TRANSITION ELECTRIC" in line:
                 found = True
@@ -455,3 +452,23 @@ class OrcaResults(Results):
                     vals.append(vals_per_iter)
                     vals_per_iter = []
         return vals
+
+    @property
+    def isotropic_nmr_shifts(self):
+        """
+        Return a dictionary of the last set of isotropic NMR shifts printed, with the keys
+        being the element name and index, and the values being the shifts.
+        Orca zero-indexes the atom indices, so 1 is added to each nucleus index.
+        """
+        shifts = {}
+        found = False
+        for line in self.read():
+            if "Nucleus  Element    Isotropic     Anisotropy" in line:
+                found = True
+                continue
+            if found and re.search(r"^\s+[0-9]", line):
+                items = line.split()
+                shifts[f"{items[1]} {int(items[0]) + 1}"] = float(items[2])
+            if re.search(r"^\s*$", line):
+                found = False
+        return shifts
