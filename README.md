@@ -19,6 +19,7 @@ Use this code for:
   - fluorescence data
   - geodesic charges
   - homo-lumo gaps
+  - nmr shielding constants
 - Automatic analysis of results
   - interaction energies
     - purely ionic systems
