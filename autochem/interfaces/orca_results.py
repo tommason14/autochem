@@ -4,6 +4,7 @@ from ..core.atom import Atom
 
 import re
 import os
+import pandas as pd
 
 __all__ = ["OrcaResults"]
 
@@ -456,19 +457,22 @@ class OrcaResults(Results):
     @property
     def isotropic_nmr_shifts(self):
         """
-        Return a dictionary of the last set of isotropic NMR shifts printed, with the keys
-        being the element name and index, and the values being the shifts.
+        Return a pandas dataframe of the last set of isotropic NMR shifts printed, with element indices,
+        names and shielding constants in ppm.
         Orca zero-indexes the atom indices, so 1 is added to each nucleus index.
         """
-        shifts = {}
+        shifts = []
         found = False
         for line in self.read():
             if "Nucleus  Element    Isotropic     Anisotropy" in line:
                 found = True
+                if len(shifts) > 0:
+                    # intermediate values dropped i.e. HF values from an MP2 calculation
+                    shifts = []
                 continue
             if found and re.search(r"^\s+[0-9]", line):
                 items = line.split()
-                shifts[f"{items[1]} {int(items[0]) + 1}"] = float(items[2])
+                shifts.append([int(items[0]) + 1, items[1], float(items[2])])
             if re.search(r"^\s*$", line):
                 found = False
-        return shifts
+        return pd.DataFrame(shifts, columns=["Index", "Element", "Shift"])

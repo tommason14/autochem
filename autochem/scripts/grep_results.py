@@ -18,16 +18,18 @@ from ..interfaces.gaussian_results import GaussianResults
 import os
 import re
 import sys
+import pandas as pd
 
 __all__ = [
     "charges",
-    "get_h_bonds",
-    "file_as_results_class",
-    "homo_lumo_gaps",
     "energies",
+    "energy_table",
+    "file_as_results_class",
+    "get_h_bonds",
+    "homo_lumo_gaps",
+    "nmr_shifts",
     "print_freqs",
     "print_freqs_to_csv",
-    "energy_table",
     "search_for_coords",
     "thermochemistry",
 ]
@@ -91,7 +93,7 @@ def get_type(filepath):
 
 def need_gauss_energy(calc):
     """
-    Returns True is there is an energy to be pulled from a Gaussian file. 
+    Returns True is there is an energy to be pulled from a Gaussian file.
     Required as Gaussian hessian calculations can be preceeded by optimisations,
     so the calc.is_hessian() call is irrelevant.
     """
@@ -175,7 +177,7 @@ def homo_lumo_gaps(dir, output, string_to_find=None, autosave=None):
     """
     Returns HOMO-LUMO or SOMO-LUMO gaps for each single point calculation
     found in any subdirectory. Currently restricted to single points for
-    simplicity, but can probably be extended to optimisations if needed- 
+    simplicity, but can probably be extended to optimisations if needed-
     would have to check the log files first.
     """
     info = []
@@ -379,13 +381,13 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
 
 
 def file_is_gamess(file):
-    """ Check first line of file for 'rungms' string """
+    """Check first line of file for 'rungms' string"""
     with open(file, "r") as f:
         return "rungms" in f.readline()
 
 
 def file_is_gaussian(file):
-    """ Check for the word Gaussian in the first 5 lines """
+    """Check for the word Gaussian in the first 5 lines"""
     for number, line in enumerate(read_file(file)):
         if "gaussian" in line.lower():
             return True
@@ -439,7 +441,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                             atom.index,
                             atom.symbol,
                             charge,
-                            'NA', # need to pull out standard devation...
+                            "NA",  # need to pull out standard devation...
                             atom.x,
                             atom.y,
                             atom.z,
@@ -453,7 +455,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                             atom.index,
                             atom.symbol,
                             charge,
-                            'NA', # need to pull out standard devation...
+                            "NA",  # need to pull out standard devation...
                             atom.x,
                             atom.y,
                             atom.z,
@@ -516,7 +518,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                             atom.index,
                             atom.symbol,
                             geodesic_charge,
-                            esd, 
+                            esd,
                             atom.x,
                             atom.y,
                             atom.z,
@@ -525,9 +527,38 @@ def charges(dir, output, string_to_find=None, autosave=None):
                     )
     # nested list (one level) to dict
     data = {}
-    keys = ("Path", "Index", "Element", "Charge", "Estimated Stdev", "Rx", "Ry", "Rz", "Fragment")
+    keys = (
+        "Path",
+        "Index",
+        "Element",
+        "Charge",
+        "Estimated Stdev",
+        "Rx",
+        "Ry",
+        "Rz",
+        "Fragment",
+    )
     for index, value in enumerate(keys):
         data[value] = [val[index] for val in results]
     responsive_table(data, strings=[1, 3, 9], min_width=10)
 
     write_csv_from_nested(results, col_names=keys, filename=output, autosave=autosave)
+
+
+def nmr_shifts(dir, output, string_to_find=None, autosave=None):
+    shifts = []
+    for log in get_files(dir, (".out", ".log"), filepath_includes=string_to_find):
+        calc = file_as_results_class(log)
+        try:
+            if calc.completed() and calc.is_spec():
+                data = calc.isotropic_nmr_shifts.assign(Path=calc.path, File=calc.file)[
+                    ["Path", "File", "Index", "Element", "Shift"]
+                ]
+                shifts.append(data)
+        except AttributeError:  # if log/out files are not logs of calculations
+            continue
+    if len(shifts) == 0:
+        sys.exit("Error: No single points found")
+    shifts = pd.concat(shifts, ignore_index=True)
+    responsive_table(shifts, strings=[1, 2, 4])
+    write_csv_from_dict(shifts.to_dict("list"), filename=output, autosave=autosave)
