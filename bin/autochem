@@ -307,5 +307,5 @@ if args.nmr:
     autosave = True
     if not args.output:
         autosave = False
-        args.output = "nmr_shifts.csv"
+        args.output = "nmr_shieldings.csv"
     nmr_shieldings(".", output=args.output, string_to_find=args.select, autosave=autosave)
