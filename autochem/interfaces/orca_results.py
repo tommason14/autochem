@@ -455,9 +455,9 @@ class OrcaResults(Results):
         return vals
 
     @property
-    def isotropic_nmr_shifts(self):
+    def isotropic_nmr_shielding_constants(self):
         """
-        Return a pandas dataframe of the last set of isotropic NMR shifts printed, with element indices,
+        Return a pandas dataframe of the last set of isotropic NMR shielding constants printed, with element indices,
         names and shielding constants in ppm.
         Orca zero-indexes the atom indices, so 1 is added to each nucleus index.
         """
@@ -475,4 +475,4 @@ class OrcaResults(Results):
                 shifts.append([int(items[0]) + 1, items[1], float(items[2])])
             if re.search(r"^\s*$", line):
                 found = False
-        return pd.DataFrame(shifts, columns=["Index", "Element", "Shift"])
+        return pd.DataFrame(shifts, columns=["Index", "Element", "Shielding"])

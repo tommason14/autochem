@@ -303,9 +303,9 @@ if args.copy_xyz:
     copy_xyz_tree(".", args.copy_xyz)
 
 if args.nmr:
-    from autochem.scripts.grep_results import nmr_shifts
+    from autochem.scripts.grep_results import nmr_shieldings
     autosave = True
     if not args.output:
         autosave = False
         args.output = "nmr_shifts.csv"
-    nmr_shifts(".", output=args.output, string_to_find=args.select, autosave=autosave)
+    nmr_shieldings(".", output=args.output, string_to_find=args.select, autosave=autosave)

@@ -27,7 +27,7 @@ __all__ = [
     "file_as_results_class",
     "get_h_bonds",
     "homo_lumo_gaps",
-    "nmr_shifts",
+    "nmr_shieldings",
     "print_freqs",
     "print_freqs_to_csv",
     "search_for_coords",
@@ -545,15 +545,15 @@ def charges(dir, output, string_to_find=None, autosave=None):
     write_csv_from_nested(results, col_names=keys, filename=output, autosave=autosave)
 
 
-def nmr_shifts(dir, output, string_to_find=None, autosave=None):
+def nmr_shieldings(dir, output, string_to_find=None, autosave=None):
     shifts = []
     for log in get_files(dir, (".out", ".log"), filepath_includes=string_to_find):
         calc = file_as_results_class(log)
         try:
             if calc.completed() and calc.is_spec():
-                data = calc.isotropic_nmr_shifts.assign(Path=calc.path, File=calc.file)[
-                    ["Path", "File", "Index", "Element", "Shift"]
-                ]
+                data = calc.isotropic_nmr_shielding_constants.assign(
+                    Path=calc.path, File=calc.file
+                )[["Path", "File", "Index", "Element", "Shielding"]]
                 shifts.append(data)
         except AttributeError:  # if log/out files are not logs of calculations
             continue
