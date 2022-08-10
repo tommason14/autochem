@@ -55,10 +55,12 @@ def ask_package():
             choice = 6
         elif choice == 2:
             choice = 7
+        elif choice == 3:
+            choice = 8
         elif choice == 4:
             choice = 9
         elif choice == 5:
-            choice = 8
+            choice = 10
     options = {
         1: "gamess",
         2: "psi4",
@@ -67,8 +69,9 @@ def ask_package():
         5: "gamess_fmo",
         6: "gamess_no_frags",
         7: "psi4_no_frags",
-        8: "gamess_fmo_no_frags",
+        8: "gauss_no_frags",
         9: "orca_no_frags",
+        10: "gamess_fmo_no_frags",
     }
     return options[choice]
 
@@ -92,13 +95,15 @@ def job_type(package, xyz, s):
     elif package == "psi4":
         return PsiJob(using=xyz, frags_in_subdir=True, settings=s, is_complex=True)
     elif package == "gauss":
-        return GaussJob(using=xyz, settings=s)
+        return GaussJob(using=xyz, settings=s, frags_in_subdir=True, is_complex=True)
     elif package == "orca":
         return OrcaJob(using=xyz, settings=s, frags_in_subdir=True)
     elif package == "gamess_no_frags":
         return GamessJob(using=xyz, frags_in_subdir=False, settings=s)
     elif package == "psi4_no_frags":
         return PsiJob(using=xyz, frags_in_subdir=False, settings=s)
+    elif package == "gauss_no_frags":
+        return GaussJob(using=xyz, settings=s, frags_in_subdir=False)
     elif package == "gamess_fmo_no_frags":
         return GamessJob(using=xyz, fmo=True, frags_in_subdir=False, settings=s)
     elif package == "orca_no_frags":
@@ -251,11 +256,11 @@ def xyz_to_tree(settings):
     underscore is seen, a new subdirectory is created.
 
     This function looks for a directory called ``files``, containing the xyz files, and outputs into
-    ``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings 
-    should be created and then passed into the function. 
+    ``calcs``. Ideally, call the function from the parent directory of ``files``. Desired settings
+    should be created and then passed into the function.
 
-    Another desirable feature is to separate optimisations from single point calculations. As a   
-    result, when the function runs, it creates jobs in a new subdirectory of the molecule 
+    Another desirable feature is to separate optimisations from single point calculations. As a
+    result, when the function runs, it creates jobs in a new subdirectory of the molecule
     directory.
 
     >>> s = Settings()
