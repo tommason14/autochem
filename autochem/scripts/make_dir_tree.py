@@ -77,14 +77,6 @@ def ask_package():
 
 
 def job_type(package, xyz, s):
-    # jobs = {
-    #     "gamess": GamessJob(using = xyz, frags_in_subdir = True, settings = s),
-    #     "gamess_fmo": GamessJob(using = xyz, fmo = True, frags_in_subdir = True, settings = s),
-    #     "psi4": PsiJob(using = xyz, frags_in_subdir = True, settings = s),
-    #     "lammps": 'LAMMPS'
-    # }
-    # return jobs[package]
-    # ABOVE CODE RAN GAMESS FMO AND PSI4 REGARDLESS OF CHOICE-- WHY???
 
     if package == "gamess":
         return GamessJob(using=xyz, frags_in_subdir=True, settings=s, is_complex=True)
@@ -208,9 +200,7 @@ def xyz_is_rerun(file):
     return file == "rerun.xyz"
 
 
-def logfile_in_dir(path):
-    if path == "":
-        path = "."
+def logfile_in_dir(path="."):
     return any("log" in f for f in os.listdir(path))
 
 
@@ -305,10 +295,8 @@ def xyz_to_tree(settings):
     ``calcs`` directory.
     """
     package = ask_package()
-    # xyz_directory = check_dir()
     xyz_directory = os.getcwd()
     files = get_xyz()
-    # rm dir if log present
     files = [f for f in files if not logfile_in_dir(os.path.dirname(f))]
     make_tree_and_copy(xyz_directory, files)
     make_job_files(xyz_directory, package, settings)  # xyz directory is base dir
