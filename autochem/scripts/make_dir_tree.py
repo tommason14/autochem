@@ -201,6 +201,8 @@ def xyz_is_rerun(file):
 
 
 def logfile_in_dir(path="."):
+    if path == "":
+        path = "."
     return any("log" in f for f in os.listdir(path))
 
 
