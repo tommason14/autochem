@@ -41,6 +41,8 @@ Inspired by the [PLAMS](https://github.com/SCM-NV/PLAMS) package.
 
 # Installation
 
+Requires gfortran to be installed for vibrational analysis.
+
 ```sh
 git clone https://github.com/tommason14/autochem
 cd autochem
@@ -50,6 +52,13 @@ sh install.sh
 Then reload your shell with `source ~/.bashrc` or `source ~/.zshrc`.
 
 Note that the `install.sh` scripts installs the python numpy and pandas packages through pip by assuming you have a `python3` executable available.
+
+Alternatively, run through docker to avoid having to install fortran/python packages:
+```sh 
+git clone https://github.com/tommason14/autochem
+cd autochem
+docker build -t autochem .
+```
 
 # Example Usage
 
@@ -111,6 +120,7 @@ sett.meta.jobfs='400gb'
 then run from the command line using `autochem -d -s settings.py`, which
 takes in every xyz file in the current directory and creates jobs using
 parameters from the `Settings` object in `settings.py`. 
+Expects that the settings.py file is in the folder where you are running `autochem` from.
 Note: using this method, the `Settings` object must be called `sett`.
 
 Example settings can be found in the [settings_files](https://github.com/tommason14/monash_automation/tree/master/settings_files)
@@ -603,11 +613,23 @@ In addition, other information can be found:
   `pandas.DataFrame` object. For example, 
   `autochem -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
   (Experimental, use with caution)
-  
+
+If running through docker, you will need to mount the current directory inside the container and then switch to it when running the CLI.
+To do this:
+
+```
+docker run -v .:/mnt/data -w /mnt/data -it autochem <arguments>
+```
+
+This will allow you to run commands acting on files in the current folder i.e.
+```
+docker run -v .:/mnt/data -w /mnt/data -it autochem --freqs 
+```
+will check for vibrations and write a CSV named freqs.csv in the current folder.  
+
 # Adding additional molecules to the database
 
-Add molecules to the `~/.config/autochem/molecules.txt` file, 
-using the format of:
+Add molecules to the `~/.config/autochem/molecules.txt` file if you installed the package to your filesystem, or to `molecules.txt` in the top level of this repository if running through docker, using the format of:
 ```
 name=dihydrogen_citrate
 charge=-1
