@@ -630,3 +630,5 @@ atoms=C,C,C,H,H,O,O,C,O,C,C,H,H,O,H,O,H,H,O,O
 ```
 
 Make sure that names do not contain spaces.
+
+If using docker, you will need to rebuild the container after adding to this file, so run `docker build -t autochem .` again.
