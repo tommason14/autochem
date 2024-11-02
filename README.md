@@ -59,6 +59,11 @@ git clone https://github.com/tommason14/autochem
 cd autochem
 docker build -t autochem .
 ```
+I'd then recommend setting the following alias, to mount the current folder inside
+the docker container and run autochem from that folder:
+```
+alias autochem='docker run -v .:/mnt/data -w /mnt/data -it autochem'
+```
 
 # Example Usage
 
@@ -613,19 +618,6 @@ In addition, other information can be found:
   `pandas.DataFrame` object. For example, 
   `autochem -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
   (Experimental, use with caution)
-
-If running through docker, you will need to mount the current directory inside the container and then switch to it when running the CLI.
-To do this:
-
-```
-docker run -v .:/mnt/data -w /mnt/data -it autochem <arguments>
-```
-
-This will allow you to run commands acting on files in the current folder i.e.
-```
-docker run -v .:/mnt/data -w /mnt/data -it autochem --freqs 
-```
-will check for vibrations and write a CSV named freqs.csv in the current folder.  
 
 # Adding additional molecules to the database
 
