@@ -14,6 +14,7 @@ class GaussianResults(Results):
     """
     Class for obtaining results from Gaussian simulations. This class requires a log file to be read.
     """
+
     def __init__(self, log):
         super().__init__(log)
 
@@ -118,8 +119,7 @@ class GaussianResults(Results):
                     found_equil = True
                 if "Standard orientation" in line:
                     found_some = True
-                    if len(some_coords
-                           ) > 0:  # from last run, remove those coords
+                    if len(some_coords) > 0:  # from last run, remove those coords
                         some_coords = []
                 if found_equil:
                     if re.search(regex, line):
@@ -158,8 +158,7 @@ class GaussianResults(Results):
                 newdir = os.path.join(MOLECULE_PARENT_DIR, "rerun")
                 if not os.path.isdir(newdir):
                     os.mkdir(newdir)
-                write_xyz(some_coords,
-                          os.path.join(newdir, f"{self.title}-rerun.xyz"))
+                write_xyz(some_coords, os.path.join(newdir, f"{self.title}-rerun.xyz"))
             else:
                 print("No iterations were cycled through!")
 
@@ -181,7 +180,7 @@ class GaussianResults(Results):
             lines.append(line)
         title = lines[-2].strip()
         # if spaces in title, use the filename instead
-        if ' ' in title:
+        if " " in title:
             return self.basename
         return title
 
@@ -213,7 +212,7 @@ class GaussianResults(Results):
     @property
     def method(self):
         """
-        Returns energy type. For example, for HF/cc-pVTZ, returns HF. 
+        Returns energy type. For example, for HF/cc-pVTZ, returns HF.
         For wB97xD/aug-cc-pVDZ, returns WB97XD.
         """
         return self.user_commands.split("/")[0].split()[-1].upper()
@@ -221,7 +220,7 @@ class GaussianResults(Results):
     @property
     def basis(self):
         """
-        Returns basis set. For example, for HF/cc-pVTZ, returns cc-pvtz. 
+        Returns basis set. For example, for HF/cc-pVTZ, returns cc-pvtz.
         For wB97xD/aug-cc-pVDZ, returns aug-cc-pVDZ.
         """
         basis = self.user_commands.split("/")[1].split()[0]
@@ -274,21 +273,12 @@ class GaussianResults(Results):
     def get_data(self):
         """
         Returns the last occurrence of printed energies. Negate energy types, and if the energy type
-        is not found, assumed to be DFT. 
+        is not found, assumed to be DFT.
         Must return file, path, method, basis, hf/dft, mp2/srs, mp2_opp, mp2_same
         in the order, so 'NA' values are there to satisfy that criteria.
         """
         if self.method == "hf":
-            return (
-                self.file,
-                self.path,
-                self.method,
-                self.basis,
-                self.hf_energy,
-                "NA",
-                "NA",
-                "NA",
-            )
+            return (self.file, self.path, self.method, self.basis, self.hf_energy, "NA", "NA", "NA")
         elif self.method == "mp2":
             return (
                 self.file,
@@ -301,16 +291,7 @@ class GaussianResults(Results):
                 "NA",
             )
         else:
-            return (
-                self.file,
-                self.path,
-                self.method,
-                self.basis,
-                self.dft_energy,
-                "NA",
-                "NA",
-                "NA",
-            )
+            return (self.file, self.path, self.method, self.basis, self.dft_energy, "NA", "NA", "NA")
 
     @property
     def multiplicity(self):
@@ -413,10 +394,10 @@ class GaussianResults(Results):
     @property
     def td_dft_wavelengths(self):
         """
-        Returns a nested list of wavelengths for each 
+        Returns a nested list of wavelengths for each
         iteration. For vertical excitations, the list
-        will just have one element, but for an 
-        excited state optimisation, there will be many 
+        will just have one element, but for an
+        excited state optimisation, there will be many
         iterations.
         """
         waves = []

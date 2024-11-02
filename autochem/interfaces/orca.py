@@ -14,8 +14,8 @@ __all__ = ["OrcaJob"]
 
 
 class OrcaJob(Job):
-    """Class for creating Orca input files and job scripts. 
-    
+    """Class for creating Orca input files and job scripts.
+
     The input files generated default to single point energy calculations, with density fitting. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
     >>> s = Settings()
     >>> s.input.basis='cc-pVDZ'
@@ -31,14 +31,7 @@ class OrcaJob(Job):
 
     _procs = {"stm": 46, "mon": 16, "mas": 16, "gadi": 48, "mgs": 24}
 
-    def __init__(
-        self,
-        using=None,
-        frags_in_subdir=False,
-        settings=None,
-        filename=None,
-        is_complex=None,
-    ):
+    def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None, is_complex=None):
         super().__init__(using)
         self.filename = filename
         self.defaults = read_template("orca.json")  # settings object
@@ -79,7 +72,7 @@ class OrcaJob(Job):
             self.is_complex = True
 
     def write_file(self, data, filetype):
-        """Writes the generated Orca input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+        """Writes the generated Orca input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq).
         NOTE: Must pass data as a string, not a list!"""
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
@@ -92,8 +85,8 @@ class OrcaJob(Job):
 
     def create_job(self):
         """
-        Returns the relevant job template as a list, then performs the 
-        necessary modifications. After, the job file is printed in the      
+        Returns the relevant job template as a list, then performs the
+        necessary modifications. After, the job file is printed in the
         appropriate directory.
         """
         jobfile = self.get_job_template().replace(" name", f" {self.base_name}")
@@ -126,7 +119,7 @@ class OrcaJob(Job):
                 jobfile = jobfile.replace("24:00:00", self.meta.time)
 
             if hasattr(self, "meta") and "mem" in self.meta:
-                mem = str(self.meta.mem).lower().replace('gb', '')
+                mem = str(self.meta.mem).lower().replace("gb", "")
                 jobfile = jobfile.replace(
                     "mem=64", f"mem={mem}"
                 )  # for m3/mon, mem=... doesn't appear for stm
@@ -134,12 +127,10 @@ class OrcaJob(Job):
             if "time" in self.meta:
                 jobfile = jobfile.replace("24:00:00", self.meta.time)
             if "mem" in self.meta:
-                mem = str(self.meta.mem).lower().replace('gb', '')
+                mem = str(self.meta.mem).lower().replace("gb", "")
                 jobfile = jobfile.replace("mem=192", f"mem={mem}")
             if "partition" in self.meta:
-                jobfile = jobfile.replace(
-                    "#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}"
-                )
+                jobfile = jobfile.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
             if "ncpus" in self.meta:
                 jobfile = jobfile.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
             if "jobfs" in self.meta:
@@ -162,24 +153,24 @@ class OrcaJob(Job):
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
-            .
-            ├── frags
-            │   ├── acetate0
-            │   │   ├── acetate0.xyz
-            │   │   └── spec.inp
-            │   ├── acetate1
-            │   │   ├── acetate1.xyz
-            │   │   └── spec.inp
-            │   ├── choline2
-            │   │   ├── choline2.xyz
-            │   │   └── spec.inp
-            │   ├── choline3
-            │   │   ├── choline3.xyz
-            │   │   └── spec.inp
-            │   └── water4
-            │       ├── spec.inp
-            │       └── water4.xyz
-            ├── spec.inp
+        .
+        ├── frags
+        │   ├── acetate0
+        │   │   ├── acetate0.xyz
+        │   │   └── spec.inp
+        │   ├── acetate1
+        │   │   ├── acetate1.xyz
+        │   │   └── spec.inp
+        │   ├── choline2
+        │   │   ├── choline2.xyz
+        │   │   └── spec.inp
+        │   ├── choline3
+        │   │   ├── choline3.xyz
+        │   │   └── spec.inp
+        │   └── water4
+        │       ├── spec.inp
+        │       └── water4.xyz
+        ├── spec.inp
         """
         # not necessarily any splitting prior to this
         self.is_complex = False
@@ -302,7 +293,7 @@ class OrcaJob(Job):
     @property
     def runtype(self):
         """
-        Decides if the job should be an optimisation, single point or 
+        Decides if the job should be an optimisation, single point or
         frequency job.
         """
         params = self.input.keys()
@@ -361,7 +352,7 @@ class OrcaJob(Job):
     @property
     def additional_params(self):
         """
-        Add in parameters to the `run_info` that do not involve 
+        Add in parameters to the `run_info` that do not involve
         a basis set, method or run type.
         """
         addn = ""
@@ -416,14 +407,14 @@ class OrcaJob(Job):
     def additional_info(self):
         """
         Add information such as:
-        %pal 
-            nprocs 46 
+        %pal
+            nprocs 46
         end
         with this function.
         By default, Orca is set to run in parallel with the following number of CPUs
         per node depending on the supercomputer:
-        
-        - Stampede: 46        
+
+        - Stampede: 46
         - Magnus: 24
         - Monarch: 16
         - Massive: 16
@@ -435,15 +426,15 @@ class OrcaJob(Job):
         adds the line "%maxcore ___"
         """
         ret = ""
-        if 'maxcore' in self.input:
-            ret +=f"%maxcore {self.input.maxcore}\n\n"
+        if "maxcore" in self.input:
+            ret += f"%maxcore {self.input.maxcore}\n\n"
         if hasattr(self.input, "meta") and "pal" in self.input.meta:
             pass
         elif hasattr(self, "meta") and "ncpus" in self.meta:
             ret += f"%pal\n nprocs {self.meta.ncpus}\nend"
         else:
             ret += f"%pal\n nprocs {OrcaJob._procs[self.sc]}\nend"
-        
+
         for key, val in self.input.meta.items():
             ret += f"\n\n%{key}\n{val}\nend"
         return ret

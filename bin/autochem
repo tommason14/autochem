@@ -14,9 +14,7 @@ parser.add_argument(
 #                     help='Depth to apply function to, be it searching for data or xyz files to act on when creating files',
 #                     action='store', type=int)
 parser.add_argument(
-    "--freqs",
-    help="Print frequencies and intensities to a csv. Works recursively.",
-    action="store_true",
+    "--freqs", help="Print frequencies and intensities to a csv. Works recursively.", action="store_true"
 )
 parser.add_argument(
     "--freqs-to-csv",
@@ -24,9 +22,7 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "--fluorescence",
-    help="Pull fluorescence data recursively from Gaussian log files",
-    action="store_true",
+    "--fluorescence", help="Pull fluorescence data recursively from Gaussian log files", action="store_true"
 )
 parser.add_argument(
     "--charges",
@@ -74,10 +70,7 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "-e",
-    "--equil-coords",
-    help="Searches for equilibrium coordinates recursively",
-    action="store_true",
+    "-e", "--equil-coords", help="Searches for equilibrium coordinates recursively", action="store_true"
 )
 parser.add_argument(
     "-f",
@@ -90,9 +83,7 @@ parser.add_argument(
     "--select",
     help="Use with -r or -t to select certain files, or limit the selection i.e, use `-l spec` to limit the output to only include files with spec in their path",
 )
-parser.add_argument(
-    "-m", "--mult", help="Multiplicity used with --thermochem", action="store"
-)
+parser.add_argument("-m", "--mult", help="Multiplicity used with --thermochem", action="store")
 parser.add_argument(
     "-n",
     "--nmr",
@@ -145,11 +136,10 @@ args = parser.parse_args()
 
 
 def imported_settings():
-    from importlib import import_module
-
     # imports from cwd not working on stampede for some reason
     # so hack to add dir to pythonpath
     import os
+    from importlib import import_module
 
     sys.path.append(os.getcwd())
     file_to_import = args.settings[:-3]
@@ -203,9 +193,7 @@ if args.thermochem:
     )
 
 if args.free_energies:
-    from autochem.scripts.free_energy_interactions import (
-        calculate_free_energy_interactions,
-    )
+    from autochem.scripts.free_energy_interactions import calculate_free_energy_interactions
 
     calculate_free_energy_interactions(args.free_energies)
 
@@ -216,9 +204,7 @@ if args.results:
     if not args.output:
         autosave = False
         args.output = "energies.csv"
-    energy_table(
-        ".", file_name=args.output, string_to_find=args.select, autosave=autosave
-    )
+    energy_table(".", file_name=args.output, string_to_find=args.select, autosave=autosave)
 
 if args.settings:
     settings = imported_settings()
@@ -257,7 +243,7 @@ if args.interaction_energies:
     calculate_interaction_energies(
         args.interaction_energies,
         with_ionic=args.with_ionic,
-        pretty_print=True, # prefer the output in a table rather than a truncated DataFrame
+        pretty_print=True,  # prefer the output in a table rather than a truncated DataFrame
         output=args.output,
     )
 
@@ -275,9 +261,7 @@ if args.weight:
     if not args.output:
         autosave = False
         args.output = "weighted.csv"
-    apply_boltzmann_weightings(
-        args.weight, args.group, output=args.output
-    )
+    apply_boltzmann_weightings(args.weight, args.group, output=args.output)
 
 if args.charges:
     from autochem.scripts.grep_results import charges
@@ -304,6 +288,7 @@ if args.copy_xyz:
 
 if args.nmr:
     from autochem.scripts.grep_results import nmr_shieldings
+
     autosave = True
     if not args.output:
         autosave = False

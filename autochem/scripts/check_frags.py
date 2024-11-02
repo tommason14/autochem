@@ -9,7 +9,7 @@ def print_frags(directory, verbose=False, grouping=None):
     """
     Prints fragments for each xyz file in the directory passed in.
     If the verbose setting is passed, print out indices of each fragment.
-    If grouping is not None, then fragments of those names are grouped 
+    If grouping is not None, then fragments of those names are grouped
     together.
     """
     files = [file for file in os.listdir(directory) if file.endswith("xyz")]
@@ -19,7 +19,9 @@ def print_frags(directory, verbose=False, grouping=None):
         mol = Molecule(using=file, group=grouping)
         mol.separate()
         if len(mol.fragments) == 0:
-            print(f'{file}: contains no molecules found in the database.\nConsider adding molecules to the ~/.config/autochem/molecules.txt file.\n')
+            print(
+                f"{file}: contains no molecules found in the database.\nConsider adding molecules to the ~/.config/autochem/molecules.txt file.\n"
+            )
             continue
         else:
             print(f"{file.replace('.xyz', '')}: {len(mol.fragments)} fragments")
@@ -31,8 +33,7 @@ def print_frags(directory, verbose=False, grouping=None):
                 ]
             else:
                 for_printing["Atoms"] = [
-                    f"{frag['atoms'][0].index}-{frag['atoms'][-1].index}"
-                    for frag in mol.fragments.values()
+                    f"{frag['atoms'][0].index}-{frag['atoms'][-1].index}" for frag in mol.fragments.values()
                 ]
 
             # for frag in mol.fragments.values():

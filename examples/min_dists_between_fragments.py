@@ -5,6 +5,7 @@ from collections import namedtuple
 
 info = namedtuple("info", "xyz atom1 mol1 atom2 mol2 dist")
 
+
 def distances(namedtup, molecule):
     return [
         namedtup(
@@ -20,13 +21,14 @@ def distances(namedtup, molecule):
         for atom2 in frag2["atoms"]
     ]
 
+
 dists = []
-for xyz in glob('*xyz'):
+for xyz in glob("*xyz"):
     mol = Molecule(xyz)
     dists += distances(info, mol)
 
 df = df_from_namedtuples(info, dists)
-mindists = df.groupby(["xyz", "mol1", "mol2"])["dist"].min().reset_index().sort_values(
-    ["xyz", "mol1", "mol2"]
+mindists = (
+    df.groupby(["xyz", "mol1", "mol2"])["dist"].min().reset_index().sort_values(["xyz", "mol1", "mol2"])
 )
-mindists.to_csv('min_dists_between_frags.csv', index=False)
+mindists.to_csv("min_dists_between_frags.csv", index=False)

@@ -97,9 +97,7 @@ def need_gauss_energy(calc):
     Required as Gaussian hessian calculations can be preceeded by optimisations,
     so the calc.is_hessian() call is irrelevant.
     """
-    return (
-        isinstance(calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
-    )
+    return isinstance(calc, GaussianResults) and calc.is_optimisation() or calc.is_spec()
 
 
 def energies(dir, filepath_includes):
@@ -111,9 +109,7 @@ def energies(dir, filepath_includes):
         calc = file_as_results_class(log)
         filetype = get_type(log)
         try:
-            if (
-                calc.completed()
-            ):  # add provision for energies of opts only if equilibrium found
+            if calc.completed():  # add provision for energies of opts only if equilibrium found
                 if not calc.is_hessian() or need_gauss_energy(calc):
                     print(log)
                     data = calc.get_data()
@@ -150,16 +146,7 @@ def energy_table(dir, file_name, string_to_find=None, autosave=None):
     for result in output:
         data = add_data(data, result["data"])
 
-    keys = (
-        "File",
-        "Path",
-        "Method",
-        "Basis",
-        "HF/DFT",
-        "MP2/SRS",
-        "MP2_opp",
-        "MP2_same",
-    )
+    keys = ("File", "Path", "Method", "Basis", "HF/DFT", "MP2/SRS", "MP2_opp", "MP2_same")
     table_data = {}
     for key, val in zip(keys, data):
         table_data[key] = val
@@ -257,8 +244,7 @@ def thermochemistry(dir, string_to_find, mult, temp, output, autosave=None):
         {
             k: v
             for k, v in collected.items()
-            if k
-            in ("File", "Temperature [K]", "Multiplicity given", "S tot [J/(mol K)]")
+            if k in ("File", "Temperature [K]", "Multiplicity given", "S tot [J/(mol K)]")
         },
         strings=[1],
         min_width=10,
@@ -319,9 +305,7 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
         return True
 
     distance = check_user_input(
-        "Distance (Å) [2]",
-        lambda item: can_cast_as_float(item) or item == "",
-        "Please enter a number",
+        "Distance (Å) [2]", lambda item: can_cast_as_float(item) or item == "", "Please enter a number"
     )
 
     if distance == "":
@@ -331,11 +315,7 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
 
     print("\n", " " * 15, "HYDROGEN BOND DATA\n")
     output = []
-    files = [
-        f
-        for f in get_files(dir, ["xyz"], filepath_includes=string_to_find)
-        if f.count("/") == 1
-    ]
+    files = [f for f in get_files(dir, ["xyz"], filepath_includes=string_to_find) if f.count("/") == 1]
     for file in files:
         path, f = os.path.split(file)
         print("Checking", file[2:])
@@ -349,32 +329,14 @@ def get_h_bonds(dir, output=None, string_to_find=None, autosave=None):
     print()
     if len(output) > 0:
         data = {}
-        keys = (
-            "File",
-            "Path",
-            "Molecule1",
-            "Atom1",
-            "Molecule2",
-            "Atom2",
-            "Length",
-            "Angle",
-        )
+        keys = ("File", "Path", "Molecule1", "Atom1", "Molecule2", "Atom2", "Length", "Angle")
         for index, value in enumerate(keys):
             data[value] = [val[index] for val in output]
         responsive_table(data, strings=[1, 2, 3, 4, 5, 6], min_width=9)
         print()
         write_csv_from_nested(
             output,
-            col_names=(
-                "File",
-                "Path",
-                "Molecule1",
-                "Atom1",
-                "Molecule2",
-                "Atom2",
-                "Length",
-                "Angle",
-            ),
+            col_names=("File", "Path", "Molecule1", "Atom1", "Molecule2", "Atom2", "Length", "Angle"),
             filename="hbonds.csv",
             autosave=autosave,
         )
@@ -415,9 +377,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                 if re.search(atom_regex, line):
                     sym, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append(
-                        [logfile, Atom(sym, coords=(x, y, z))]
-                    )  # new key for each coord
+                    res.append([logfile, Atom(sym, coords=(x, y, z))])  # new key for each coord
             found = False
             counter = 0
             for line in eof(logfile, 0.20):
@@ -475,9 +435,7 @@ def charges(dir, output, string_to_find=None, autosave=None):
                 if re.search(atom_regex, line):
                     sym, atnum, x, y, z = line.split()
                     x, y, z = map(float, (x, y, z))
-                    res.append(
-                        [logfile, Atom(sym, coords=(x, y, z))]
-                    )  # new key for each coord
+                    res.append([logfile, Atom(sym, coords=(x, y, z))])  # new key for each coord
             found = False
             counter = 0
             for line in read_file(logfile):
@@ -513,31 +471,11 @@ def charges(dir, output, string_to_find=None, autosave=None):
                     )
                 except KeyError:
                     results.append(
-                        [
-                            path,
-                            atom.index,
-                            atom.symbol,
-                            geodesic_charge,
-                            esd,
-                            atom.x,
-                            atom.y,
-                            atom.z,
-                            "NA",
-                        ]
+                        [path, atom.index, atom.symbol, geodesic_charge, esd, atom.x, atom.y, atom.z, "NA"]
                     )
     # nested list (one level) to dict
     data = {}
-    keys = (
-        "Path",
-        "Index",
-        "Element",
-        "Charge",
-        "Estimated Stdev",
-        "Rx",
-        "Ry",
-        "Rz",
-        "Fragment",
-    )
+    keys = ("Path", "Index", "Element", "Charge", "Estimated Stdev", "Rx", "Ry", "Rz", "Fragment")
     for index, value in enumerate(keys):
         data[value] = [val[index] for val in results]
     responsive_table(data, strings=[1, 3, 9], min_width=10)
@@ -551,9 +489,9 @@ def nmr_shieldings(dir, output, string_to_find=None, autosave=None):
         calc = file_as_results_class(log)
         try:
             if calc.completed() and calc.is_spec():
-                data = calc.isotropic_nmr_shielding_constants.assign(
-                    Path=calc.path, File=calc.file
-                )[["Path", "File", "Index", "Element", "Shielding"]]
+                data = calc.isotropic_nmr_shielding_constants.assign(Path=calc.path, File=calc.file)[
+                    ["Path", "File", "Index", "Element", "Shielding"]
+                ]
                 shifts.append(data)
         except AttributeError:  # if log/out files are not logs of calculations
             continue

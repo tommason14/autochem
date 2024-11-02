@@ -77,13 +77,10 @@ def ask_package():
 
 
 def job_type(package, xyz, s):
-
     if package == "gamess":
         return GamessJob(using=xyz, frags_in_subdir=True, settings=s, is_complex=True)
     elif package == "gamess_fmo":
-        return GamessJob(
-            using=xyz, fmo=True, frags_in_subdir=True, settings=s, is_complex=True
-        )
+        return GamessJob(using=xyz, fmo=True, frags_in_subdir=True, settings=s, is_complex=True)
     elif package == "psi4":
         return PsiJob(using=xyz, frags_in_subdir=True, settings=s, is_complex=True)
     elif package == "gauss":

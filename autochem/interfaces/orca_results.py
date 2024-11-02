@@ -197,15 +197,7 @@ class OrcaResults(Results):
         Returns data for HF/DFT single point calculations.
         Note the NAs returned are because of no MP2 spin parameters.
         """
-        return (
-            self.file,
-            self.path,
-            self.method,
-            self.basis,
-            self.final_single_point_energy,
-            "NA",
-            "NA",
-        )
+        return (self.file, self.path, self.method, self.basis, self.final_single_point_energy, "NA", "NA")
 
     def get_data(self):
         """
@@ -366,9 +358,7 @@ class OrcaResults(Results):
         Prints all thermochemical data currently extracted from orca log files.
         """
         print(f"Thermochemical summary for {self.log}")
-        for temp, zpve, thermal in zip(
-            self.thermo_temp, self.thermo_zpve, self.thermo_thermal_energy
-        ):
+        for temp, zpve, thermal in zip(self.thermo_temp, self.thermo_zpve, self.thermo_thermal_energy):
             print(f"Data taken at {temp}:")
             print(f"\tZPVE: {zpve} kJ/mol")
             print(f"\tTotal thermal energy: {thermal} kJ/mol")

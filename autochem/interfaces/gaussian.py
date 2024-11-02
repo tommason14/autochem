@@ -10,29 +10,23 @@ __all__ = ["GaussJob"]
 
 
 class GaussJob(Job):
-    """Class for creating Gaussian input files and job scripts. 
-    
-    The names of files created default to the type of calculation: 
-    optimisation (opt), single point energy (spec) or hessian matrix 
-    calculation for thermochemical data and vibrational frequencies (hess). 
-    If a different name is desired, pass a string with the ``filename`` 
+    """Class for creating Gaussian input files and job scripts.
+
+    The names of files created default to the type of calculation:
+    optimisation (opt), single point energy (spec) or hessian matrix
+    calculation for thermochemical data and vibrational frequencies (hess).
+    If a different name is desired, pass a string with the ``filename``
     parameter, with no extension. The name will be used for both input and job
     files.
-    
+
         >>> job = GaussJob(using = 'file.xyz', filename = 'benzene')
-    
-    This command produces 'benzene.job', containing both input data and 
+
+    This command produces 'benzene.job', containing both input data and
     job scheduler information.
     For meta data, number of processors (ncpus), memory (mem) etc, use sett.meta.ncpus=46.
     """
-    def __init__(
-        self,
-        using=None,
-        frags_in_subdir=False,
-        settings=None,
-        filename=None,
-        is_complex=None,
-    ):
+
+    def __init__(self, using=None, frags_in_subdir=False, settings=None, filename=None, is_complex=None):
         super().__init__(using)
         self.filename = filename
         self.defaults = read_template("gaussian.json")
@@ -107,8 +101,7 @@ class GaussJob(Job):
                     job = job.replace("mem=192", f"mem={mem}")
             if "ncpus" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
-                    job = job.replace("cpus-per-task=16",
-                                      f"cpus-per-task={self.meta.ncpus}")
+                    job = job.replace("cpus-per-task=16", f"cpus-per-task={self.meta.ncpus}")
                     # for stampede, specified as -c, so it won't change there, which is
                     # what we want as you are charged for the whole node there!
                 else:  # gadi
@@ -116,19 +109,14 @@ class GaussJob(Job):
             if "partition" in self.meta:
                 if self.sc in super().SLURM_HOSTS:
                     jobfile = job.split("\n")
-                    jobfile = _change_partition(jobfile,
-                                                self.meta.partition,
-                                                search_term="#SBATCH -p ")
+                    jobfile = _change_partition(jobfile, self.meta.partition, search_term="#SBATCH -p ")
                     # might be --partition=
                     jobfile = _change_partition(
-                        jobfile,
-                        self.meta.partition,
-                        search_term="#SBATCH --partition=")
+                        jobfile, self.meta.partition, search_term="#SBATCH --partition="
+                    )
                     job = "\n".join(jobfile)
                 else:
-                    job = job.replace(
-                        "#PBS -l wd",
-                        f"#PBS -q {self.meta.partition}\n#PBS -l wd")
+                    job = job.replace("#PBS -l wd", f"#PBS -q {self.meta.partition}\n#PBS -l wd")
 
             if self.sc in super().PBS_HOSTS:
                 if "jobfs" in self.meta:
@@ -150,14 +138,7 @@ class GaussJob(Job):
         <blank>
         END
         """
-        inp = [
-            self.job_data,
-            self.metadata,
-            self.run_info,
-            self.title,
-            self.coord_info,
-            "END",
-        ]
+        inp = [self.job_data, self.metadata, self.run_info, self.title, self.coord_info, "END"]
         return "\n\n".join(inp)
 
     @property
@@ -165,8 +146,7 @@ class GaussJob(Job):
         """
         Include data such as memory and number of cpus in the Gaussian file.
         """
-        excluded_properties = ("time", "partition", "nodemem", "jobfs",
-                               "nodes")
+        excluded_properties = ("time", "partition", "nodemem", "jobfs", "nodes")
         # input by user for scheduler
         meta = []
         if self.sc == "stm":
@@ -203,7 +183,7 @@ class GaussJob(Job):
     @property
     def additional_params(self):
         """
-        Add in parameters to the `run_info` that do not involve 
+        Add in parameters to the `run_info` that do not involve
         a basis set, method or run type.
         """
         addn = ""
@@ -230,16 +210,14 @@ class GaussJob(Job):
         #P wB97XD/cc-pVDZ opt=(ts,noeigentest,calcfc) freq SCF=tight SCRF=(SMD,solvent=water) INT=(grid=ultrafine)
         from data stored in self.input
         """
-        return (f"#P {self.input.method}/{self.input.basis}"
-                f"{self.formatted_run}{self.additional_params}")
+        return f"#P {self.input.method}/{self.input.basis}" f"{self.formatted_run}{self.additional_params}"
 
     @property
     def coord_info(self):
         self.find_charge_and_mult()
         info = [f"{self.input.charge} {self.input.mult}"]
         info += [
-            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}"
-            for atom in self.mol.coords
+            f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f}" for atom in self.mol.coords
         ]
         return "\n".join(info)
 
@@ -257,24 +235,24 @@ class GaussJob(Job):
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
-            .
-            ├── frags
-            │   ├── acetate0
-            │   │   ├── acetate0.xyz
-            │   │   └── spec.inp
-            │   ├── acetate1
-            │   │   ├── acetate1.xyz
-            │   │   └── spec.inp
-            │   ├── choline2
-            │   │   ├── choline2.xyz
-            │   │   └── spec.inp
-            │   ├── choline3
-            │   │   ├── choline3.xyz
-            │   │   └── spec.inp
-            │   └── water4
-            │       ├── spec.inp
-            │       └── water4.xyz
-            ├── spec.inp
+        .
+        ├── frags
+        │   ├── acetate0
+        │   │   ├── acetate0.xyz
+        │   │   └── spec.inp
+        │   ├── acetate1
+        │   │   ├── acetate1.xyz
+        │   │   └── spec.inp
+        │   ├── choline2
+        │   │   ├── choline2.xyz
+        │   │   └── spec.inp
+        │   ├── choline3
+        │   │   ├── choline3.xyz
+        │   │   └── spec.inp
+        │   └── water4
+        │       ├── spec.inp
+        │       └── water4.xyz
+        ├── spec.inp
         """
         # not necessarily any splitting prior to this
         self.is_complex = False
@@ -299,8 +277,8 @@ class GaussJob(Job):
                     mkdir(join(subdirectory, name))  # ./frags/water4/
                 chdir(join(subdirectory, name))
                 Molecule.write_xyz(
-                    self, atoms=data["atoms"], filename=name +
-                    str(".xyz"))  # using the method, but with no class
+                    self, atoms=data["atoms"], filename=name + str(".xyz")
+                )  # using the method, but with no class
 
                 # use the same settings, so if runtype is freq, generate freq inputs for all fragments too.
                 if hasattr(self, "merged"):
@@ -312,8 +290,7 @@ class GaussJob(Job):
                 frag_settings.input.charge = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.mult = data["multiplicity"]
-                job = GaussJob(using=name + str(".xyz"),
-                               settings=frag_settings)
+                job = GaussJob(using=name + str(".xyz"), settings=frag_settings)
                 chdir(parent_dir)
                 count += 1
         if hasattr(self.mol, "ionic"):
@@ -339,11 +316,11 @@ class GaussJob(Job):
 def gauss_print(d, value):
     """
     Decides how to print a parameter.
-    For example, opt, opt=ts or opt=(ts,eigentest,calcfc). 
+    For example, opt, opt=ts or opt=(ts,eigentest,calcfc).
     Checks a |Settings| object, `d`, for a key, `value`.
     For example, sett.input.freq=True in the script would
     produce 'freq', sett.input.scf='tight' would produce
-    'scf=tight', and sett.input.opt='ts,noeigentest,calcfc' 
+    'scf=tight', and sett.input.opt='ts,noeigentest,calcfc'
     produces 'opt=(ts,noeigentest,calcfc)'. Note: doesn't
     work with lists or dict values, but unlikely that they would
     be passed in as settings values anyway.

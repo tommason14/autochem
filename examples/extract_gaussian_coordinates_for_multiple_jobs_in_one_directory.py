@@ -12,9 +12,9 @@ class GaussResults(GaussianResults):
         Redefine self.title so that the xyzs from example.log are written to spec/example-equil.xyz or
         rerun/example-rerun.xyz
         """
-        return self.log.split('.')[0]
+        return self.log.split(".")[0]
 
 
-for log in glob('*log'):
+for log in glob("*log"):
     res = GaussResults(log)
     res.get_equil_coords()

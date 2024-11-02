@@ -12,28 +12,28 @@ __all__ = ["GamessResults"]
 
 class GamessResults(Results):
     """Class for obtaining results from Gamess simulations. This class requires
-    a log file to be read.
-    Usage:
-        >>> results = Gamess_results(using = 'filename.log')
+        a log file to be read.
+        Usage:
+            >>> results = Gamess_results(using = 'filename.log')
 
-    Note: assumes that FMO has been used.
-    May have to change in future, and write methods for both non-FMO and FMO
-    calculations.
+        Note: assumes that FMO has been used.
+        May have to change in future, and write methods for both non-FMO and FMO
+        calculations.
 
-    Currently, these methods look for FMO3 data primarily, with an FMO2 fall
-back if not found.
+        Currently, these methods look for FMO3 data primarily, with an FMO2 fall
+    back if not found.
 
-    Instances of this class have the following attributes:
+        Instances of this class have the following attributes:
 
-    * ``log`` -- filename of the log file of the calculation
-    * ``basis`` -- basis set of the calculation, as this class is assumed to be
-    * used for ab initio calculations. This attribute may be read from the
-    * input file i.e. set as gamess.input.basis = 'CCT')
-    * ``coords`` -- coordinates of system, in xyz format
-    
-    Currently all methods to find energy return the last occurrence of that energy- needs amending to grep every
-instance, really. Simple fix; instead of returning values, store in list and return the list, maybe
-store the iteration number.
+        * ``log`` -- filename of the log file of the calculation
+        * ``basis`` -- basis set of the calculation, as this class is assumed to be
+        * used for ab initio calculations. This attribute may be read from the
+        * input file i.e. set as gamess.input.basis = 'CCT')
+        * ``coords`` -- coordinates of system, in xyz format
+
+        Currently all methods to find energy return the last occurrence of that energy- needs amending to grep every
+    instance, really. Simple fix; instead of returning values, store in list and return the list, maybe
+    store the iteration number.
     """
 
     def __init__(self, log):
@@ -56,9 +56,7 @@ store the iteration number.
     ################################
 
     def completed(self):
-        return any(
-            "EXECUTION OF GAMESS TERMINATED NORMALLY" in line for line in self.eof(0.1)
-        )
+        return any("EXECUTION OF GAMESS TERMINATED NORMALLY" in line for line in self.eof(0.1))
 
         ####NEEDS WORK####
         # CURRENTLY IF TERMINATES ABNORMALLY, RESULTS FROM THE CALC
@@ -191,11 +189,11 @@ store the iteration number.
     def fmo_mp2_data(self, mp2_type):
         """
         Returns Hartree Fock and MP2 data.
-        Returns the last occurrence of FMO energies 
+        Returns the last occurrence of FMO energies
         (FMO3 given if available, else FMO2), MP2 correlation energies
-        and HF energies. Works because FMO3 values are printed 
-        after FMO2, and the function returns the last 
-        value printed. `mp2_type` should be either 'SCS' or 'MP2', 
+        and HF energies. Works because FMO3 values are printed
+        after FMO2, and the function returns the last
+        value printed. `mp2_type` should be either 'SCS' or 'MP2',
         to return the correlated SCS energy, 'E corr SCS', or correlated
         MP2 energies, 'E corr MP2'.
         """
@@ -241,9 +239,7 @@ store the iteration number.
             "aCCT": "aug-cc-pVTZ",
             "aCCQ": "aug-cc-pVQZ",
         }
-        return change_basis.get(
-            basis, basis
-        )  # if self.basis not in dict, return self.basis
+        return change_basis.get(basis, basis)  # if self.basis not in dict, return self.basis
 
     def non_fmo_mp2_gas_data_for_spec(self):
         """
@@ -282,7 +278,7 @@ store the iteration number.
 
     def non_fmo_mp2_solvent_data(self):
         """
-        Returns value of E(0) as HF, E(MP2) as the MP2 energy. 
+        Returns value of E(0) as HF, E(MP2) as the MP2 energy.
         When solvent is added, GAMESS doesn't print the individual correlation
         energy for each spin. Also these energy are for the molecule itself and
         not with the addition of the energy of the solvent. In order to find
@@ -366,7 +362,7 @@ store the iteration number.
     def method(self):
         """
         More usable version of self._energy_type.
-        i.e. instead of fmo_dft, this method actually returns the 
+        i.e. instead of fmo_dft, this method actually returns the
         dft functional used.
         """
         if "scs" in self._energy_type:
@@ -382,8 +378,8 @@ store the iteration number.
     def solvent_calc(self):
         """
         Returns True if the user inputs a $PCM section in the input file.
-        No guarantees that the $PCM line will be shown in the copy of the 
-        input file at the top though, so instead has to check when the 
+        No guarantees that the $PCM line will be shown in the copy of the
+        input file at the top though, so instead has to check when the
         log file reports it.
         """
         for line in self.read():
