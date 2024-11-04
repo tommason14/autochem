@@ -94,9 +94,9 @@ def reassign_root_of_initial_spectra(
     d, name, root, iteration, transition_energy, intensity, wavelength, number, cutoff
 ):
     """
-    If the file being searched is run to find the 
+    If the file being searched is run to find the
     roots to take forward, need to know the roots!
-    
+
     This function reassigns the value in the 'root'
     column to reflect this
     """
@@ -109,9 +109,7 @@ def reassign_root_of_initial_spectra(
         if iteration not in d[name][new_key]["peaks"]:
             d[name][new_key]["peaks"][iteration] = []
     if intensity > cutoff:
-        d[name][new_key]["peaks"][iteration].append(
-            (transition_energy, wavelength, intensity)
-        )
+        d[name][new_key]["peaks"][iteration].append((transition_energy, wavelength, intensity))
     return d
 
 
@@ -140,31 +138,21 @@ def find_spectral_data(file, d, name, root, cutoff):
                 transition_energy = float(line[index - 1])
         if root == "initial_spectra":
             d = reassign_root_of_initial_spectra(
-                d,
-                name,
-                root,
-                iteration,
-                transition_energy,
-                intensity,
-                wavelength,
-                number,
-                cutoff,
+                d, name, root, iteration, transition_energy, intensity, wavelength, number, cutoff
             )
         else:
             if intensity > cutoff:
-                d[name][root]["peaks"][iteration].append(
-                    (transition_energy, wavelength, intensity)
-                )
+                d[name][root]["peaks"][iteration].append((transition_energy, wavelength, intensity))
     return d
 
 
 def grep_data(cutoff, files):
     """Return a dictionary of data in the form
-    
+
     data = {
         config : {
             root : {
-                peaks: { 
+                peaks: {
                     iter1: [(wavelength_1, intensity_1),
                             (wavelength_2, intensity_2)],
                     iter2: [(wavelength_1, intensity_1),
@@ -183,7 +171,7 @@ def grep_data(cutoff, files):
 
 
 def transform(res):
-    """ Transforms dictionary to a list of lists """
+    """Transforms dictionary to a list of lists"""
     flattened = []
     for name in sorted(res):
         for root in sorted(res[name]):
@@ -195,7 +183,7 @@ def transform(res):
 
 
 def one_level_dict(res):
-    """ Transforms nested dict to dictionary only one level deep """
+    """Transforms nested dict to dictionary only one level deep"""
     configs = []
     roots = []
     iters = []

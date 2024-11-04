@@ -7,7 +7,7 @@ Email: tommason14@gmail.com
 Github: https:github.com/tommason14
 Description: This pulls UV-Vis data from Orca and Gaussian
 log files. Note that this script does not account for fluorescence,
-but only because of the NA given for the root. This can easily be 
+but only because of the NA given for the root. This can easily be
 changed.
 """
 
@@ -28,25 +28,13 @@ def results(logfile):
 
 
 with open("uv_vis.csv", "w") as f:
-    f.write(
-        "Config,"
-        "Root,"
-        "Iteration,"
-        "Transition Energies (eV),"
-        "Wavelength (nm),"
-        "Intensity (au)\n"
-    )
+    f.write("Config," "Root," "Iteration," "Transition Energies (eV)," "Wavelength (nm)," "Intensity (au)\n")
     for logfile in glob("**/*log", recursive=True):
         log = results(logfile)
         if log is None:
             continue  # if not gaussian/orca job
         for iteration, data in enumerate(
-            zip(
-                log.td_dft_wavelengths,
-                log.td_dft_intensities,
-                log.td_dft_transition_energies,
-            ),
-            1,
+            zip(log.td_dft_wavelengths, log.td_dft_intensities, log.td_dft_transition_energies), 1
         ):
             waves, ints, energies = data
             for wave, intensity, energy in zip(waves, ints, energies):

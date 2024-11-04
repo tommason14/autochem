@@ -17,80 +17,74 @@ class PsiJob(Job):
 
     # >>> j = PsiJob(using = 'file.xyz')
     # >>> j.supercomp = 'raijin'
-    """Class for creating PSI4 input files and job scripts. 
-    
-    The input files generated default to single point energy calculations using MP2/cc-pVTZ, with frozen core orbitals- for this reason, these single point calculations are very fast. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
-    >>> s = Settings()
-    >>> s.input.globals.basis= 'cc-pVDZ'
-    >>> s.input.molecule.extra_value = 'extra'
-    >>> j = PsiJob(using = '../xyz_files/mesylate.xyz', settings = s)
-    This yields the following result:
-        memory 32 Gb
-        molecule complex {
-        -1 1
-         C      -11.52615475      2.13587901     -3.92614475
-         H      -12.17727298      1.37283268     -4.39314733
-         H      -12.13111156      2.84527650     -3.33020803
-         H      -10.95289836      2.67720525     -4.70258006
-         S      -10.36648767      1.31567304     -2.82897636
-         O       -9.54405868      2.38757303     -2.22205822
-         O      -11.24567273      0.60890457     -1.83183396
-         O       -9.60100212      0.36690604     -3.68579623
-        units angstrom
-        no_reorient
-        symmetry c1
-        extra_value extra
-        }
-        set globals {
-            basis cc-pVDZ
-            scf_type DF
-            freeze_core True
-            guess sad
-            S_ORTHOGONALIZATION canonical
-        }
-        energy('mp2')
-    Options are added in sections: 
-        - self.input.molecule for any key value pair in the molecule section
-        - self.input.unbound for any key value pair outside of molecule and globals. The value can be a string or a list.
-            >>> self.input.unbound.key = 'value'
-            # key value
-             >>> self.input.unbound.key2 = 'value value value'
-            # key value value value
-            >>> self.input.unbound.key = ['value1', 'value2', 'value3']
-            # key value1 value2 value3
-        - self.input.globals for the 'set globals' section
-        - any options not enclosed in braces appear before the last line
-        - To change the run type:
-            >>> self.input.run = {'optimize': 'scf'}
-            # optimize('scf')
-        - If extra run options are required:
-            >>> self.input.run.additional = {'dertype': 'energy'} 
-            # optimize('scf', dertype='energy')
-            >>> self.input.run.additional = {'dertype': 'energy', 'option2': 'value'} 
-            # optimize('scf', dertype='energy', 'option2'='value')
-    
-    The names of files created default to the type of calculation: optimisation (opt), single point
-energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
-        >>> job = PsiJob(using = 'file.xyz', filename = 'benzene')
-    This command produces two files, benzene.inp and benzene.job.
-    
-    To run a counterpoise corrected calculation, pass in `cp=True` to the constructor:
-        >>> job = PsiJob(using = 'file.xyz', filename = 'benzene', cp=True)
-    
-   This produces an extra file- a counterpoise corrected Hartree-Fock calculation of the entire
-cluster.
-       
- 
+    """Class for creating PSI4 input files and job scripts.
+
+        The input files generated default to single point energy calculations using MP2/cc-pVTZ, with frozen core orbitals- for this reason, these single point calculations are very fast. This is easily changed by creating a |Settings| object and adding parameters, using the following syntax.
+        >>> s = Settings()
+        >>> s.input.globals.basis= 'cc-pVDZ'
+        >>> s.input.molecule.extra_value = 'extra'
+        >>> j = PsiJob(using = '../xyz_files/mesylate.xyz', settings = s)
+        This yields the following result:
+            memory 32 Gb
+            molecule complex {
+            -1 1
+             C      -11.52615475      2.13587901     -3.92614475
+             H      -12.17727298      1.37283268     -4.39314733
+             H      -12.13111156      2.84527650     -3.33020803
+             H      -10.95289836      2.67720525     -4.70258006
+             S      -10.36648767      1.31567304     -2.82897636
+             O       -9.54405868      2.38757303     -2.22205822
+             O      -11.24567273      0.60890457     -1.83183396
+             O       -9.60100212      0.36690604     -3.68579623
+            units angstrom
+            no_reorient
+            symmetry c1
+            extra_value extra
+            }
+            set globals {
+                basis cc-pVDZ
+                scf_type DF
+                freeze_core True
+                guess sad
+                S_ORTHOGONALIZATION canonical
+            }
+            energy('mp2')
+        Options are added in sections:
+            - self.input.molecule for any key value pair in the molecule section
+            - self.input.unbound for any key value pair outside of molecule and globals. The value can be a string or a list.
+                >>> self.input.unbound.key = 'value'
+                # key value
+                 >>> self.input.unbound.key2 = 'value value value'
+                # key value value value
+                >>> self.input.unbound.key = ['value1', 'value2', 'value3']
+                # key value1 value2 value3
+            - self.input.globals for the 'set globals' section
+            - any options not enclosed in braces appear before the last line
+            - To change the run type:
+                >>> self.input.run = {'optimize': 'scf'}
+                # optimize('scf')
+            - If extra run options are required:
+                >>> self.input.run.additional = {'dertype': 'energy'}
+                # optimize('scf', dertype='energy')
+                >>> self.input.run.additional = {'dertype': 'energy', 'option2': 'value'}
+                # optimize('scf', dertype='energy', 'option2'='value')
+
+        The names of files created default to the type of calculation: optimisation (opt), single point
+    energy (spec) or hessian matrix calculation for thermochemical data and vibrational frequencies (hess). If a different name is desired, pass a string with the ``filename`` parameter, with no extension. The name will be used for both input and job files.
+            >>> job = PsiJob(using = 'file.xyz', filename = 'benzene')
+        This command produces two files, benzene.inp and benzene.job.
+
+        To run a counterpoise corrected calculation, pass in `cp=True` to the constructor:
+            >>> job = PsiJob(using = 'file.xyz', filename = 'benzene', cp=True)
+
+       This produces an extra file- a counterpoise corrected Hartree-Fock calculation of the entire
+    cluster.
+
+
     """
 
     def __init__(
-        self,
-        using=None,
-        frags_in_subdir=False,
-        settings=None,
-        filename=None,
-        is_complex=False,
-        cp=False,
+        self, using=None, frags_in_subdir=False, settings=None, filename=None, is_complex=False, cp=False
     ):
         super().__init__(using)
         self.filename = filename
@@ -133,7 +127,7 @@ cluster.
 
     def make_header(self):
         """Transform all contents of |Settings| objects into PSI4 input file headers, containing all the information pertinent to the calculation"""
-        
+
         self.find_charge_and_mult()
         comment = f"# PSI4 Calc: {self.title}\n\n"
         mem = f"memory {self.input.memory}\n\n"
@@ -161,7 +155,7 @@ cluster.
 
     def add_unbound(self):
         """May never be required- but this adds options between the molecule and global sections.
-        Returns a dictionary of terms- might need more than two terms on same line = nested dict """
+        Returns a dictionary of terms- might need more than two terms on same line = nested dict"""
 
         vals = search_dict_recursively(self.input.unbound)
         if len(vals) > 0:
@@ -217,7 +211,8 @@ cluster.
 
     def file_basename(self):
         """If no filename is passed when the class is instantiated, the name of the file defaults to
-        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (hess). This method creates an attribute ``base_name``, used in creating the input and job files."""
+        the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (hess). This method creates an attribute ``base_name``, used in creating the input and job files.
+        """
         for key in self.input.run.keys():  # run, or additional
             if key != "additional":
                 nom = key
@@ -228,7 +223,7 @@ cluster.
             self.base_name = self.filename
 
     def write_file(self, data, filetype):
-        """Writes the generated PSI4 input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+        """Writes the generated PSI4 input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq).
         NOTE: Must pass data as a string, not a list!"""
         with open(f"{self.base_name}.{filetype}", "w") as f:
             f.write(data)
@@ -335,7 +330,7 @@ cluster.
     def create_job(self):
         """Returns the relevant job template as a list, then performs the necessary modifications. After, the job file is printed in the appropriate directory."""
         job = self.get_job_template()
-        
+
         job = job.replace("name", f"{self.base_name}")
 
         if "time" in self.meta:
@@ -347,7 +342,7 @@ cluster.
             if "mem" in self.meta:
                 mem = self.meta.mem[:-2]
                 job = job.replace("mem=64GB", f"mem={mem}GB")
-            
+
         if self.sc in super().PBS_HOSTS:
             if "ncpus" in self.meta:
                 job = job.replace("ncpus=16", f"ncpus={self.meta.ncpus}")
@@ -374,24 +369,24 @@ cluster.
 
     def create_inputs_for_fragments(self):
         """Very useful to generate files for each fragment automatically, for single point and frequency calculations, generating free energy changes. Called if ``frags_in_subdir`` is set to True, as each fragment is given a subdirectory in an overall subdirectory, creating the following directory structure (here for a 5-molecule system):
-            .
-            ├── frags
-            │   ├── acetate0
-            │   │   ├── acetate0.xyz
-            │   │   └── spec.inp
-            │   ├── acetate1
-            │   │   ├── acetate1.xyz
-            │   │   └── spec.inp
-            │   ├── choline2
-            │   │   ├── choline2.xyz
-            │   │   └── spec.inp
-            │   ├── choline3
-            │   │   ├── choline3.xyz
-            │   │   └── spec.inp
-            │   └── water4
-            │       ├── spec.inp
-            │       └── water4.xyz
-            ├── spec.inp
+        .
+        ├── frags
+        │   ├── acetate0
+        │   │   ├── acetate0.xyz
+        │   │   └── spec.inp
+        │   ├── acetate1
+        │   │   ├── acetate1.xyz
+        │   │   └── spec.inp
+        │   ├── choline2
+        │   │   ├── choline2.xyz
+        │   │   └── spec.inp
+        │   ├── choline3
+        │   │   ├── choline3.xyz
+        │   │   └── spec.inp
+        │   └── water4
+        │       ├── spec.inp
+        │       └── water4.xyz
+        ├── spec.inp
         """
         # not necessarily any splitting prior to this
         self.is_complex = False

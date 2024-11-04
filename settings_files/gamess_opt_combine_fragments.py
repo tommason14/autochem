@@ -1,5 +1,4 @@
 from autochem import Settings
 
-sett=Settings()
-sett.grouped='sodium-saccharinate'
-
+sett = Settings()
+sett.grouped = "sodium-saccharinate"

@@ -41,6 +41,8 @@ Inspired by the [PLAMS](https://github.com/SCM-NV/PLAMS) package.
 
 # Installation
 
+Requires gfortran to be installed for vibrational analysis.
+
 ```sh
 git clone https://github.com/tommason14/autochem
 cd autochem
@@ -50,6 +52,18 @@ sh install.sh
 Then reload your shell with `source ~/.bashrc` or `source ~/.zshrc`.
 
 Note that the `install.sh` scripts installs the python numpy and pandas packages through pip by assuming you have a `python3` executable available.
+
+Alternatively, run through docker to avoid having to install fortran/python packages:
+```sh 
+git clone https://github.com/tommason14/autochem
+cd autochem
+docker build -t autochem .
+```
+I'd then recommend setting the following alias, to mount the current folder inside
+the docker container and run autochem from that folder:
+```
+alias autochem='docker run -v .:/mnt/data -w /mnt/data -it autochem'
+```
 
 # Example Usage
 
@@ -111,6 +125,7 @@ sett.meta.jobfs='400gb'
 then run from the command line using `autochem -d -s settings.py`, which
 takes in every xyz file in the current directory and creates jobs using
 parameters from the `Settings` object in `settings.py`. 
+Expects that the settings.py file is in the folder where you are running `autochem` from.
 Note: using this method, the `Settings` object must be called `sett`.
 
 Example settings can be found in the [settings_files](https://github.com/tommason14/monash_automation/tree/master/settings_files)
@@ -603,11 +618,10 @@ In addition, other information can be found:
   `pandas.DataFrame` object. For example, 
   `autochem -w data.csv --group df['Config'].str.split('-').str[:-1].str.join('-')`. 
   (Experimental, use with caution)
-  
+
 # Adding additional molecules to the database
 
-Add molecules to the `~/.config/autochem/molecules.txt` file, 
-using the format of:
+Add molecules to the `~/.config/autochem/molecules.txt` file if you installed the package to your filesystem, or to `molecules.txt` in the top level of this repository if running through docker, using the format of:
 ```
 name=dihydrogen_citrate
 charge=-1
@@ -616,3 +630,5 @@ atoms=C,C,C,H,H,O,O,C,O,C,C,H,H,O,H,O,H,H,O,O
 ```
 
 Make sure that names do not contain spaces.
+
+If using docker, you will need to rebuild the container after adding to this file, so run `docker build -t autochem .` again.

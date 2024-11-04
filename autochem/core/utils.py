@@ -43,7 +43,7 @@ def df_from_namedtuples(definition, lst):
     Pass in the namedtuple created and a list of
     objects made using the namedtuple, and this
     function returns a dataframe.
-    
+
     Usage:
         >>> nt = namedtuple('nt', 'one two')
         >>> one = nt(10, 20)
@@ -106,9 +106,7 @@ def read_xyz(using):
             line = coord.split()
             for val in PT.ptable.values():
                 if line[0] == val[0]:
-                    coords.append(
-                        Atom(line[0],
-                             coords=tuple(float(i) for i in line[1:4])))
+                    coords.append(Atom(line[0], coords=tuple(float(i) for i in line[1:4])))
     return coords
 
 
@@ -130,12 +128,9 @@ def write_xyz(atoms, filename=None):
                     else:
                         sym, x, y, z = parts
                     x, y, z = float(x), float(y), float(z)
-                    file.write(
-                        f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
+                    file.write(f"{sym:5s} {x:>15.10f} {y:15.10f} {z:15.10f} \n")
                 else:
-                    file.write(
-                        f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n"
-                    )
+                    file.write(f"{atom.symbol:5s} {atom.x:>15.10f} {atom.y:>15.10f} {atom.z:>15.10f} \n")
 
 
 def get_files(directory, ext, filepath_includes=None):
@@ -163,8 +158,7 @@ def get_files(directory, ext, filepath_includes=None):
                     # freq.out used for thermo calculations
                     # with the fortran code
                     if filepath_includes is not None:
-                        if any(filepath_includes in string
-                               for string in (path, file)):
+                        if any(filepath_includes in string for string in (path, file)):
                             file_list.append(os.path.join(path, file))
                     else:
                         file_list.append(os.path.join(path, file))
@@ -182,7 +176,7 @@ def module_exists(module_name):
 
 def sort_elements(lst):
     """
-    Sort a list of |Atom| objects by atomic number. 
+    Sort a list of |Atom| objects by atomic number.
     Returns a list of tuples- [(symbol, atomic number), (symbol, atomic number), ...]
 
     TODO: Extend to giving back the objects- more useful than just for formatting of symbols
@@ -199,7 +193,7 @@ def sort_elements(lst):
 def list_of_dicts_to_one_level_dict(lst):
     """
     Convert
-    [ 
+    [
       {'one': one,
        'two': two},
       {'one': three,
@@ -208,11 +202,12 @@ def list_of_dicts_to_one_level_dict(lst):
     into
     {
       'one': [one, three],
-      'two': [two, four] 
+      'two': [two, four]
     }
     Note that all dictionaries must have the same keys. Values can be ints, floats, strings or lists.
     Will break if values of the dicts of each list item are dicts.
     """
+
     def add_to_dict(lst_item, dictionary):
         for k, v in lst_item.items():
             if k not in dictionary:
@@ -256,23 +251,17 @@ def write_csv_from_dict(data, filename=None, autosave=False):
             writer.writerows(content)
 
 
-def write_csv_from_nested(data,
-                          *,
-                          col_names=None,
-                          return_name=False,
-                          filename=None,
-                          autosave=False):
+def write_csv_from_nested(data, *, col_names=None, return_name=False, filename=None, autosave=False):
     """
-    Write to csv from nested data structure; list of tuples, list of lists. 
-    
+    Write to csv from nested data structure; list of tuples, list of lists.
+
     NB: requires a list or tuple of column names passed to the `col_names` parameter
     """
 
     import csv
 
     if type(col_names) not in (list, tuple):
-        raise AttributeError(
-            "Must pass in column names as a list or tuple of values")
+        raise AttributeError("Must pass in column names as a list or tuple of values")
 
     write = True if autosave else False
     if not autosave:
@@ -312,9 +301,9 @@ def search_dict_recursively(d):
 
 def check_user_input(user_input, condition, if_error):
     """
-    Uses a try/except statement to create a scenario where the 
-    end user cannot give unexpected input. 
-    Give the condition referring to an item in a lambda expression 
+    Uses a try/except statement to create a scenario where the
+    end user cannot give unexpected input.
+    Give the condition referring to an item in a lambda expression
     i.e. lambda item: item.endswith('.csv'), or lambda item: item in range(...)
 
     Usage:
@@ -346,7 +335,7 @@ def check_user_input(user_input, condition, if_error):
 
 
 def sort_data(data):
-    """ 
+    """
     Sorts a dictionary into alphanumerical order based on key
     """
     collapsed = [[k, v] for k, v in data.items()]
@@ -376,17 +365,14 @@ def responsive_table(data, strings, min_width=13, decimal_places=5):
     can be passed in to define the number of decimal places of floats.
     """
     num_cols = len(data.keys())
-    content = zip(*[data[key]
-                    for key in data.keys()])  # dict values into list of lists
+    content = zip(*[data[key] for key in data.keys()])  # dict values into list of lists
     # unknown number of arguments
     max_sizes = {}
     try:
         for k, v in data.items():
             max_sizes[k] = len(max([str(val) for val in v], key=len))
     except ValueError:
-        sys.exit(
-            "Error: No data is passed into autochem.core.utils.responsive_table"
-        )
+        sys.exit("Error: No data is passed into autochem.core.utils.responsive_table")
 
     # create the thing to pass into .format()- can't have brackets like zip gives
     formatting = []

@@ -20,7 +20,7 @@ class PsiResults(Results):
 
     def get_runtype(self):
         """
-        Returns runtype. For example, for MP2 single points, the line `energy('mp2')` is used. 
+        Returns runtype. For example, for MP2 single points, the line `energy('mp2')` is used.
         This method returns the string 'energy'.
         """
         for line in self.read():
@@ -29,13 +29,13 @@ class PsiResults(Results):
                 if re.search("[A-z]*\('[A-z0-9]*'\)", line):  # energy('mp2')
                     return line.split("(")[0]
                 else:  # optimize('scf', dertype='hess'......)
-                    return line.split("(")[0]  
+                    return line.split("(")[0]
                     # add to this later, using the collect additional data
 
     @property
     def method(self):
         """
-        Returns energy type. For example, for MP2 single points, the line `energy('mp2')` is used. 
+        Returns energy type. For example, for MP2 single points, the line `energy('mp2')` is used.
         This method returns the string 'mp2'.
         """
         for line in self.read():
@@ -130,7 +130,7 @@ class PsiResults(Results):
             transition = "HOMO-LUMO"
         else:
             transition = "SOMO-LUMO"
-        
+
         homo, lumo, gap = self._homo_lumo_gap()
 
         return {
@@ -176,19 +176,10 @@ class PsiResults(Results):
 
     def _scf_data(self):
         """
-        Return data for scf calculations. 
+        Return data for scf calculations.
         Note the NAs returned are because of no MP2 data.
         """
-        return (
-            self.file,
-            self.path,
-            self.method,
-            self.basis,
-            self.total_energy,
-            "NA",
-            "NA",
-            "NA",
-        )
+        return (self.file, self.path, self.method, self.basis, self.total_energy, "NA", "NA", "NA")
 
     @property
     def hf_energy_for_mp2(self):
@@ -225,10 +216,10 @@ class PsiResults(Results):
 
     def _mp2_data(self):
         """
-        Returns data for MP2 calculations: filename, filepath, 
+        Returns data for MP2 calculations: filename, filepath,
         basis set, hf energy, opp spin energy, same spin energy.
-        No MP2 data is returned, but should be calculated instead from the 
-        HF and MP2 correlation energies by the user, as coefficients of 
+        No MP2 data is returned, but should be calculated instead from the
+        HF and MP2 correlation energies by the user, as coefficients of
         each spin component will vary depending on the basis set.
         """
 

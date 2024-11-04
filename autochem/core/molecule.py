@@ -1,10 +1,11 @@
-from .periodic_table import PeriodicTable as PT
-from .atom import Atom
-from .utils import sort_elements
-
 import os
-import numpy as np
 import sys
+
+import numpy as np
+
+from .atom import Atom
+from .periodic_table import PeriodicTable as PT
+from .utils import sort_elements
 
 __all__ = ["Molecule"]
 
@@ -38,12 +39,12 @@ class Molecule:
     -------------------
     xyz: string
         name of xyz file used to create the molecule
-    coords: list 
+    coords: list
         list of `Atom` objects for every atom in the molecule
     fragments: dict
         format of {number: subdict} created when `self.separate()` is called.
         The subdict contains the keys: type (string), name (string),
-        atoms (list of `Atom` instances), charge (int), mult (int), 
+        atoms (list of `Atom` instances), charge (int), mult (int),
         elements (list of atomic symbols)
 
     """
@@ -54,86 +55,15 @@ class Molecule:
     Anions["dca"] = ["N", "C", "N", "C", "N"]
     Anions["pf6"] = ["F", "P", "F", "F", "F", "F", "F"]
     Anions["mes"] = ["S", "O", "O", "O", "C", "H", "H", "H"]
-    Anions["ntf2"] = [
-        "F",
-        "F",
-        "F",
-        "F",
-        "F",
-        "N",
-        "S",
-        "S",
-        "O",
-        "O",
-        "O",
-        "O",
-        "C",
-        "C",
-        "F",
-    ]
+    Anions["ntf2"] = ["F", "F", "F", "F", "F", "N", "S", "S", "O", "O", "O", "O", "C", "C", "F"]
     Anions["bis-fsi"] = ["F", "S", "O", "O", "N", "S", "O", "O", "F"]
-    Anions["tos"] = [
-        "C",
-        "C",
-        "C",
-        "C",
-        "H",
-        "H",
-        "H",
-        "H",
-        "H",
-        "H",
-        "H",
-        "S",
-        "O",
-        "O",
-        "O",
-        "C",
-        "C",
-        "C",
-    ]
+    Anions["tos"] = ["C", "C", "C", "C", "H", "H", "H", "H", "H", "H", "H", "S", "O", "O", "O", "C", "C", "C"]
     Anions["dhp"] = ["H", "H", "P", "O", "O", "O", "O"]
     Anions["acetate"] = ["C", "H", "H", "H", "C", "O", "O"]
-    Anions["saccharinate"] = [
-        "C",
-        "C",
-        "C",
-        "C",
-        "C",
-        "C",
-        "H",
-        "H",
-        "H",
-        "H",
-        "C",
-        "O",
-        "N",
-        "S",
-        "O",
-        "O",
-    ]
+    Anions["saccharinate"] = ["C", "C", "C", "C", "C", "C", "H", "H", "H", "H", "C", "O", "N", "S", "O", "O"]
     Anions["triflate"] = ["C", "F", "F", "F", "S", "O", "O", "O"]
 
-    Cations = {
-        "c1mim": [
-            "C",
-            "N",
-            "C",
-            "N",
-            "C",
-            "C",
-            "C",
-            "H",
-            "H",
-            "H",
-            "H",
-            "H",
-            "H",
-            "H",
-            "H",
-            "H",
-        ]
-    }
+    Cations = {"c1mim": ["C", "N", "C", "N", "C", "C", "C", "H", "H", "H", "H", "H", "H", "H", "H", "H"]}
     Cations["c1mpyr"] = [
         "C",
         "C",
@@ -980,13 +910,13 @@ class Molecule:
 
     def formula(self, as_dict=False, as_latex=False, as_html=False):
         """
-        Returns the molecular format in a variety of formats using keyword 
+        Returns the molecular format in a variety of formats using keyword
         arguments:
         * *as_dict* -- returns a python dictionary
         * *as_latex* -- returns a latex expression using \textsubscript{} notation (equivalent to $_{value}$, but the math expression renders in a different font)
         * *as_html* -- returns a html expression using <sub> tags
 
-        If no keyword arguments are passed, a regular string is returned with 
+        If no keyword arguments are passed, a regular string is returned with
         no formatting i.e. C8H18
         """
 
@@ -1048,12 +978,10 @@ class Molecule:
                 line = coord.split()
                 for val in PT.ptable.values():
                     if line[0] == val[0]:
-                        coords.append(
-                            Atom(line[0], coords=tuple(float(i) for i in line[1:4]))
-                        )
+                        coords.append(Atom(line[0], coords=tuple(float(i) for i in line[1:4])))
         return coords
 
-    def write_xyz(self, atoms, filename=None):
+    def write_xyz(self, filename=None):
         """
         Writes an xyz file using a list of |Atom| instances
         """
@@ -1061,11 +989,9 @@ class Molecule:
             raise ValueError("write_xyz: Must give a path to the output file")
         else:
             with open(filename, "w") as f:
-                f.write(str(len(atoms)) + "\n\n")
-                for atom in atoms:
-                    f.write(
-                        f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n"
-                    )
+                f.write(str(len(self.coords)) + "\n\n")
+                for atom in self.coords:
+                    f.write(f"{atom.symbol:5s} {atom.x:>10.5f} {atom.y:>10.5f} {atom.z:>10.5f} \n")
 
     def check_db(self):
         """
@@ -1078,8 +1004,8 @@ class Molecule:
 
         def check_dict(molecules_dict, symbols_dict, db):
             """
-            Checking molecule database for a match, and returning the required attributes- 
-            name, atoms in molecule, type of molecule, charge, multiplicity, 
+            Checking molecule database for a match, and returning the required attributes-
+            name, atoms in molecule, type of molecule, charge, multiplicity,
             and elements present in the molecule"""
             if db == Molecule.Anions:
                 charge = -1
@@ -1176,14 +1102,12 @@ class Molecule:
 
     def renumber_molecules(self):
         """
-        Molecule numbers (Mol: _) are sometimes not in a numerical order. 
-        This function takes the molecules and gives them a number from 1 to the 
+        Molecule numbers (Mol: _) are sometimes not in a numerical order.
+        This function takes the molecules and gives them a number from 1 to the
         number of fragments
         """
         current = set([atom.mol for atom in self.coords])
-        convert_keys = {
-            k: v for k, v in enumerate(self.fragments.keys(), 1)
-        }  # old: new
+        convert_keys = {k: v for k, v in enumerate(self.fragments.keys(), 1)}  # old: new
         frags = list(self.fragments.items())
         self.fragments.clear()
         for k, v in frags:
@@ -1215,7 +1139,7 @@ class Molecule:
 
     def reassign_frags_manually(self):
         """
-        Called if fragments are not assigned correctly- user then inputs 
+        Called if fragments are not assigned correctly- user then inputs
         the fragments manually
         """
 
@@ -1261,9 +1185,7 @@ class Molecule:
             self.mol_dict.clear()
             mols = set([atom.mol for atom in self.coords])
             for mol in mols:
-                self.mol_dict[mol] = Molecule(
-                    atoms=[atom for atom in self.coords if atom.mol == mol]
-                )
+                self.mol_dict[mol] = Molecule(atoms=[atom for atom in self.coords if atom.mol == mol])
             self.check_db()
             self.print_frags()
 
@@ -1287,7 +1209,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     def assign_neighbours(self):
         """
-        Checks each atom, either per fragment or in whole list, for bonded 
+        Checks each atom, either per fragment or in whole list, for bonded
         atoms by considering separation and van der waals radii
         """
 
@@ -1304,7 +1226,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     def add_ionic_network(self):
         """
-        Adds one item to self.fragments- removing all neutral species, 
+        Adds one item to self.fragments- removing all neutral species,
         along with the one-atom ions
         """
 
@@ -1421,11 +1343,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             merged_charge += self.fragments[key]["charge"]
             merged_elements += self.fragments[key]["elements"]
         merged_elements = set(merged_elements)
-        merged_mult = (
-            2
-            if any(frag["multiplicity"] == 2 for frag in self.fragments.values())
-            else 1
-        )
+        merged_mult = 2 if any(frag["multiplicity"] == 2 for frag in self.fragments.values()) else 1
         merged_mol_type = merged_type(merged_charge)
         self.fragments[new_key] = {
             "type": "merged",  # was merged_mol_type
@@ -1443,8 +1361,8 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     def separate(self):
         """
-        Separates coordinates into specific fragments using the intermolecular 
-        distances along with van der waals radii. Note this function only works 
+        Separates coordinates into specific fragments using the intermolecular
+        distances along with van der waals radii. Note this function only works
         with intermolecular fragments and cannot split molecules on bonds.
         """
         self.split()
@@ -1454,9 +1372,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
         if (
             not self.all_atoms_assigned
         ):  # or not self.all_fragments_known: # fix for stampede check_hf_v_mp2 geodesics
-            print(
-                f"{len(self.fragments)} fragments found, some atoms unaccounted for..."
-            )
+            print(f"{len(self.fragments)} fragments found, some atoms unaccounted for...")
             all_assigned = False
             while not all_assigned:
                 self.reassign_frags_manually()
@@ -1474,10 +1390,10 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
     def fragment_on_bonds(self):
         """
         Takes a system that has already been fragmented according to intermolecular
-        distance, and then fragments again according to the bonds passed in by the 
+        distance, and then fragments again according to the bonds passed in by the
         `bonds_to_split` parameter. This should be a nested list of atom indices,
         indicating which bond to break. For example, [(4,9)] indicates a bond between
-        atoms 4 and 9 of the original xyz file that should be broken. 
+        atoms 4 and 9 of the original xyz file that should be broken.
         """
 
         def remove_connection(connections, atom1, atom2):
@@ -1487,18 +1403,14 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 connections[atom2].remove(atom1)
             return connections
 
-        connections = {
-            atom.index: [con.index for con in atom.connected_atoms] for atom in self
-        }
+        connections = {atom.index: [con.index for con in atom.connected_atoms] for atom in self}
         # apply split
         for bond in self.bonds_to_split:
             a1, a2 = bond
             connections = remove_connection(connections, a1, a2)
 
         # convert indices back to atom objects
-        connections = {
-            k: [self.coords[i - 1] for i in v] for k, v in connections.items()
-        }
+        connections = {k: [self.coords[i - 1] for i in v] for k, v in connections.items()}
 
         # now have {original_atom: [connections_to_original_atom]}
         # but need include original_atom in that dict
@@ -1513,9 +1425,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             # for connections to any of current atoms in fragment
             for index2, connected2 in connections.items():
                 if index != index2:
-                    if any(
-                        atom in connected2 for atom in connected_atoms
-                    ):  # frags are connected
+                    if any(atom in connected2 for atom in connected_atoms):  # frags are connected
                         # add the rest of connected2 into connected_atoms and empty 'old' frag
                         for a2 in connected2:
                             if a2 not in connected_atoms:
@@ -1523,9 +1433,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                         connections[index2] = []
 
         connections = {
-            k: sorted(v, key=lambda atom: atom.index)
-            for k, v in connections.items()
-            if len(v) != 0
+            k: sorted(v, key=lambda atom: atom.index) for k, v in connections.items() if len(v) != 0
         }
 
         # redefine molecule number for each atom, starting from 1
@@ -1562,7 +1470,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
         def check_frag_in_db(atoms):
             """
-            Checking molecule database for a match, and returns charge and mult 
+            Checking molecule database for a match, and returns charge and mult
             in that order.
             If not found, returns a neutral species with no unpaired electrons.
             """
@@ -1629,7 +1537,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
     def distance_matrix(self):
         """
         Creates an N x N matrix of interatomic distances
-        between every atom in the system. N = number of 
+        between every atom in the system. N = number of
         atoms in system.
         """
         num_atoms = len(self.coords)
@@ -1682,9 +1590,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 mol_count += 1
 
         nums = set([atom.mol for atom in self.coords])
-        self.mol_dict = {
-            val: [atom for atom in self.coords if atom.mol == val] for val in nums
-        }
+        self.mol_dict = {val: [atom for atom in self.coords if atom.mol == val] for val in nums}
         for mol in self.mol_dict.values():
             mol.sort(key=lambda atom: atom.index)
 
@@ -1702,19 +1608,13 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 """
                 connectors = {}
                 if atom.symbol == "H":
-                    for (
-                        alpha
-                    ) in atom.connected_atoms:  # alpha = one atom away, beta = two away
+                    for alpha in atom.connected_atoms:  # alpha = one atom away, beta = two away
                         for beta in alpha.connected_atoms:
                             if beta.symbol not in connectors:
                                 connectors[beta.symbol] = 1
                             else:
                                 connectors[beta.symbol] += 1
-                            if (
-                                alpha.symbol == "C"
-                                and "N" in connectors
-                                and connectors["N"] == 2
-                            ):
+                            if alpha.symbol == "C" and "N" in connectors and connectors["N"] == 2:
                                 return True
                 return False
 
@@ -1853,9 +1753,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                 group1 = find_molecule_type(mol_one_name)
                 group2 = find_molecule_type(mol_two_name)
 
-                hbond_data.append(
-                    [mol_one_name, one.symbol, mol_two_name, two.symbol, dist, angle]
-                )
+                hbond_data.append([mol_one_name, one.symbol, mol_two_name, two.symbol, dist, angle])
 
             return hbond_data
 
@@ -1882,11 +1780,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
 
     @classmethod
     def get_multiplicity(cls, fragment_dict):
-        return (
-            2
-            if any("radical" in frag["type"] for frag in fragment_dict.values())
-            else 1
-        )
+        return 2 if any("radical" in frag["type"] for frag in fragment_dict.values()) else 1
         # extend multiplicity for biradicals etc...
 
     def centre_of_mass(self):
@@ -1918,7 +1812,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
     @staticmethod
     def check_user_additions():
         """
-        Reads ~/.config/autochem/molecules.txt for 
+        Reads ~/.config/autochem/molecules.txt for
         any additional molecules
         """
         confdir = os.path.expanduser("~/.config/autochem/")
@@ -1987,7 +1881,7 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
                             charge = False
                             mult = False
                             atoms = False
-        # now have to update the collated dict otherwise 
+        # now have to update the collated dict otherwise
         # the additions aren't found in the overall dict,
         Molecule.molecules = {
             **Molecule.Cations,
@@ -2003,4 +1897,4 @@ molecules, include the number without brackets: [1, 3], 4, [5, 7]
             **Molecule.Anion_radicals,
             **Molecule.Cation_radicals,
             **Molecule.Dication_radicals,
-    }
+        }

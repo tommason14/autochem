@@ -13,10 +13,10 @@ __all__ = ["Job"]
 
 class Job:
     """Base class for any input file for a computational chemistry calculation- ab initio or
-molecular dynamics. This class also creates job files in the same directory as the class is called. 
+    molecular dynamics. This class also creates job files in the same directory as the class is called.
 
-    Instances of this class have the following attributes:
-    * ``using`` -- coordinates of chemical system, in xyz format
+        Instances of this class have the following attributes:
+        * ``using`` -- coordinates of chemical system, in xyz format
 
     """
 
@@ -37,9 +37,7 @@ molecular dynamics. This class also creates job files in the same directory as t
         if using is not None:
             self.molecule_name = using
             if user_settings is not None and "grouped" in user_settings.keys():
-                self.mol = Molecule(using,
-                                    group=user_settings.grouped,
-                                    bonds_to_split=bonds_to_split)
+                self.mol = Molecule(using, group=user_settings.grouped, bonds_to_split=bonds_to_split)
             else:
                 self.mol = Molecule(using, bonds_to_split=bonds_to_split)
 
@@ -85,11 +83,10 @@ molecular dynamics. This class also creates job files in the same directory as t
 
     def find_job(self, dft=False):
         """
-        Returns the relevant job template. If a GAMESS job is for a dft 
+        Returns the relevant job template. If a GAMESS job is for a dft
         calculation, gamess_{self.sc}_dft.job will be called"""
         self.get_sc()
-        package = sys.modules[self.__class__.__module__].__file__.split(
-            "/")[-1][:-3]
+        package = sys.modules[self.__class__.__module__].__file__.split("/")[-1][:-3]
         # Returns gamess from GamessJob, psi from PsiJob etc...
         if dft:
             job = f"{package}_{self.sc}_dft.job"
@@ -103,7 +100,7 @@ molecular dynamics. This class also creates job files in the same directory as t
     def find_charge_and_mult(self):
         """
         Changes charge and multiplicity unless user defines values in a
-        settings file. In that case, the user-defined charge and 
+        settings file. In that case, the user-defined charge and
         multiplicity are used.
         """
         user_assigned_charge = False
@@ -119,7 +116,7 @@ molecular dynamics. This class also creates job files in the same directory as t
             self.input.mult = self.mol.overall_mult
 
     def write_file(self, data, filetype):
-        """Writes the generated input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq). 
+        """Writes the generated input/jobs to a file. If no filename is passed when the class is instantiated, the name of the file defaults to the run type: a geometry optimisation (opt), single point energy calculation (spec), or a hessian matrix calculation for vibrational frequencies (freq).
 
         NOTE: Must pass data as a string, not a list!"""
         with open(f"{self.base_name}.{filetype}", "w") as f:

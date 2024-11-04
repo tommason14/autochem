@@ -151,16 +151,7 @@ class GamessJob(Job):
 
     def order_header(self):
         if self.fmo:
-            desired = [
-                "SYSTEM",
-                "CONTRL",
-                "GDDI",
-                "STATPT",
-                "SCF",
-                "BASIS",
-                "FMO",
-                "FMOPRP",
-            ]  # mp2/dft after
+            desired = ["SYSTEM", "CONTRL", "GDDI", "STATPT", "SCF", "BASIS", "FMO", "FMOPRP"]  # mp2/dft after
         else:
             desired = ["SYSTEM", "CONTRL", "STATPT", "SCF", "BASIS"]
 
@@ -209,13 +200,7 @@ class GamessJob(Job):
 
         self.change_charge_and_mult()
 
-        opp_spin_params = {
-            "cct": 1.64,
-            "ccq": 1.689,
-            "accd": 1.372,
-            "acct": 1.443,
-            "accq": 1.591,
-        }
+        opp_spin_params = {"cct": 1.64, "ccq": 1.689, "accd": 1.372, "acct": 1.443, "accq": 1.591}
         if "mp2" in self.input:
             for basis, opp in opp_spin_params.items():
                 if self.input.basis.gbasis.lower() == basis:
@@ -307,12 +292,8 @@ class GamessJob(Job):
         self.all_frags_same = len(mols) == 1
         if self.all_frags_same and self.all_frags_known_to_autochem:
             self.nacut = len(Molecule.molecules.get(mols[0]))
-            self.fmo_charg = [
-                str(frag["charge"]) for frag in self.mol.fragments.values()
-            ]
-            self.fmo_mult = [
-                str(frag["multiplicity"]) for frag in self.mol.fragments.values()
-            ]
+            self.fmo_charg = [str(frag["charge"]) for frag in self.mol.fragments.values()]
+            self.fmo_mult = [str(frag["multiplicity"]) for frag in self.mol.fragments.values()]
             # exit early if all molecules are the same
             return
         info = {}
@@ -331,9 +312,7 @@ class GamessJob(Job):
                     # check for consecutive numbers
                     atom_indices = [atom.index for atom in data["atoms"]]
                     if consecutive(atom_indices):
-                        indat_string = (
-                            f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
-                        )
+                        indat_string = f"0,{data['atoms'][0].index},-{data['atoms'][-1].index},"
                     else:
                         # odd ordering, especially when fragmenting on a bond
                         groups = []
@@ -411,9 +390,7 @@ class GamessJob(Job):
         # 0,29,35,
         # 0.8,28
 
-        sorted_info = sorted(
-            info.items(), key=lambda val: int(val[1]["indat"].split(",")[1])
-        )
+        sorted_info = sorted(info.items(), key=lambda val: int(val[1]["indat"].split(",")[1]))
         # could also just sort on mol (or frag of info[frag]), from the assignments in self.split(), but these might not
         # always be in a numerical order- by using the index from self.coords, it is always ensured that the
         # correct order is shown, as these coords are also used in the input file
@@ -430,12 +407,7 @@ class GamessJob(Job):
         self.fmo_meta()  # gives self.mol.indat, self.mol.charg
         # real issue here is that fmo options aren't considered as self.input.fmo....
         # when they should be...
-        if self.input.contrl.runtyp.lower() in (
-            "optimize",
-            "hessian",
-            "fmohess",
-            "sadpoint",
-        ):
+        if self.input.contrl.runtyp.lower() in ("optimize", "hessian", "fmohess", "sadpoint"):
             nbody = self.input.fmo.nbody if "nbody" in self.input.fmo else 2
             rcorsd = 100
         else:
@@ -548,12 +520,8 @@ class GamessJob(Job):
         if hasattr(self.mol, "fragments") and len(self.mol.fragments) != 0:
             num_frags = len(self.mol.fragments)
             jobfile = job.replace("ncpus=32", f"ncpus={16 * num_frags}")
-            jobfile = jobfile.replace(
-                "mem=125gb", f"mem={4 * 16 * num_frags}gb"
-            )  # 4gb cpus
-            jobfile = jobfile.replace(
-                "jobfs=150gb", f"jobfs={4 * 16 * num_frags + 20}gb"
-            )
+            jobfile = jobfile.replace("mem=125gb", f"mem={4 * 16 * num_frags}gb")  # 4gb cpus
+            jobfile = jobfile.replace("jobfs=150gb", f"jobfs={4 * 16 * num_frags + 20}gb")
             return jobfile
         return job
 
@@ -594,14 +562,11 @@ class GamessJob(Job):
                 self.meta.mem = 96
 
         if "mem" in self.meta:
-            jobfile = jobfile.replace(
-                "mem=32", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
-            )
+            jobfile = jobfile.replace("mem=32", f"mem={str(self.meta.mem).upper().replace('GB', '')}")
         if "ncpus" in self.meta:
             jobfile = jobfile.replace("ntasks=16", f"ntasks={self.meta.ncpus}")
             jobfile = jobfile.replace(
-                "tasks-per-node=16",
-                f"tasks-per-node={int(self.meta.ncpus / self.meta.nodes)}",
+                "tasks-per-node=16", f"tasks-per-node={int(self.meta.ncpus / self.meta.nodes)}"
             )
         return jobfile
 
@@ -609,19 +574,13 @@ class GamessJob(Job):
         job = job.replace("name", f"{self.base_name}")
         # can now give as number or string with gb
         if "mem" in self.meta:
-            job = job.replace(
-                "mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}"
-            )
+            job = job.replace("mem=96", f"mem={str(self.meta.mem).upper().replace('GB', '')}")
         if "ncpus" in self.meta:
             job = job.replace("ncpus=48", f"ncpus={self.meta.ncpus}")
         if "jobfs" in self.meta:
-            job = job.replace(
-                "jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}"
-            )
+            job = job.replace("jobfs=100", f"jobfs={str(self.meta.jobfs).upper().replace('GB', '')}")
         if "partition" in self.meta:
-            job = job.replace(
-                "#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}"
-            )
+            job = job.replace("#PBS -l wd", f"#PBS -l wd\n#PBS -q {self.meta.partition}")
         # if fmo srs run on >1 node, use rungms.gadi.ln, else use rungms.gadi
         # default is set to use logical node
         if self._job_runtype == "standard":
@@ -716,7 +675,6 @@ class GamessJob(Job):
         count = 0  # avoid  overwriting files by iterating with a number
         for frag, data in self.mol.fragments.items():
             if data["frag_type"] == "frag":
-
                 # make a directory inside the subdir for each fragment
                 # i.e. acetate0, acetate1, choline2, choline3, water4
                 name = f"{data['name']}_{count}"
@@ -735,9 +693,7 @@ class GamessJob(Job):
                 frag_settings.input.contrl.icharg = data["charge"]
                 if data["multiplicity"] != 1:
                     frag_settings.input.contrl.mult = data["multiplicity"]
-                job = GamessJob(
-                    using=name + str(".xyz"), settings=frag_settings, run_dir=True
-                )
+                job = GamessJob(using=name + str(".xyz"), settings=frag_settings, run_dir=True)
                 chdir(parent_dir)
                 count += 1
 
@@ -763,12 +719,7 @@ class GamessJob(Job):
                 if complex_is_fmo:
                     complex_is_fmo = self.ionic_mol_has_two_or_more_frags()
 
-                job = GamessJob(
-                    using="ionic.xyz",
-                    settings=frag_settings,
-                    fmo=complex_is_fmo,
-                    run_dir=True,
-                )
+                job = GamessJob(using="ionic.xyz", settings=frag_settings, fmo=complex_is_fmo, run_dir=True)
                 chdir(parent_dir)
 
                 chdir(parent_dir)

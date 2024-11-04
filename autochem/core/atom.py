@@ -21,12 +21,8 @@ class Atom:
     >>> a = Atom('H', coords = (1,2,3))
 
     """
-    def __init__(self,
-                 symbol=None,
-                 atnum=0,
-                 coords=None,
-                 mol=None,
-                 bonds=None):
+
+    def __init__(self, symbol=None, atnum=0, coords=None, mol=None, bonds=None):
         if symbol is not None:
             self.symbol = symbol
             self.atnum = PT.get_atnum(self)
@@ -65,28 +61,34 @@ class Atom:
         if self.fragment is not None:
             return (
                 f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
-                f"{self.z:>10.5f} Index: {self.index} Mol: {self.fragment}")
+                f"{self.z:>10.5f} Index: {self.index} Mol: {self.fragment}"
+            )
 
         if hasattr(self, "index") and not hasattr(self, "mol"):
-            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
-                    f"{self.z:>10.5f} Index: {self.index}")
+            return (
+                f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                f"{self.z:>10.5f} Index: {self.index}"
+            )
 
         if hasattr(self, "index") and hasattr(self, "mol"):
-            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
-                    f"{self.z:>10.5f} Index: {self.index} Mol: {self.mol}")
+            return (
+                f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                f"{self.z:>10.5f} Index: {self.index} Mol: {self.mol}"
+            )
 
         elif hasattr(self, "number"):
-            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
-                    f" {self.z:>10.5f} Mol: {self.mol} Atom: {self.number}")
+            return (
+                f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                f" {self.z:>10.5f} Mol: {self.mol} Atom: {self.number}"
+            )
 
         elif hasattr(self, "index") and len(self.h_bonded_to) > 0:
-            h_bonded = [(atom.symbol, {
-                "mol": atom.mol,
-                "atom": atom.index
-            }) for atom in self.h_bonded_to]
-            return (f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
-                    f"{self.z:>10.5f} Mol: {self.mol} Index: {self.index} "
-                    f"Number: {self.number} H-Bonds: {h_bonded}")
+            h_bonded = [(atom.symbol, {"mol": atom.mol, "atom": atom.index}) for atom in self.h_bonded_to]
+            return (
+                f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} "
+                f"{self.z:>10.5f} Mol: {self.mol} Index: {self.index} "
+                f"Number: {self.number} H-Bonds: {h_bonded}"
+            )
 
         return f"Atom: {self.symbol:3s} {self.x:>10.5f} {self.y:>10.5f} {self.z:>10.5f}"
 
@@ -108,7 +110,7 @@ class Atom:
         # pythagoras in 3D
         dist = 0.0
         for i, j in zip(self, vector):
-            dist += (i - j)**2
+            dist += (i - j) ** 2
         return dist**0.5
 
     def vector_to(self, point):
